@@ -77,6 +77,36 @@ struct TLAppSettings: Codable, Equatable {
         }
     }
 
+    enum UnrealGraphics: String, Codable, CaseIterable, Identifiable {
+        case automatic, gameDefault, sharpHigh
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .automatic: return "Automatic"
+            case .gameDefault: return "Game Default"
+            case .sharpHigh: return "Sharp / High Quality"
+            }
+        }
+    }
+
+    var unrealGraphics: UnrealGraphics = .automatic
+
+    func usesSharpGraphics(for app: TLApp) -> Bool {
+        guard app.report?.nativeEngine == .ue4 else { return false }
+        switch unrealGraphics {
+        case .gameDefault: return false
+        case .sharpHigh: return true
+        case .automatic:
+            let name = app.label.lowercased()
+            return (name.contains("minecraft") && name.contains("dungeons"))
+                || (app.packageName?.lowercased().contains("dungeons") ?? false)
+        }
+    }
+
+    @MainActor func renderScale(for app: TLApp) -> CGFloat {
+        usesSharpGraphics(for: app) ? UIScreen.main.scale : resolution.scale
+    }
+
     var orientation: Orientation = .auto
     var window: WindowMode = .auto
     var resolution: Resolution = .high
@@ -99,6 +129,7 @@ struct TLAppSettings: Codable, Equatable {
     // Settings written by an older Husk lack the keys a newer one added; each falls back to its default.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        unrealGraphics = try c.decodeIfPresent(UnrealGraphics.self, forKey: .unrealGraphics) ?? .automatic
         orientation = try c.decodeIfPresent(Orientation.self, forKey: .orientation) ?? .auto
         resolution = try c.decodeIfPresent(Resolution.self, forKey: .resolution) ?? .high
         showStats = try c.decodeIfPresent(Bool.self, forKey: .showStats) ?? true
@@ -186,13 +217,29 @@ struct TLAppSettingsView: View {
                 Picker("Resolution", selection: $settings.resolution) {
                     ForEach(TLAppSettings.Resolution.allCases) { Text($0.title).tag($0) }
                 }
+                .disabled(settings.usesSharpGraphics(for: app))
                 Toggle("Performance readout", isOn: $settings.showStats)
                 Toggle("Keep the screen on", isOn: $settings.keepAwake)
             } header: {
                 Text("Display")
             } footer: {
-                Text("\(settings.resolution.detail) Orientation and resolution apply the next time the game starts, and a game already "
+                Text("\(settings.usesSharpGraphics(for: app) ? "The graphics preset uses Native resolution." : settings.resolution.detail) Orientation and resolution apply the next time the game starts, and a game already "
                    + "running in this session needs Husk closed and opened again.")
+            }
+
+            if app.report?.nativeEngine == .ue4 {
+                Section {
+                    Picker("Graphics", selection: $settings.unrealGraphics) {
+                        ForEach(TLAppSettings.UnrealGraphics.allCases) { Text($0.title).tag($0) }
+                    }
+                    LabeledContent("Active Preset", value: settings.usesSharpGraphics(for: app) ? "Sharp / High Quality" : "Game Default")
+                } header: {
+                    Text("Game Graphics")
+                } footer: {
+                    Text("Automatic uses Sharp / High Quality for Minecraft Dungeons. It requests native resolution, 16× texture filtering, "
+                       + "higher detail and shadows, and reduced motion and depth blur. Quality depends on the game's available assets and may reduce performance. "
+                       + "Choose Game Default to remove these overrides. Close Husk completely and reopen it after a change.")
+                }
             }
 
             Section {

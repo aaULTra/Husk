@@ -16,6 +16,7 @@
 #include "husk-tl-egl.h"
 #include "husk-tl-gamepad.h"
 #include "husk-tl-vulkan.h"
+#include "husk-tl-ue4-graphics.h"
 #include "husk-tl-jni.h"
 #include "husk-tl-internal.h"
 #include "husk-tl-ld.h"
@@ -249,6 +250,11 @@ bool tl_na_start(const tl_ga_config *cfg)
         return start_generic();
     }
     tl_ue4_hle_install(cfg->package_name, cfg->apk_path, cfg->data_dir, N.ext_dir);
+    const char *project = tl_ue4_meta("com.epicgames.ue4.GameActivity.ProjectName");
+    if (!tl_ue4_graphics_prepare(N.internal_dir, N.ext_dir, project))
+        tl_log_line("ue4: graphics config could not be prepared completely; launch arguments will still be supplied");
+    else
+        tl_log_line("ue4: graphics config prepared for project %s (individual CVars still depend on the game)", project ? project : "(unknown)");
     drop_empty_saves(N.data, 0);
 
     N.activity = tl_jni_new_object(tl_jni_class(CLS));

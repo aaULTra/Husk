@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "husk-tl-bionic.h"
+#include "husk-tl-ue4-graphics.h"
 
 static jvalue vl(void *p) { jvalue v; v.j = 0; v.l = p; return v; }
 static jvalue vi(int i) { jvalue v; v.j = 0; v.i = i; return v; }
@@ -158,7 +159,13 @@ static void GA_true(tl_jcall *c) { c->ret = vz(1); }
 static void GA_zero(tl_jcall *c) { c->ret = vi(0); }
 static void GA_nullObj(tl_jcall *c) { c->ret.l = NULL; }
 static void GA_emptyString(tl_jcall *c) { c->ret = vl(tl_jni_new_string("")); }
-static void GA_commandLine(tl_jcall *c) { c->ret = vl(tl_jni_new_string(getenv("TL_UE4_CMDLINE") ? getenv("TL_UE4_CMDLINE") : "")); }
+static void GA_commandLine(tl_jcall *c)
+{
+    const char *base = getenv("TL_UE4_CMDLINE");
+    char *args = tl_ue4_graphics_command_line(base);
+    c->ret = vl(tl_jni_new_string(args ? args : (base ? base : "")));
+    free(args);
+}
 static void GA_fontDir(tl_jcall *c) { c->ret = vl(tl_jni_new_string("/system/fonts/")); }
 const char *tl_hle_android_id(void);
 static void GA_androidId(tl_jcall *c) { c->ret = vl(tl_jni_new_string(tl_hle_android_id())); }
