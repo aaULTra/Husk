@@ -1,0 +1,92 @@
+name: Build Husk IPA
+
+# Builds this repository's Husk source with the previously verified staging approach.
+# Avoids recompiling WebKit ANGLE (which fails on the hosted compiler).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: husk-ipa-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build iOS IPA
+    runs-on: macos-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Check out Husk fork
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        shell: bash
+        run: |
+          set -euo pipefail
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+          xcodebuild -version
+
+      - name: Download verified official base libraries and game resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          curl --fail --location --retry 3 \
+            https://github.com/Leviidev/Husk/releases/download/3.0/Husk.ipa \
+            --output build/Husk-3.0-base.ipa
+          # Verifies the SHA256 and stages dependencies only, not the donor app executable.
+          python3 scripts/stage_graphics_build.py build/Husk-3.0-base.ipa
+
+      - name: Install Rust iOS target
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add aarch64-apple-ios
+
+      - name: Cache Rust pairing dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src/rppairing-ios/target
+          key: husk-pairing-${{ runner.os }}-${{ hashFiles('src/rppairing-ios/Cargo.lock') }}
+
+      - name: Build pairing library
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/build_rppairing_ios.sh
+
+      - name: Build this fork's Husk app and package IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/package_ipa.sh "$PWD/build/Husk.ipa"
+          test -s build/Husk.ipa
+          ls -lh build/Husk.ipa
+
+      - name: Upload the installable IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Husk-LiveContainer-IPA
+          path: build/Husk.ipa
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+      - name: Upload compiler log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: husk-build-logs
+          path: |
+            /tmp/husk_ipa/build.log
+            build/logs/
+          if-no-files-found: ignore
+          retention-days: 7

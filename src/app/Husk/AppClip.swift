@@ -23,6 +23,42 @@ enum AppClip {
         return c.url!
     }
 
+    /// LiveContainer is the installed application, so the Home Screen shortcut must
+    /// open LC first and forward the original husk:// URL to this guest.
+    ///
+    /// The host scheme is read from LC's running ObjC runtime (not guessed), and
+    /// the guest bundle/container identify this particular installed Husk instance.
+    /// A directly installed Husk continues using the original husk:// shortcut.
+    private static func homeScreenURL(for id: String) -> URL? {
+        let guestURL = link(for: id)
+        guard ProcessInfo.processInfo.environment["LC_HOME_PATH"] != nil else {
+            return guestURL
+        }
+
+        guard let hostScheme = husk_livecontainer_host_scheme(), !hostScheme.isEmpty,
+              let home = ProcessInfo.processInfo.environment["HOME"], !home.isEmpty else {
+            HuskLog.log("ui", "app clip: LC host URL scheme or data container unavailable")
+            return nil
+        }
+
+        let guestBundleName = Bundle.main.bundleURL.lastPathComponent
+        let dataContainerName = URL(fileURLWithPath: home, isDirectory: true).lastPathComponent
+        guard !guestBundleName.isEmpty, !dataContainerName.isEmpty else {
+            HuskLog.log("ui", "app clip: invalid LC guest bundle or data container")
+            return nil
+        }
+
+        var c = URLComponents()
+        c.scheme = hostScheme
+        c.host = "livecontainer-launch"
+        c.queryItems = [
+            URLQueryItem(name: "bundle-name", value: guestBundleName),
+            URLQueryItem(name: "container-folder-name", value: dataContainerName),
+            URLQueryItem(name: "open-url", value: Data(guestURL.absoluteString.utf8).base64EncodedString()),
+        ]
+        return c.url
+    }
+
     /// husk://open_app?unique_identifier=<id>: open that game's page and start it. True when the URL was one.
     @discardableResult
     static func handle(_ url: URL) -> Bool {
@@ -39,6 +75,7 @@ enum AppClip {
 
     /// The profile: one Web Clip with the game's name and icon.
     static func profile(for app: TLApp) -> Data {
+        guard let launchURL = homeScreenURL(for: app.id) else { return Data() }
         let clip = UUID().uuidString, outer = UUID().uuidString
         var payload: [String: Any] = [
             "PayloadType": "com.apple.webClip.managed",
@@ -47,7 +84,7 @@ enum AppClip {
             "PayloadUUID": clip,
             "PayloadDisplayName": app.label,
             "Label": app.label,
-            "URL": link(for: app.id).absoluteString,
+            "URL": launchURL.absoluteString,
             "IsRemovable": true,
             "FullScreen": false,
             "Precomposed": true,
@@ -89,6 +126,10 @@ enum AppClip {
     /// Serve the profile and open it. The server stays up until the sheet closes.
     static func generate(for app: TLApp) {
         let data = profile(for: app)
+        guard !data.isEmpty else {
+            HuskLog.log("ui", "app clip: could not generate a valid Home Screen shortcut")
+            return
+        }
         let name = "\(safe(app.label)).mobileconfig"
         let server = ProfileServer(body: data, name: name)
         server.start { url in

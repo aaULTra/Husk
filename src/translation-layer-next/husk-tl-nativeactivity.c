@@ -350,7 +350,7 @@ bool tl_na_start(const tl_ga_config *cfg)
     }
     tl_ue4_hle_install(cfg->package_name, cfg->apk_path, cfg->data_dir, N.ext_dir);
     tl_log_line("ue4 graphics: preset %s; offered surface %dx%d; startup-file override v2",
-                tl_ue4_sharp_graphics_enabled() ? "Sharp / High Quality" : "Game Default", cfg->width, cfg->height);
+                tl_ue4_efficiency_enabled() ? "Sharp / Efficient" : (tl_ue4_sharp_graphics_enabled() ? "Sharp / High Quality" : "Game Default"), cfg->width, cfg->height);
     const char *project = tl_ue4_meta("com.epicgames.ue4.GameActivity.ProjectName");
     if (!tl_ue4_graphics_prepare(N.internal_dir, N.ext_dir, project))
         tl_log_line("ue4: graphics config could not be prepared completely; launch arguments will still be supplied");

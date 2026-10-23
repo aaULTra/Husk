@@ -1,7 +1,7 @@
-name: Build Dungeons Graphics IPA
+name: Build Dungeons Efficient 60 FPS IPA
 on:
   push:
-    branches: [codex/dungeons-sharp-graphics]
+    branches: [codex/dungeons-efficient-native]
   pull_request:
     paths:
       - 'src/app/Husk/TLAppSettings.swift'
@@ -55,12 +55,12 @@ jobs:
       - name: Build on-device pairing library
         run: bash scripts/build_rppairing_ios.sh
       - name: Build and validate IPA
-        run: bash scripts/package_ipa.sh "$PWD/build/Husk-Dungeons-Sharp.ipa"
+        run: bash scripts/package_ipa.sh "$PWD/build/Husk-Dungeons-Efficient-60.ipa"
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: Husk-Dungeons-Sharp
-          path: build/Husk-Dungeons-Sharp.ipa
+          name: Husk-Dungeons-Efficient-60
+          path: build/Husk-Dungeons-Efficient-60.ipa
           if-no-files-found: error
       - name: Upload compiler log
         if: failure()

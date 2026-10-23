@@ -11,6 +11,8 @@
 #include <unistd.h>
 
 static bool sharp;
+static bool efficient;
+static int frame_limit = 60;
 static const char begin[] = "; BEGIN HUSK SHARP GRAPHICS v1\n";
 static const char end[] = "; END HUSK SHARP GRAPHICS v1\n";
 /* Runtime quality CVars only: do not change feature level, shader permutations,
@@ -28,6 +30,58 @@ static const char *const values[] = {
     "r.MotionBlurQuality=0", "r.DepthOfFieldQuality=0",
     "r.SceneColorFringeQuality=0"
 };
+
+/* Keep native geometry/texture sharpness, spend less on shadows and effects.
+ * Keep the same marker so switching presets replaces the previous block. */
+static const char *const efficient_values[] = {
+    "sg.ViewDistanceQuality=2", "sg.AntiAliasingQuality=3",
+    "sg.ShadowQuality=2", "sg.PostProcessQuality=1",
+    "sg.TextureQuality=3", "sg.EffectsQuality=2", "sg.FoliageQuality=2",
+    "r.MobileContentScaleFactor=0", "r.ScreenPercentage=100",
+    "r.DynamicRes.OperationMode=0", "r.MaxAnisotropy=8",
+    "r.Streaming.MipBias=0", "r.ViewDistanceScale=1", "r.DetailMode=2",
+    "r.PostProcessAAQuality=4", "r.ShadowQuality=3",
+    "r.Shadow.MaxResolution=1024", "r.Shadow.CSM.MaxCascades=2",
+    "r.MotionBlurQuality=0", "r.DepthOfFieldQuality=0",
+    "r.SceneColorFringeQuality=0"
+};
+_Static_assert(sizeof(values) == sizeof(efficient_values), "preset size mismatch");
+#define BASE_VALUE_COUNT (sizeof(values) / sizeof(values[0]))
+#define VALUE_COUNT (BASE_VALUE_COUNT + (efficient ? 1u : 0u))
+static const char *value_at(size_t i)
+{
+    if (efficient && i == BASE_VALUE_COUNT)
+        return frame_limit == 30 ? "t.MaxFPS=30" : "t.MaxFPS=60";
+    return efficient ? efficient_values[i] : values[i];
+}
+
+void husk_ue4_set_efficiency(bool enabled, int fps)
+{
+    efficient = enabled;
+    frame_limit = fps == 30 ? 30 : 60;
+}
+bool tl_ue4_efficiency_enabled(void) { return sharp && efficient; }
+int tl_ue4_effective_frame_limit(int thermal_state)
+{
+    if (!tl_ue4_efficiency_enabled()) return 0;
+    if (thermal_state >= 3) return 20;
+    if (thermal_state >= 2) return 30;
+    return frame_limit;
+}
+/* Pure monotonic scheduling: no busy wait or catch-up burst after slow frames
+ * or a resume. Call once per present, on that present thread. */
+int64_t tl_ue4_frame_delay_ns(int64_t now, int fps, int64_t *deadline)
+{
+    if (fps <= 0) { *deadline = 0; return 0; }
+    int64_t interval = 1000000000LL / fps;
+    if (!*deadline || now >= *deadline || *deadline - now > interval) {
+        *deadline = now + interval;
+        return 0;
+    }
+    int64_t delay = *deadline - now;
+    *deadline += interval;
+    return delay;
+}
 
 void husk_ue4_set_sharp_graphics(bool enabled) { sharp = enabled; }
 bool tl_ue4_sharp_graphics_enabled(void) { return sharp; }
@@ -71,14 +125,14 @@ char *tl_ue4_graphics_command_line(const char *base)
     const char prefix[] = " -mcsf=0 -ini:Engine:";
     const char section[] = "[SystemSettings]:";
     size_t bytes = strlen(clean) + sizeof(prefix);
-    for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++)
-        bytes += strlen(section) + strlen(values[i]) + 1;
+    for (size_t i = 0; i < VALUE_COUNT; i++)
+        bytes += strlen(section) + strlen(value_at(i)) + 1;
     char *out = malloc(bytes);
     if (!out) { free(clean); return NULL; }
     strcpy(out, clean); free(clean); strcat(out, prefix);
-    for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++) {
+    for (size_t i = 0; i < VALUE_COUNT; i++) {
         if (i) strcat(out, ",");
-        strcat(out, section); strcat(out, values[i]);
+        strcat(out, section); strcat(out, value_at(i));
     }
     return out;
 }
@@ -180,8 +234,8 @@ static bool update_ini(const char *root, const char *project, const char *platfo
     free(contents);
     if (sharp) {
         ok = fprintf(f, "\n%s[SystemSettings]\n", begin) >= 0 && ok;
-        for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++)
-            ok = fprintf(f, "%s\n", values[i]) >= 0 && ok;
+        for (size_t i = 0; i < VALUE_COUNT; i++)
+            ok = fprintf(f, "%s\n", value_at(i)) >= 0 && ok;
         ok = fputs(end, f) >= 0 && ok;
     }
     if (fflush(f) || fsync(fd)) ok = false;

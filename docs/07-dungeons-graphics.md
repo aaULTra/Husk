@@ -1,8 +1,101 @@
+# Efficient native-resolution 60 FPS target
+
+The goal is sustained 60 FPS at high resolution with lower power consumption.
+This is a target, not an on-device benchmark result. Select **Sharp / Efficient**
+and **60 FPS · Smoother** in the game's settings, then fully restart Husk.
+Automatic also selects this preset for Minecraft Dungeons. Existing explicit
+Sharp / High Quality selections retain the original preset until changed.
+Both full-screen and floating-window launch paths carry the new settings.
+
+| Setting | Original Sharp | Efficient |
+| --- | --- | --- |
+| Host resolution / Android content scale | Native / 0 | Native / 0 |
+| Scene percentage request | 100% | 100% |
+| Texture quality / streaming mip bias | 3 / 0 | 3 / 0 |
+| AA / post-process AA quality | 3 / 4 | 3 / 4 |
+| Anisotropic filtering | 16× | 8× |
+| Shadow resolution / cascades | 2048 / 4 | 1024 / 2 |
+| Shadow group / shadow quality | 3 / 5 | 2 / 3 |
+| Post-process group | 3 | 1 |
+| Effects / foliage / view-distance groups | 3 / 3 / 3 | 2 / 2 / 2 |
+| Target frame rate | Game's behaviour | 60; optional 30 |
+
+Efficient retains the exact native resolution hooks and disables dynamic
+resolution. It preserves texture streaming and the game's memory budget. The
+trade-off is less detailed shadows/effects and reduced anisotropic filtering;
+visual equivalence is not claimed. Cooked game CVars may be ignored or
+subsequently overwritten, so configuration requests need device verification.
+`t.MaxFPS` is requested at startup and a native Vulkan present limiter supplies
+back-pressure even if the game ignores that request. Neither can make a frame
+that costs more than 16.67 ms execute within a 60 FPS budget.
+
+The limiter sleeps after presentation rather than spinning or forcing the GPU
+idle. Slow frames and resume reset its deadline: no catch-up burst. It queries
+iOS thermal state at most once a second. Serious thermal pressure lowers the
+cap to 30, critical to 20; recovery requires 15 seconds at a lower reported
+state. This fallback means the 60 FPS thermal target has **not** been achieved;
+it must not be described as a successful sustained-60 result.
+
+Normal Vulkan gameplay no longer runs the existing queue-idle pixel-readback
+probes at frames 3, 60, 400, and 3000. They were four diagnostic stalls, not a
+continuous cause of overheating. Set `TL_VK_PROBE_FRAMES=1` only for blank-frame
+diagnosis. Mac regression screenshot capture is retained. Every ten seconds
+(or 600 samples), Efficient reports present cadence, p95 wall-clock interval,
+intervals over 120% of the selected frame budget, thermal state and cap. These
+are producer/present timing measurements, **not GPU execution time** or proof
+of internal 3D resolution.
+
+## Priorities after this build
+
+1. Compare the same mission, camera and combat route for at least 15–20 minutes
+   on the same phone, brightness, charging state and room conditions. Keep the
+   full log: swapchain dimensions, cadence/p95 and thermal transitions. Compare
+   warm gameplay as well as the first minute. A 60 cap or a short peak at 60
+   is not evidence of sustained performance or a cool phone.
+2. Profile CPU and GPU separately with Apple's Game Performance Instruments
+   template. If GPU-bound, measure shadow/effects changes individually before
+   sacrificing native resolution; if CPU-bound, inspect guest thread waits,
+   JNI calls and submission overhead. Avoid speculative global Vulkan changes.
+3. Audit the actual APK's use of `vkCreatePipelineCache` and
+   `vkGetPipelineCacheData`, and its saved cache files, before adding a host
+   cache. MoltenVK documents serialized pipeline caches as a way to avoid
+   repeated SPIR-V-to-MSL conversion and shader compilation hitches. Cache
+   validation must include driver/device and game compatibility; a forced
+   shared cache or blindly reusing guest cache bytes is unsafe.
+4. A/B test command-buffer prefill and synchronous submit only with profiling
+   evidence against the **bundled** MoltenVK version. Current upstream defaults
+   are not proof that an older pinned binary supports a setting, and options
+   trade memory against CPU overhead. Keep the verified library for this pass.
+5. MetalFX/upscaling is a separate integration requiring suitable render
+   resources and, for temporal techniques, motion/depth data. It is not an
+   environment-variable switch and does not preserve true native rendering.
+   Do not quietly substitute lower internal resolution for this target.
+
+Research references:
+- Apple graphics settings and energy guidance:
+  https://developer.apple.com/documentation/metal/improving-your-games-graphics-performance-and-settings
+- Apple serious thermal pressure guidance:
+  https://developer.apple.com/documentation/foundation/processinfo/thermalstate-swift.enum/serious
+- Apple profiling:
+  https://developer.apple.com/documentation/xcode/analyzing-the-performance-of-your-metal-app
+- Epic scalability reference (check the cooked UE4 game's actual behaviour):
+  https://dev.epicgames.com/documentation/unreal-engine/scalability-reference-for-unreal-engine
+- MoltenVK configuration and pipeline cache documentation:
+  https://github.com/KhronosGroup/MoltenVK/blob/main/Docs/MoltenVK_Configuration_Parameters.md
+  https://github.com/KhronosGroup/MoltenVK/blob/main/Docs/MoltenVK_Runtime_UserGuide.md
+
+Validation: portable configuration/pacing tests and guarded resolution-hook
+regressions run in CI before the iOS build. The workflow rebuilds the fork's
+app/translation-layer source, stages only pinned official third-party libraries,
+and uploads **Husk-Dungeons-Efficient-60**. LiveContainer webclip routing from
+main is included. An IPA build confirms compilation, not phone performance.
+
+---
+
 # Minecraft Dungeons graphics preset
 
 In Dungeons' settings, **Game Graphics > Graphics** offers **Automatic**,
-**Game Default**, and **Sharp / High Quality**. Automatic selects Sharp / High
-Quality only for a UE4 game identified by its Minecraft Dungeons label or a
+**Game Default**, **Sharp / High Quality**, and **Sharp / Efficient**. Automatic selects Sharp / Efficient only for a UE4 game identified by its Minecraft Dungeons label or a
 package name containing `dungeons`. Other games retain their defaults. The
 explicit preset also works if a particular APK has an unrecognised name.
 
@@ -12,7 +105,7 @@ iPad, High and Native have the same surface size; the Unreal settings below are
 the additional change. Enlarging a window after launch still scales its original
 surface, as before; use full screen at launch for the sharpest full-screen result.
 
-The preset requests 100% rendering, native Android content scale, no dynamic
+The original Sharp / High Quality preset requests 100% rendering, native Android content scale, no dynamic
 resolution, quality level 3 for the standard UE4 scalability groups, 16x
 anisotropic filtering, zero streaming mip bias, high-quality anti-aliasing and
 shadows up to 2048, with motion blur, depth of field and chromatic aberration off.

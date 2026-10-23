@@ -3,10 +3,17 @@
 #define HUSK_TL_UE4_GRAPHICS_H
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /* Set before starting the engine; one engine is loaded for the process's lifetime. */
 void husk_ue4_set_sharp_graphics(bool enabled);
 bool tl_ue4_sharp_graphics_enabled(void);
+/* Native resolution remains enabled in both presets. fps accepts 30 or 60 (default).
+ * Thermal values follow NSProcessInfo: nominal=0, fair=1, serious=2, critical=3. */
+void husk_ue4_set_efficiency(bool enabled, int fps);
+bool tl_ue4_efficiency_enabled(void);
+int tl_ue4_effective_frame_limit(int thermal_state);
+int64_t tl_ue4_frame_delay_ns(int64_t now, int fps, int64_t *deadline);
 /* Caller frees the result. Preserves the developer's TL_UE4_CMDLINE arguments. */
 char *tl_ue4_graphics_command_line(const char *base);
 /* Startup text read through NDK assets or an existing external command file.

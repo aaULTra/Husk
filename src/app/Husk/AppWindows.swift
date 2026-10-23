@@ -176,7 +176,7 @@ private struct AppWindow: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let apk = app.apks.first {
             TLWindowScreen(apk: apk, extraApks: Array(app.apks.dropFirst()), dataDir: app.nativeDataDir,
-                           engine: app.screenEngine, portrait: portrait, scale: settings.renderScale(for: app), sharpGraphics: settings.usesSharpGraphics(for: app))
+                           engine: app.screenEngine, portrait: portrait, scale: settings.renderScale(for: app), sharpGraphics: settings.usesSharpGraphics(for: app), efficientGraphics: settings.usesEfficientGraphics(for: app), efficientFrameLimit: settings.efficientFrameRate.rawValue)
                 .overlay {
                     if model.frames == 0 {
                         VStack(spacing: 10) {
@@ -325,10 +325,12 @@ struct TLWindowScreen: UIViewRepresentable {
     let portrait: Bool
     let scale: CGFloat
     var sharpGraphics: Bool = false
+    var efficientGraphics: Bool = false
+    var efficientFrameLimit: Int = 60
 
     func makeUIView(context: Context) -> TLWindowHost {
         TLWindowHost(game: TLUnityScreen.view(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine,
-                                              portrait: portrait, scale: scale, sharpGraphics: sharpGraphics))
+                                              portrait: portrait, scale: scale, sharpGraphics: sharpGraphics, efficientGraphics: efficientGraphics, efficientFrameLimit: efficientFrameLimit))
     }
     func updateUIView(_ view: TLWindowHost, context: Context) { view.setNeedsLayout() }
 }

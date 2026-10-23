@@ -20,6 +20,10 @@ class GraphicsTests(unittest.TestCase):
                         "-o", str(library)], check=True)
         cls.lib = ctypes.CDLL(str(library))
         cls.lib.husk_ue4_set_sharp_graphics.argtypes = [ctypes.c_bool]
+        cls.lib.husk_ue4_set_efficiency.argtypes = [ctypes.c_bool, ctypes.c_int]
+        cls.lib.tl_ue4_effective_frame_limit.argtypes = [ctypes.c_int]
+        cls.lib.tl_ue4_frame_delay_ns.argtypes = [ctypes.c_int64, ctypes.c_int, ctypes.POINTER(ctypes.c_int64)]
+        cls.lib.tl_ue4_frame_delay_ns.restype = ctypes.c_int64
         cls.lib.tl_ue4_graphics_prepare.argtypes = [ctypes.c_char_p] * 3
         cls.lib.tl_ue4_graphics_prepare.restype = ctypes.c_bool
         cls.lib.tl_ue4_graphics_command_line.argtypes = [ctypes.c_char_p]
@@ -42,6 +46,7 @@ class GraphicsTests(unittest.TestCase):
         self.paths = [root / "UE4Game/Dungeons/Dungeons/Saved/Config" / platform / "Engine.ini"
                       for root in self.roots for platform in ("Android", "Android_Vulkan")]
         self.lib.husk_ue4_set_sharp_graphics(False)
+        self.lib.husk_ue4_set_efficiency(False, 60)
 
     def prepare(self, project=b"Dungeons"):
         return self.lib.tl_ue4_graphics_prepare(*(os.fsencode(p) for p in self.roots), project)
@@ -118,6 +123,65 @@ class GraphicsTests(unittest.TestCase):
         self.assertIn("[SystemSettings]:r.ScreenPercentage=100", args)
         self.assertIn("[SystemSettings]:r.DepthOfFieldQuality=0", args)
         self.assertNotIn("ExecCmds", args)
+
+    def test_efficient_switch_keeps_native_detail_and_restores_original_config(self):
+        original = b"[User]\r\nSound=7\r\n"
+        for p in self.paths:
+            p.parent.mkdir(parents=True)
+            p.write_bytes(original)
+        self.lib.husk_ue4_set_sharp_graphics(True)
+        self.assertTrue(self.prepare())
+        self.lib.husk_ue4_set_efficiency(True, 60)
+        self.assertTrue(self.prepare())
+        args = self.command(b"-vulkan")
+        for item in ("r.ScreenPercentage=100", "r.MobileContentScaleFactor=0", "sg.TextureQuality=3",
+                     "r.Streaming.MipBias=0", "r.PostProcessAAQuality=4", "r.MaxAnisotropy=8",
+                     "r.Shadow.MaxResolution=1024", "r.Shadow.CSM.MaxCascades=2", "t.MaxFPS=60"):
+            self.assertIn(item, args)
+            for p in self.paths:
+                self.assertIn(item.encode(), p.read_bytes())
+        self.assertNotIn("r.Shadow.MaxResolution=2048", args)
+        first = [p.read_bytes() for p in self.paths]
+        self.assertTrue(self.prepare())
+        self.assertEqual(first, [p.read_bytes() for p in self.paths])
+        self.lib.husk_ue4_set_sharp_graphics(False)
+        self.assertTrue(self.prepare())
+        self.assertEqual([p.read_bytes() for p in self.paths], [original] * 4)
+        self.assertEqual(self.command(b"-custom"), "-custom")
+
+    def test_frame_limit_is_scoped_and_responds_to_heat(self):
+        self.lib.husk_ue4_set_efficiency(True, 60)
+        self.assertEqual(self.lib.tl_ue4_effective_frame_limit(0), 0)
+        self.lib.husk_ue4_set_sharp_graphics(True)
+        self.assertEqual([self.lib.tl_ue4_effective_frame_limit(i) for i in range(4)], [60, 60, 30, 20])
+        self.lib.husk_ue4_set_efficiency(True, 30)
+        self.assertEqual([self.lib.tl_ue4_effective_frame_limit(i) for i in range(4)], [30, 30, 30, 20])
+        self.lib.husk_ue4_set_efficiency(False, 60)
+        self.assertEqual(self.lib.tl_ue4_effective_frame_limit(3), 0)
+
+    def test_frame_pacer_sleeps_only_remaining_budget_and_does_not_catch_up(self):
+        deadline = ctypes.c_int64()
+        delay = lambda now, fps=60: self.lib.tl_ue4_frame_delay_ns(now, fps, ctypes.byref(deadline))
+        start = 1000000000
+        self.assertEqual(delay(start), 0)
+        self.assertEqual(delay(start + 5000000), 11666666)
+        self.assertEqual(delay(start + 21000000), 12333332)
+        # Long GPU frame and background/resume never cause a catch-up burst.
+        self.assertEqual(delay(start + 100000000), 0)
+        self.assertEqual(delay(start + 10000000000), 0)
+        self.assertEqual(delay(start + 10005000000), 11666666)
+        self.assertEqual(delay(start + 10005000000, 0), 0)
+        self.assertEqual(deadline.value, 0)
+
+    def test_frame_pacer_targets_sixty_with_varying_work_below_budget(self):
+        deadline = ctypes.c_int64()
+        now = 1000000000
+        timestamps = []
+        for i in range(601):
+            now += (4 + i % 9) * 1000000  # 4–12 ms of simulated game work
+            now += self.lib.tl_ue4_frame_delay_ns(now, 60, ctypes.byref(deadline))
+            timestamps.append(now)
+        self.assertAlmostEqual(600 * 1e9 / (timestamps[-1] - timestamps[0]), 60, places=4)
 
     def owned(self, p):
         self.assertTrue(p)
