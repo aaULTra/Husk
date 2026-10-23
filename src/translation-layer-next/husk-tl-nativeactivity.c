@@ -139,6 +139,46 @@ static bool patch_return(tl_lib *lib, const char *symbol, unsigned value)
     return true;
 }
 
+/* UE4 Android returns this 16-byte, non-HFA aggregate in x0/x1, on both
+ * Android AAPCS64 and Darwin arm64. The bool parameter added in UE4.26 is
+ * deliberately unused: neither window-thread choice changes our host size.
+ * Resolve exact exported names, never guessed addresses or instruction scans. */
+typedef struct { int32_t left, top, right, bottom; } tl_ue4_screen_rect;
+static tl_ue4_screen_rect sharp_screen_rect;
+static atomic_uint sharp_rect_calls;
+static tl_ue4_screen_rect sharp_get_screen_rect(void)
+{
+    unsigned call = atomic_fetch_add(&sharp_rect_calls, 1);
+    if (call < 8)
+        tl_log_line("ue4 graphics: engine screen rect call %u held at %dx%d", call + 1,
+                    sharp_screen_rect.right, sharp_screen_rect.bottom);
+    return sharp_screen_rect;
+}
+
+static void install_sharp_screen_rect(tl_lib *ue, const char *project, int width, int height)
+{
+    /* This changes engine behaviour, so limit it to the game that supplied
+     * the reproducing log. Game Default and other UE4 games keep stock code. */
+    if (!tl_ue4_sharp_graphics_enabled() || !project || strcmp(project, "Dungeons") ||
+        !ue || width < 8 || height < 8 || width > 16384 || height > 16384) return;
+    sharp_screen_rect = (tl_ue4_screen_rect){0, 0, width & ~7, height & ~7};
+    atomic_store(&sharp_rect_calls, 0);
+    static const char *const names[] = {
+        "_ZN14FAndroidWindow13GetScreenRectEb", /* UE4.26 */
+        "_ZN14FAndroidWindow13GetScreenRectEv"  /* older UE4 */
+    };
+    unsigned installed = 0;
+    for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+        if (tl_ld_replace_function(ue, names[i], (void *)sharp_get_screen_rect)) {
+            installed++;
+            tl_log_line("ue4 graphics: native engine screen rect override v3 installed: %s, %dx%d",
+                        names[i], sharp_screen_rect.right, sharp_screen_rect.bottom);
+        }
+    }
+    if (!installed)
+        tl_log_line("ue4 graphics: native engine screen rect override v3 unavailable; keeping startup override only");
+}
+
 /* The OBB the engine looks for: <package>.obb in the OBB directory, named main.<version>.<package>.obb. */
 #define OBB_VERSION 42
 
@@ -270,6 +310,7 @@ bool tl_na_start(const tl_ga_config *cfg)
         load_library(libs[i]);
         if (tl_jni_pending()) { tl_log_line("ue4: loading lib%s.so failed", libs[i]); return false; }
     }
+    install_sharp_screen_rect(tl_ld_find_lib("libUE4.so"), project, cfg->width, cfg->height);
     if (getenv("TL_UE4_NO_VULKAN")) {
         tl_lib *ue = tl_ld_find_lib("libUE4.so");
         if (ue) { patch_return(ue, "_ZN12FAndroidMisc15ShouldUseVulkanEv", 0); patch_return(ue, "_ZN12FAndroidMisc22ShouldUseDesktopVulkanEv", 0); }

@@ -479,6 +479,29 @@ void *tl_ld_sym(tl_lib *lib, const char *name)
     return NULL;
 }
 
+bool tl_ld_replace_function(tl_lib *lib, const char *name, void *replacement)
+{
+    if (!lib || !name || !replacement) return false;
+    const elf_sym *s = lib_find(lib, name);
+    /* ldr x16, #8; br x16; .quad replacement. No relocated prologue or
+     * trampoline is needed because the complete function is replaced. */
+    if (!s || (s->st_info & 0xf) != 2 || s->st_size < 16 || (s->st_value & 3)) return false;
+    bool code = false;
+    for (int i = 0; i < lib->ncode; i++)
+        if (s->st_value >= lib->code[i].start && s->st_value < lib->code[i].end &&
+            lib->code[i].end - s->st_value >= 16) code = true;
+    if (!code) return false;
+    uint8_t *rx = sym_value(lib, s);
+    if (!tl_xmem_is_rx(rx)) return false;
+    uint8_t *rw = rx + tl_xmem_delta();
+    const uint32_t jump[] = { 0x58000050u, 0xD61F0200u };
+    uintptr_t target = (uintptr_t)replacement;
+    memcpy(rw, jump, sizeof(jump));
+    memcpy(rw + sizeof(jump), &target, sizeof(target));
+    tl_xmem_flush(rx, 16);
+    return true;
+}
+
 /* dlsym(handle) as bionic's: the library, then what it needs, breadth-first (ART finds a dependency's JNI_OnLoad this way:
  * Signal loads libringrtc, whose JNI_OnLoad is in the libringrtc_rffi it needs) */
 void *tl_ld_sym_deep(tl_lib *lib, const char *name, tl_lib **found_in)

@@ -30,7 +30,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Test graphics configuration and restoration
-        run: python3 tests/translation-layer/test_ue4_graphics.py -v
+        run: |
+          python3 tests/translation-layer/test_ue4_graphics.py -v
+          python3 tests/translation-layer/test_ue4_resolution_hook.py -v
       - name: Install XcodeGen
         run: brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
       - name: Download pinned official libraries and resources

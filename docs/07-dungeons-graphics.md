@@ -37,8 +37,29 @@ UE4 Android startup does not use. A device log showed a 1566x1300 host surface
 but an 864x720 Vulkan swapchain. The v2 change supplies text through the
 startup route implemented in Epic's Android `InitCommandLine`, and uses the
 direct `mcsf` option read by `FAndroidWindow::GetScreenRect`, independently of
-generated INI handling. The actual APK still needs a new on-device log to
-establish the result.
+generated INI handling. The v2 device log showed native 2752x2064 at startup,
+then a later 816x720 swapchain while the host stayed 2752x2064. Startup worked,
+but gameplay did not remain at native resolution.
+
+V3 additionally replaces the exported `FAndroidWindow::GetScreenRect` function
+for project `Dungeons` with Sharp enabled. Both known UE4 signatures are looked
+up by name. Every query returns the launch surface rounded down to multiples of
+eight, as UE4 Android normally requires. The change affects the engine window
+query upstream of rendering-target creation; it does not enlarge Vulkan's
+swapchain behind the engine's back. Installation runs before engine threads
+start and requires an exported function with at least 16 bytes in an executable
+section. The code cache is flushed. An unavailable export leaves the startup
+path active and produces a diagnostic. Game Default and other projects skip it.
+
+This does not establish which game setting caused the later resize, or guarantee
+that every game-specific resize uses this function. Device validation must show
+the v3 installation, calls to the replacement, and native presentation after
+gameplay loads and after resume. This is still a draft pending that check.
+
+Source references: Epic's UE4.26 Android window implementation at
+https://github.com/CFHH/UnrealEngine-4.26/blob/main/Engine/Source/Runtime/ApplicationCore/Private/Android/AndroidWindow.cpp
+and the older no-argument signature at
+https://github.com/folgerwang/UnrealEngine/blob/release/Engine/Source/Runtime/ApplicationCore/Private/Android/AndroidWindow.cpp.
 
 The log records the **requested** preset and surface dimensions, and explicitly
 logs when the startup asset/external file is served with `-mcsf=0`. Vulkan's
@@ -51,7 +72,11 @@ the actual APK on the device.
 
 ## Validation and build
 
-Run `python3 tests/translation-layer/test_ue4_graphics.py -v`. It compiles the real
+Run `python3 tests/translation-layer/test_ue4_graphics.py -v` and
+`python3 tests/translation-layer/test_ue4_resolution_hook.py -v`. The latter
+checks the actual loader patch routine's bounds, function-type and executable
+memory guards, writable-alias writes and cache flush size with fake ELF metadata.
+The former compiles the real
 portable C module with warnings as errors, then checks argument preservation,
 repeat application, byte-for-byte config restoration, preservation of unrelated
 later game changes and character data, and invalid inputs / I/O failures.
