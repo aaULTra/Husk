@@ -1,0 +1,62 @@
+name: Build Husk IPA
+
+# Run manually from Actions after this workflow is merged.
+# A clean build compiles Husk and its iOS dependencies.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build iOS IPA
+    runs-on: macos-15
+    timeout-minutes: 360
+
+    steps:
+      - name: Check out Husk fork
+        uses: actions/checkout@v4
+
+      - name: Set up Apple build tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Husk's GPU cross-build scripts use /opt/homebrew/bin,
+          # so use the standard Apple Silicon macOS runner.
+          test "$(uname -m)" = "arm64"
+          brew install meson ninja pkg-config xcodegen qemu cmake autoconf automake libtool python@3.12
+          echo "$(brew --prefix python@3.12)/libexec/bin" >> "$GITHUB_PATH"
+          rustup target add aarch64-apple-ios
+          xcodebuild -version
+          echo "Available build space:"
+          df -h .
+
+      - name: Compile Husk and create IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./scripts/ci_build.sh
+          test -s build/Husk.ipa
+          ls -lh build/Husk.ipa
+          df -h .
+
+      - name: Upload the installable IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Husk-LiveContainer-IPA
+          path: build/Husk.ipa
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+      - name: Upload diagnostic logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: husk-build-logs
+          path: |
+            build/logs/
+            build/stamps/
+          if-no-files-found: ignore
+          retention-days: 7
