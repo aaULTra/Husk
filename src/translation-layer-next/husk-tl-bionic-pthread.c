@@ -16,6 +16,7 @@
 #define _DARWIN_C_SOURCE
 #include "husk-tl-bionic.h"
 #include "husk-tl-ld.h"
+#include "husk-tl-thread-policy.h"
 
 #include <errno.h>
 #include <pthread.h>
@@ -478,7 +479,7 @@ static int b_kill(pthread_t t, int sig)
 
 static int b_setname_np(pthread_t t, const char *name)
 {
-    if (pthread_equal(t, pthread_self())) pthread_setname_np(name);
+    if (pthread_equal(t, pthread_self()) && pthread_setname_np(name) == 0) tl_thread_policy_named(name);
     return 0;
 }
 

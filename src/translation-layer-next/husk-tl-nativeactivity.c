@@ -17,6 +17,7 @@
 #include "husk-tl-gamepad.h"
 #include "husk-tl-vulkan.h"
 #include "husk-tl-ue4-graphics.h"
+#include "husk-tl-thread-policy.h"
 #include "husk-tl-jni.h"
 #include "husk-tl-internal.h"
 #include "husk-tl-ld.h"
@@ -352,6 +353,7 @@ bool tl_na_start(const tl_ga_config *cfg)
     tl_log_line("ue4 graphics: preset %s; offered surface %dx%d; startup-file override v2",
                 tl_ue4_efficiency_enabled() ? "Sharp / Efficient" : (tl_ue4_sharp_graphics_enabled() ? "Sharp / High Quality" : "Game Default"), cfg->width, cfg->height);
     const char *project = tl_ue4_meta("com.epicgames.ue4.GameActivity.ProjectName");
+    tl_thread_policy_activate(project);
     if (!tl_ue4_graphics_prepare(N.internal_dir, N.ext_dir, project))
         tl_log_line("ue4: graphics config could not be prepared completely; launch arguments will still be supplied");
     else

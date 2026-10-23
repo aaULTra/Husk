@@ -6,6 +6,7 @@
  */
 #define _DARWIN_C_SOURCE
 #include "husk-tl-bionic.h"
+#include "husk-tl-thread-policy.h"
 
 #include <crt_externs.h>
 #include <dlfcn.h>
@@ -589,7 +590,7 @@ static int bionic_prctl(int option, unsigned long a2, unsigned long a3, unsigned
 {
     (void)a3; (void)a4; (void)a5;
     switch (option) {
-    case 15: pthread_setname_np((const char *)a2); return 0;                 /* PR_SET_NAME */
+    case 15: if (pthread_setname_np((const char *)a2) == 0) tl_thread_policy_named((const char *)a2); return 0;                 /* PR_SET_NAME */
     case 16: pthread_getname_np(pthread_self(), (char *)a2, 16); return 0;   /* PR_GET_NAME */
     case 0x53564d41: return 0;                                               /* PR_SET_VMA (naming anonymous memory) */
     case 38: case 4: case 36: return 0;                                      /* NO_NEW_PRIVS, DUMPABLE, THP: accepted, nothing to do */

@@ -9,6 +9,7 @@
  */
 #define _DARWIN_C_SOURCE
 #include "husk-tl-ue4-graphics.h"
+#include "husk-tl-thread-policy.h"
 #include "husk-tl-bionic.h"
 const char *tl_ld_main_apk(void);
 #include "husk-tl-internal.h"
@@ -1661,7 +1662,9 @@ static long linux_syscall_impl(long a0, long a1, long a2, long a3, long a4, long
     case 134: case 135: return 0;                                                       /* rt_sigaction, rt_sigprocmask: accepted */
     case 233: return 0;                                                                 /* madvise */
     case 122: case 123: return 0;                                                       /* sched_setaffinity / getaffinity */
-    case 167: return 0;                                                                 /* prctl */
+    case 167:                                                                          /* prctl */
+        if (a0 == 15 && pthread_setname_np((const char *)a1) == 0) tl_thread_policy_named((const char *)a1);
+        return 0;
     case 160: { int tl_bionic_uname(void *); return tl_bionic_uname((void *)a0); }    /* uname: filled in, as the libc call is */
     case 47: {                                                                          /* fallocate: growing the file (Superpack maps it at its full size, then writes) */
         if (a1) return -95;

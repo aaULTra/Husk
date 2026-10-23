@@ -111,6 +111,7 @@ void husk_balloon_set_bytes(int64_t target_bytes);
 #include "../../translation-layer/husk-tl.h"
 #include "../../translation-layer-next/husk-tl-unity-app.h"
 #include "../../translation-layer-next/husk-tl-ue4-graphics.h"
+#include "../../translation-layer-next/husk-tl-thread-policy.h"
 #include "../../translation-layer-next/husk-console-host.h"
 
 /* LiveContainer guests reuse the host process. Resolve its actual URL scheme

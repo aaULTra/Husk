@@ -104,6 +104,19 @@ struct TLAppSettings: Codable, Equatable {
         }
     }
 
+    enum WorkerScheduling: Int, Codable, CaseIterable, Identifiable {
+        case gameDefault = 0, observe = 1, balanced = 2
+        var id: Int { rawValue }
+        var title: String {
+            switch self {
+            case .gameDefault: return "Game Default"
+            case .observe: return "Observe Only"
+            case .balanced: return "Balanced (Experimental)"
+            }
+        }
+    }
+    var workerScheduling: WorkerScheduling = .balanced
+
     enum EfficientFrameRate: Int, Codable, CaseIterable, Identifiable {
         case cool = 30, smooth = 60
         var id: Int { rawValue }
@@ -141,6 +154,7 @@ struct TLAppSettings: Codable, Equatable {
     // Settings written by an older Husk lack the keys a newer one added; each falls back to its default.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        workerScheduling = try c.decodeIfPresent(WorkerScheduling.self, forKey: .workerScheduling) ?? .balanced
         efficientFrameRate = try c.decodeIfPresent(EfficientFrameRate.self, forKey: .efficientFrameRate) ?? .smooth
         unrealGraphics = try c.decodeIfPresent(UnrealGraphics.self, forKey: .unrealGraphics) ?? .automatic
         orientation = try c.decodeIfPresent(Orientation.self, forKey: .orientation) ?? .auto
@@ -245,6 +259,9 @@ struct TLAppSettingsView: View {
                     Picker("Graphics", selection: $settings.unrealGraphics) {
                         ForEach(TLAppSettings.UnrealGraphics.allCases) { Text($0.title).tag($0) }
                     }
+                    Picker("Worker Scheduling", selection: $settings.workerScheduling) {
+                        ForEach(TLAppSettings.WorkerScheduling.allCases) { Text($0.title).tag($0) }
+                    }
                     LabeledContent("Active Preset", value: settings.usesEfficientGraphics(for: app) ? "Sharp / Efficient" : (settings.usesSharpGraphics(for: app) ? "Sharp / High Quality" : "Game Default"))
                     if settings.usesEfficientGraphics(for: app) {
                         Picker("Frame Limit", selection: $settings.efficientFrameRate) {
@@ -258,7 +275,9 @@ struct TLAppSettingsView: View {
                        + "lighter shadows and effects. The default target is 60 FPS; 30 FPS is an optional lower-power mode. "
                        + "When iOS reports serious heat, the cap drops to 30 FPS, or 20 at critical heat, and recovers after cooling. "
                        + "Sharp / High Quality keeps the previous maximum-quality preset. Game Default removes the overrides. "
-                       + "Close Husk completely and reopen after changing these settings.")
+                       + "For Dungeons only, Balanced caps named normal workers at Default QoS and background workers at Utility. "
+                       + "Other thread roles are preserved. Observe Only logs requested QoS without changing it. "
+                       + "This does not pin CPU cores and may affect frame times. Close Husk completely and reopen after changes.")
                 }
             }
 

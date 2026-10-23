@@ -86,6 +86,56 @@ https://developer.apple.com/documentation/foundation/timer/tolerance
 POSIX absolute-deadline rationale:
 https://pubs.opengroup.org/onlinepubs/009604599/functions/pthread_cond_timedwait.html
 
+## Role-aware worker scheduling
+
+Game Graphics > Worker Scheduling offers **Balanced (Experimental)** (the
+new default), **Observe Only**, and **Game Default**. Restart Husk after changes.
+The selected policy is passed through both full-screen and windowed launch
+paths, but activates only for the exact UE4 project metadata `Dungeons`.
+Other games, missing metadata, and invalid modes remain unchanged.
+
+Balanced caps *requested* QoS for explicitly named normal TaskGraph workers at
+Default, and background TaskGraph workers at Utility. It never raises an already
+lower requested class. Unspecified QoS is logged without modification because
+it cannot be faithfully restored with the public setter. High-priority workers,
+game/render/RHI/audio threads, and unknown names retain their current class.
+No worker-count split, CPU affinity, shader changes, or graphics reductions are
+introduced. Guest Linux priority and affinity calls retain their existing shim
+semantics. This policy cannot guarantee P-core/E-core placement.
+
+Epic's UE4.26 source names the pools `TaskGraphThreadNP`, `TaskGraphThreadBP`,
+and `TaskGraphThreadHP`. Its Android thread startup removes `Thread` and
+`Runnable` when shortening names to 15 characters, producing `TaskGraphNP 0`
+and `TaskGraphBP 0`. Both complete and shortened NP/BP forms, with an optional
+numeric index, are recognized; ambiguous or malformed names are left alone.
+The actual APK's pool names still require confirmation in its logs.
+
+The policy runs after successful self-thread naming through either guest
+`pthread_setname_np`, `prctl(PR_SET_NAME)`, or the raw Linux prctl syscall. Existing cross-thread naming
+requests remain as before and do not change another thread's QoS. Before a
+worker is reclassified after a rename, its original requested QoS and relative
+priority are restored. Failed API calls are logged and not recorded as successful
+changes. State is thread-local; no scheduling work is added to the frame loop.
+Diagnostics record at most 128 naming events, including class/relative priority
+before and after, chosen role, policy mode and API result. They measure requested
+QoS, not effective priority boosts or the physical core executing the thread.
+Observe Only emits these diagnostics without setting QoS; Game Default does
+neither. Balanced is experimental: reduced heat and sustained 60 FPS need an
+A/B mission comparison, and background tasks can still become dependencies.
+
+Fourteen new tests compile the actual policy with public-QoS API substitutes:
+matching and Android aliases, critical/unknown preservation, project scoping,
+all modes, lower/unspecified classes, relative-priority restoration, setter and
+restore failures, independent per-thread state, bounded diagnostics, and all three host-name-success/failure routes. All
+40 portable checks run before the iOS build. These prove policy behaviour, not
+Apple scheduler placement or game performance.
+
+Primary source references:
+- https://github.com/CFHH/UnrealEngine-4.26/blob/main/Engine/Source/Runtime/Core/Private/Async/TaskGraph.cpp
+- https://github.com/CFHH/UnrealEngine-4.26/blob/main/Engine/Source/Runtime/Core/Public/Android/AndroidPlatformRunnableThread.h
+- https://github.com/apple-oss-distributions/libpthread/blob/main/include/pthread/qos.h
+- https://developer.apple.com/documentation/xcode/scheduling-cpu-work-efficiently
+
 ## Priorities after this build
 
 1. Compare the same mission, camera and combat route for at least 15–20 minutes

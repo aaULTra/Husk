@@ -42,6 +42,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
     private let sharpGraphics: Bool
     private let efficientGraphics: Bool
     private let efficientFrameLimit: Int
+    private let threadPolicy: Int
     /// The app's other APKs -- splits, an asset pack -- which an SDL game's libraries and data may be in.
     private let extraApks: [String]
     private let dataDir: String
@@ -68,11 +69,12 @@ final class TLUnityUIView: UIView, UIKeyInput {
     /// Called when three fingers tap at once: the way back to the interface while it is hidden.
     var onThreeFingerTap: (() -> Void)?
 
-    init(apk: String, extraApks: [String] = [], dataDir: String, engine: TLNativeEngine, portrait: Bool = false, scale: CGFloat = 2, sharpGraphics: Bool = false, efficientGraphics: Bool = false, efficientFrameLimit: Int = 60) {
+    init(apk: String, extraApks: [String] = [], dataDir: String, engine: TLNativeEngine, portrait: Bool = false, scale: CGFloat = 2, sharpGraphics: Bool = false, efficientGraphics: Bool = false, efficientFrameLimit: Int = 60, threadPolicy: Int = 0) {
         self.apk = apk
         self.sharpGraphics = sharpGraphics
         self.efficientGraphics = efficientGraphics
         self.efficientFrameLimit = efficientFrameLimit
+        self.threadPolicy = threadPolicy
         self.portrait = portrait
         self.dataDir = dataDir
         self.engine = engine
@@ -320,6 +322,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
             // Unreal draws with Vulkan, which on this device is MoltenVK, a framework of the app's own.
             husk_ue4_set_sharp_graphics(sharpGraphics)
             husk_ue4_set_efficiency(efficientGraphics, Int32(efficientFrameLimit))
+            husk_ue4_set_thread_policy(Int32(threadPolicy))
             HuskLog.log("tl", "ue4: requested graphics preset: \(efficientGraphics ? "Sharp / Efficient" : (sharpGraphics ? "Sharp / High Quality" : "Game Default")), surface \(width)x\(height)")
             if let fw = Bundle.main.privateFrameworksPath { husk_ue4_set_vulkan(fw + "/MoltenVK.framework/MoltenVK") }
             started = husk_ue4_launch(apk, dataDir, layerPtr, Int32(width), Int32(height), angle, ca)
@@ -706,6 +709,7 @@ struct TLUnityScreen: UIViewRepresentable {
     var sharpGraphics: Bool = false
     var efficientGraphics: Bool = false
     var efficientFrameLimit: Int = 60
+    var threadPolicy: Int = 0
     var onStats: ((String) -> Void)? = nil
     var onThreeFingerTap: (() -> Void)? = nil
     /// One view per game for the life of the process. The engine's GPU surface belongs to this view's layer and an
@@ -713,9 +717,9 @@ struct TLUnityScreen: UIViewRepresentable {
     private static var shared: [String: TLUnityUIView] = [:]
 
     /// The game's one view, made the first time it is asked for.
-    static func view(apk: String, extraApks: [String], dataDir: String, engine: TLNativeEngine, portrait: Bool, scale: CGFloat, sharpGraphics: Bool = false, efficientGraphics: Bool = false, efficientFrameLimit: Int = 60) -> TLUnityUIView {
+    static func view(apk: String, extraApks: [String], dataDir: String, engine: TLNativeEngine, portrait: Bool, scale: CGFloat, sharpGraphics: Bool = false, efficientGraphics: Bool = false, efficientFrameLimit: Int = 60, threadPolicy: Int = 0) -> TLUnityUIView {
         if let view = shared[apk] { return view }
-        let view = TLUnityUIView(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine, portrait: portrait, scale: scale, sharpGraphics: sharpGraphics, efficientGraphics: efficientGraphics, efficientFrameLimit: efficientFrameLimit)
+        let view = TLUnityUIView(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine, portrait: portrait, scale: scale, sharpGraphics: sharpGraphics, efficientGraphics: efficientGraphics, efficientFrameLimit: efficientFrameLimit, threadPolicy: threadPolicy)
         shared[apk] = view
         return view
     }
@@ -726,7 +730,7 @@ struct TLUnityScreen: UIViewRepresentable {
             view.transform = .identity
             view.onStats = onStats; view.onThreeFingerTap = onThreeFingerTap; return view
         }
-        let view = TLUnityUIView(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine, portrait: portrait, scale: scale, sharpGraphics: sharpGraphics, efficientGraphics: efficientGraphics, efficientFrameLimit: efficientFrameLimit)
+        let view = TLUnityUIView(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine, portrait: portrait, scale: scale, sharpGraphics: sharpGraphics, efficientGraphics: efficientGraphics, efficientFrameLimit: efficientFrameLimit, threadPolicy: threadPolicy)
         view.onStats = onStats
         view.onThreeFingerTap = onThreeFingerTap
         Self.shared[apk] = view
@@ -897,7 +901,7 @@ struct TLCocosAttemptView: View {
                     // The game always has the whole screen: it is told its size once, as it starts, so nothing may take space from it.
                     // The bar and the log are drawn over it instead, and hiding them shows everything underneath.
                     TLUnityScreen(apk: apk, extraApks: Array(app.apks.dropFirst()), dataDir: dataDir, engine: engine, portrait: portrait,
-                                  scale: settings.renderScale(for: app), sharpGraphics: settings.usesSharpGraphics(for: app), efficientGraphics: settings.usesEfficientGraphics(for: app), efficientFrameLimit: settings.efficientFrameRate.rawValue, onStats: { stats = $0 }, onThreeFingerTap: { toggleInterface() })
+                                  scale: settings.renderScale(for: app), sharpGraphics: settings.usesSharpGraphics(for: app), efficientGraphics: settings.usesEfficientGraphics(for: app), efficientFrameLimit: settings.efficientFrameRate.rawValue, threadPolicy: settings.workerScheduling.rawValue, onStats: { stats = $0 }, onThreeFingerTap: { toggleInterface() })
                         .background(Color.black)
                     .overlay {
                         // A game whose menus answer only a controller: with none paired, one on the glass. Hiding the bar leaves
