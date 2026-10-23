@@ -51,10 +51,35 @@ start and requires an exported function with at least 16 bytes in an executable
 section. The code cache is flushed. An unavailable export leaves the startup
 path active and produces a diagnostic. Game Default and other projects skip it.
 
-This does not establish which game setting caused the later resize, or guarantee
-that every game-specific resize uses this function. Device validation must show
-the v3 installation, calls to the replacement, and native presentation after
-gameplay loads and after resume. This is still a draft pending that check.
+The v3 log confirmed installation and calls returning 2424x1816, followed by
+another 816x720 swapchain. The later resize therefore is not constrained by the
+Android window query.
+
+V4 additionally hooks `FSystemResolution::RequestResolutionChange(int,int,
+EWindowMode::Type)`. The supplied Dungeons `libUE4.so`, ELF build ID
+`2b5d2a005213e32589cdd34f53882fe49e02cd4f`, contains this function at virtual
+address `0xb203870`, size 424. Disassembly confirms direct calls from
+`UGameUserSettings::ApplyResolutionSettings` at `0xac14c38` and
+`UGameViewportClient::HandleSetResCommand` at `0xac240b8`.
+`UGameUserSettings::ApplySettings` calls `ApplyResolutionSettings` directly at
+`0xac14d84`; the game's user-settings initializer calls the settings object's
+virtual apply method independently of Android's window query.
+
+The hook logs positive incoming resolution requests, replaces differing sizes
+with the native launch size, and calls the original function. Window mode,
+original CVar priority and resize/delegate logic are preserved. Nonpositive
+requests pass through unchanged. No APK or game-save bytes are changed. Exact
+symbol lookup and the existing executable-section guards are followed by a
+16-byte prologue comparison. The reviewed instructions only adjust the stack
+and store callee-saved registers; none is PC relative or uses x16. A trampoline
+executes them once and jumps back to the original function after those bytes.
+Unexpected code or allocation failure leaves the function unmodified and logs
+that the v4 override is unavailable. Installation happens before engine startup.
+
+The provided log alone does not establish that a particular caller caused the
+816x720 switch. Device validation must show the v4 request log and native
+presentation after gameplay loads and resume. A direct CVar/viewport path could
+still bypass this request function. The PR remains a draft pending this check.
 
 Source references: Epic's UE4.26 Android window implementation at
 https://github.com/CFHH/UnrealEngine-4.26/blob/main/Engine/Source/Runtime/ApplicationCore/Private/Android/AndroidWindow.cpp
@@ -74,8 +99,12 @@ the actual APK on the device.
 
 Run `python3 tests/translation-layer/test_ue4_graphics.py -v` and
 `python3 tests/translation-layer/test_ue4_resolution_hook.py -v`. The latter
-checks the actual loader patch routine's bounds, function-type and executable
-memory guards, writable-alias writes and cache flush size with fake ELF metadata.
+checks the actual loader patch routines' bounds, function-type and executable
+memory guards, writable-alias writes, prologue mismatch and allocation failures,
+trampoline continuation, cache flush sizes and native request forwarding with
+mode preservation. There are 15 portable tests total. Local ARM64 emulation
+also verified the supplied game's displaced prologue and stack/register state
+when executing the trampoline back into the original function.
 The former compiles the real
 portable C module with warnings as errors, then checks argument preservation,
 repeat application, byte-for-byte config restoration, preservation of unrelated

@@ -479,27 +479,54 @@ void *tl_ld_sym(tl_lib *lib, const char *name)
     return NULL;
 }
 
-bool tl_ld_replace_function(tl_lib *lib, const char *name, void *replacement)
+static uint8_t *function_patch_site(tl_lib *lib, const char *name)
 {
-    if (!lib || !name || !replacement) return false;
+    if (!lib || !name) return NULL;
     const elf_sym *s = lib_find(lib, name);
-    /* ldr x16, #8; br x16; .quad replacement. No relocated prologue or
-     * trampoline is needed because the complete function is replaced. */
-    if (!s || (s->st_info & 0xf) != 2 || s->st_size < 16 || (s->st_value & 3)) return false;
+    if (!s || (s->st_info & 0xf) != 2 || s->st_size < 16 || (s->st_value & 3)) return NULL;
     bool code = false;
     for (int i = 0; i < lib->ncode; i++)
         if (s->st_value >= lib->code[i].start && s->st_value < lib->code[i].end &&
             lib->code[i].end - s->st_value >= 16) code = true;
-    if (!code) return false;
+    if (!code) return NULL;
     uint8_t *rx = sym_value(lib, s);
-    if (!tl_xmem_is_rx(rx)) return false;
-    uint8_t *rw = rx + tl_xmem_delta();
+    return tl_xmem_is_rx(rx) ? rx : NULL;
+}
+
+static void write_absolute_jump(uint8_t *rw, const void *replacement)
+{
     const uint32_t jump[] = { 0x58000050u, 0xD61F0200u };
     uintptr_t target = (uintptr_t)replacement;
     memcpy(rw, jump, sizeof(jump));
     memcpy(rw + sizeof(jump), &target, sizeof(target));
+}
+
+bool tl_ld_replace_function(tl_lib *lib, const char *name, void *replacement)
+{
+    uint8_t *rx = function_patch_site(lib, name);
+    if (!rx || !replacement) return false;
+    /* ldr x16, #8; br x16; .quad replacement. */
+    write_absolute_jump(rx + tl_xmem_delta(), replacement);
     tl_xmem_flush(rx, 16);
     return true;
+}
+
+void *tl_ld_hook_prologue(tl_lib *lib, const char *name, void *replacement,
+                         const uint32_t expected[4])
+{
+    uint8_t *rx = function_patch_site(lib, name);
+    if (!rx || !replacement || !expected || memcmp(rx, expected, 16)) return NULL;
+    uint8_t *trampoline_rx, *trampoline_rw;
+    if (!tl_xmem_alloc(32, &trampoline_rx, &trampoline_rw)) return NULL;
+    /* Only a caller-reviewed prologue may be copied. This is intentionally
+     * not a general instruction relocator: no PC-relative code is accepted
+     * at the call site in nativeactivity.c. The branch clobbers only x16. */
+    memcpy(trampoline_rw, rx, 16);
+    write_absolute_jump(trampoline_rw + 16, rx + 16);
+    tl_xmem_flush(trampoline_rx, 32);
+    write_absolute_jump(rx + tl_xmem_delta(), replacement);
+    tl_xmem_flush(rx, 16);
+    return trampoline_rx;
 }
 
 /* dlsym(handle) as bionic's: the library, then what it needs, breadth-first (ART finds a dependency's JNI_OnLoad this way:

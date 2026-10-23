@@ -145,6 +145,21 @@ static bool patch_return(tl_lib *lib, const char *symbol, unsigned value)
  * Resolve exact exported names, never guessed addresses or instruction scans. */
 typedef struct { int32_t left, top, right, bottom; } tl_ue4_screen_rect;
 static tl_ue4_screen_rect sharp_screen_rect;
+typedef void (*tl_ue4_resolution_request)(int, int, int);
+static tl_ue4_resolution_request original_resolution_request;
+static void sharp_request_resolution(int width, int height, int mode)
+{
+    if (width > 0 && height > 0 &&
+        (width != sharp_screen_rect.right || height != sharp_screen_rect.bottom)) {
+        tl_log_line("ue4 graphics: resolution request v4 %dx%d -> %dx%d, mode %d",
+                    width, height, sharp_screen_rect.right, sharp_screen_rect.bottom, mode);
+        width = sharp_screen_rect.right;
+        height = sharp_screen_rect.bottom;
+    }
+    /* Preserve mode, the original CVar priority, delegates and engine resize
+     * behaviour. Do not directly resize Vulkan images or persist game saves. */
+    original_resolution_request(width, height, mode);
+}
 static atomic_uint sharp_rect_calls;
 static tl_ue4_screen_rect sharp_get_screen_rect(void)
 {
@@ -177,6 +192,22 @@ static void install_sharp_screen_rect(tl_lib *ue, const char *project, int width
     }
     if (!installed)
         tl_log_line("ue4 graphics: native engine screen rect override v3 unavailable; keeping startup override only");
+
+    /* Verified in the supplied libUE4.so (build ID
+     * 2b5d2a005213e32589cdd34f53882fe49e02cd4f), function at 0xb203870:
+     * sub sp,sp,#0x60; stp x22,x21,[sp,#0x30];
+     * stp x20,x19,[sp,#0x40]; stp x29,x30,[sp,#0x50].
+     * All four are PC independent and neither read nor write x16.
+     * ApplySettings -> ApplyResolutionSettings and HandleSetResCommand call
+     * this function directly, independently of GetScreenRect. */
+    static const uint32_t prologue[4] = {
+        0xD10183FFu, 0xA90357F6u, 0xA9044FF4u, 0xA9057BFDu
+    };
+    original_resolution_request = (tl_ue4_resolution_request)tl_ld_hook_prologue(
+        ue, "_ZN17FSystemResolution23RequestResolutionChangeEiiN11EWindowMode4TypeE",
+        (void *)sharp_request_resolution, prologue);
+    tl_log_line("ue4 graphics: saved-resolution request override v4 %s",
+                original_resolution_request ? "installed" : "unavailable (engine prologue did not match or allocation failed)");
 }
 
 /* The OBB the engine looks for: <package>.obb in the OBB directory, named main.<version>.<package>.obb. */

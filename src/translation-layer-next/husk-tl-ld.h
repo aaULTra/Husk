@@ -73,6 +73,11 @@ void *tl_ld_sym(tl_lib *lib, const char *name);
 /* Replace an exported function before any guest threads execute it. Refuses
  * non-functions, undersized symbols and addresses outside executable code. */
 bool tl_ld_replace_function(tl_lib *lib, const char *name, void *replacement);
+/* Retain the original through a trampoline. The caller supplies an exact,
+ * reviewed 16-byte PC-independent prologue; mismatches are never patched.
+ * Install before guest threads start. NULL means no patch was installed. */
+void *tl_ld_hook_prologue(tl_lib *lib, const char *name, void *replacement,
+                         const uint32_t expected[4]);
 void *tl_ld_sym_deep(tl_lib *lib, const char *name, tl_lib **found_in);   /* the library, then its dependencies, as bionic's dlsym(handle) */
 
 /* The library an address belongs to (either view), and the nearest exported symbol. */
