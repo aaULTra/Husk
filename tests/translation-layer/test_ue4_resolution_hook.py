@@ -69,6 +69,8 @@ size_t trampoline_flush_size(void) { return trampoline_flushed; }
         native = (ROOT / "src/translation-layer-next/husk-tl-nativeactivity.c").read_text()
         start = native.index("static void sharp_request_resolution(")
         wrapper = native[start:native.index("\n}\n", start) + 3]
+        start = native.index("static bool sharp_parse_resolution(")
+        parse_wrapper = native[start:native.index("\n}\n", start) + 3]
         harness += r'''
 #include <stdarg.h>
 typedef struct { int left, top, right, bottom; } Rect;
@@ -77,9 +79,16 @@ static int passed[3];
 static void record_request(int w, int h, int mode) { passed[0]=w; passed[1]=h; passed[2]=mode; }
 static void (*original_resolution_request)(int,int,int) = record_request;
 static void tl_log_line(const char *format, ...) { (void)format; }
+static bool record_parse(const uint16_t *text, uint32_t *w, uint32_t *h, int *mode) {
+    (void)w; (void)h; (void)mode; return text[0] != 0;
+}
+static bool (*original_parse_resolution)(const uint16_t *,uint32_t *,uint32_t *,int *) = record_parse;
 '''
-        harness += wrapper + r'''
+        harness += wrapper + parse_wrapper + r'''
 const int *exercise_request(int w, int h, int mode) { sharp_request_resolution(w,h,mode); return passed; }
+int exercise_parse(int valid, uint32_t *w, uint32_t *h, int *mode) {
+    const uint16_t text[] = {valid != 0,0}; return sharp_parse_resolution(text,w,h,mode);
+}
 '''
         path = Path(cls.tmp.name)
         (path / "hook.c").write_text(harness)
@@ -137,6 +146,16 @@ const int *exercise_request(int w, int h, int mode) { sharp_request_resolution(w
         self.assertEqual(list(self.lib.exercise_request(2424,1816,2)[:3]), [2424,1816,2])
         self.assertEqual(list(self.lib.exercise_request(0,0,1)[:3]), [0,0,1])
         self.assertEqual(list(self.lib.exercise_request(-1,720,0)[:3]), [-1,720,0])
+
+    def test_parser_preserves_validation_and_mode_and_overrides_positive_sizes(self):
+        for valid, w, h in ((1,816,720),(1,2424,1816),(0,816,720),(1,0,720),(1,816,0)):
+            for mode in (0,1,2):
+                x,y,m = ctypes.c_uint32(w),ctypes.c_uint32(h),ctypes.c_int(mode)
+                result = self.lib.exercise_parse(valid,ctypes.byref(x),ctypes.byref(y),ctypes.byref(m))
+                expected = (2424,1816) if valid and w and h else (w,h)
+                self.assertEqual(bool(result),bool(valid))
+                self.assertEqual((x.value,y.value),expected)
+                self.assertEqual(m.value,mode)
 
 
 if __name__ == "__main__":

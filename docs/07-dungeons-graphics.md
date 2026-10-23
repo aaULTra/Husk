@@ -76,10 +76,21 @@ executes them once and jumps back to the original function after those bytes.
 Unexpected code or allocation failure leaves the function unmodified and logs
 that the v4 override is unavailable. Installation happens before engine startup.
 
+Further disassembly confirms that the game's `ExecuteResolutionCommand` builds
+the literal `r.SetRes ` (string at `0x595eb35`) and invokes a controller method.
+That direct CVar path can bypass `RequestResolutionChange`.
+`SystemResolutionSinkCallback` calls `ParseResolution` at `0xb1e7fb0`, targeting
+`0xb1e612c`, size 1480. V4 hooks this parser too, using its independently verified
+stack-store prologue. It calls the original parser first, preserves validity
+and parsed window mode, and changes only valid positive dimensions. Failed or
+zero-size parses retain their outputs. This covers both engine requests and
+the direct CVar path actually present in the game library. It logs
+`parsed resolution v4 ... -> ...` when a parsed size changes.
+
 The provided log alone does not establish that a particular caller caused the
-816x720 switch. Device validation must show the v4 request log and native
-presentation after gameplay loads and resume. A direct CVar/viewport path could
-still bypass this request function. The PR remains a draft pending this check.
+816x720 switch. Device validation must show the v4 request/parser logs and native
+presentation after gameplay loads and resume. A direct viewport resize could
+still bypass these paths. The PR remains a draft pending this check.
 
 Source references: Epic's UE4.26 Android window implementation at
 https://github.com/CFHH/UnrealEngine-4.26/blob/main/Engine/Source/Runtime/ApplicationCore/Private/Android/AndroidWindow.cpp
@@ -102,7 +113,8 @@ Run `python3 tests/translation-layer/test_ue4_graphics.py -v` and
 checks the actual loader patch routines' bounds, function-type and executable
 memory guards, writable-alias writes, prologue mismatch and allocation failures,
 trampoline continuation, cache flush sizes and native request forwarding with
-mode preservation. There are 15 portable tests total. Local ARM64 emulation
+mode preservation, and parser validity/zero-size handling. There are 16 portable
+tests total. Local ARM64 emulation
 also verified the supplied game's displaced prologue and stack/register state
 when executing the trampoline back into the original function.
 The former compiles the real

@@ -147,6 +147,20 @@ typedef struct { int32_t left, top, right, bottom; } tl_ue4_screen_rect;
 static tl_ue4_screen_rect sharp_screen_rect;
 typedef void (*tl_ue4_resolution_request)(int, int, int);
 static tl_ue4_resolution_request original_resolution_request;
+typedef bool (*tl_ue4_parse_resolution)(const uint16_t *, uint32_t *, uint32_t *, int *);
+static tl_ue4_parse_resolution original_parse_resolution;
+static bool sharp_parse_resolution(const uint16_t *text, uint32_t *width, uint32_t *height, int *mode)
+{
+    bool valid = original_parse_resolution(text, width, height, mode);
+    if (valid && *width > 0 && *height > 0 &&
+        (*width != (uint32_t)sharp_screen_rect.right || *height != (uint32_t)sharp_screen_rect.bottom)) {
+        tl_log_line("ue4 graphics: parsed resolution v4 %ux%u -> %dx%d, mode %d",
+                    *width, *height, sharp_screen_rect.right, sharp_screen_rect.bottom, *mode);
+        *width = (uint32_t)sharp_screen_rect.right;
+        *height = (uint32_t)sharp_screen_rect.bottom;
+    }
+    return valid;
+}
 static void sharp_request_resolution(int width, int height, int mode)
 {
     if (width > 0 && height > 0 &&
@@ -208,6 +222,20 @@ static void install_sharp_screen_rect(tl_lib *ue, const char *project, int width
         (void *)sharp_request_resolution, prologue);
     tl_log_line("ue4 graphics: saved-resolution request override v4 %s",
                 original_resolution_request ? "installed" : "unavailable (engine prologue did not match or allocation failed)");
+
+    /* The game's ExecuteResolutionCommand constructs "r.SetRes ", bypassing
+     * RequestResolutionChange. Its value is consumed by SystemResolutionSinkCallback
+     * through ParseResolution (BL at 0xb1e7fb0 -> 0xb1e612c). Keep the original
+     * parser's validation and mode handling; change only valid positive sizes.
+     * Reviewed prefix: sub sp,sp,#0xb0; stp x28,x27,[sp,#0x50];
+     * stp x26,x25,[sp,#0x60]; stp x24,x23,[sp,#0x70]. */
+    static const uint32_t parse_prologue[4] = {
+        0xD102C3FFu, 0xA9056FFCu, 0xA90667FAu, 0xA9075FF8u
+    };
+    original_parse_resolution = (tl_ue4_parse_resolution)tl_ld_hook_prologue(
+        ue, "_Z15ParseResolutionPKDsRjS1_Ri", (void *)sharp_parse_resolution, parse_prologue);
+    tl_log_line("ue4 graphics: r.SetRes parser override v4 %s",
+                original_parse_resolution ? "installed" : "unavailable (engine prologue did not match or allocation failed)");
 }
 
 /* The OBB the engine looks for: <package>.obb in the OBB directory, named main.<version>.<package>.obb. */
