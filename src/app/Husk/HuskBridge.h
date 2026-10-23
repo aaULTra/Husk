@@ -112,4 +112,24 @@ void husk_balloon_set_bytes(int64_t target_bytes);
 #include "../../translation-layer-next/husk-tl-unity-app.h"
 #include "../../translation-layer-next/husk-console-host.h"
 
+/* LiveContainer guests reuse the host process. Resolve its actual URL scheme
+ * through the LC runtime so game shortcuts work with livecontainer2/3 as well.
+ * This selector exists only in LC. Do not hard-link against LC internals. */
+#ifdef __OBJC__
+#import <Foundation/Foundation.h>
+#import <objc/runtime.h>
+#include <stdlib.h>
+
+static inline NSString * _Nullable husk_livecontainer_host_scheme(void) {
+    if (!getenv("LC_HOME_PATH")) return nil;
+    Class cls = [NSUserDefaults class];
+    SEL selector = sel_registerName("lcAppUrlScheme");
+    Method method = class_getClassMethod(cls, selector);
+    if (!method) return nil;
+    id (*getter)(id, SEL) = (id (*)(id, SEL))method_getImplementation(method);
+    id value = getter(cls, selector);
+    return [value isKindOfClass:[NSString class]] ? value : nil;
+}
+#endif
+
 #endif /* HUSK_BRIDGE_H */
