@@ -1,45 +1,75 @@
 name: Build Husk IPA
 
-# Run manually from Actions after this workflow is merged.
-# A clean build compiles Husk and its iOS dependencies.
+# Builds this repository's Husk source with the previously verified staging approach.
+# Avoids recompiling WebKit ANGLE (which fails on the hosted compiler).
 on:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: husk-ipa-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build iOS IPA
-    runs-on: macos-15
-    timeout-minutes: 360
+    runs-on: macos-latest
+    timeout-minutes: 120
 
     steps:
       - name: Check out Husk fork
         uses: actions/checkout@v4
 
-      - name: Set up Apple build tools
+      - name: Install XcodeGen
         shell: bash
         run: |
           set -euo pipefail
-          # Husk's GPU cross-build scripts use /opt/homebrew/bin,
-          # so use the standard Apple Silicon macOS runner.
-          test "$(uname -m)" = "arm64"
-          brew install meson ninja pkg-config xcodegen qemu cmake autoconf automake libtool python@3.12
-          echo "$(brew --prefix python@3.12)/libexec/bin" >> "$GITHUB_PATH"
-          rustup target add aarch64-apple-ios
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
           xcodebuild -version
-          echo "Available build space:"
-          df -h .
 
-      - name: Compile Husk and create IPA
+      - name: Download verified official base libraries and game resources
         shell: bash
         run: |
           set -euo pipefail
-          ./scripts/ci_build.sh
+          mkdir -p build
+          curl --fail --location --retry 3 \
+            https://github.com/Leviidev/Husk/releases/download/3.0/Husk.ipa \
+            --output build/Husk-3.0-base.ipa
+          # Verifies the SHA256 and stages dependencies only, not the donor app executable.
+          python3 scripts/stage_graphics_build.py build/Husk-3.0-base.ipa
+
+      - name: Install Rust iOS target
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add aarch64-apple-ios
+
+      - name: Cache Rust pairing dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src/rppairing-ios/target
+          key: husk-pairing-${{ runner.os }}-${{ hashFiles('src/rppairing-ios/Cargo.lock') }}
+
+      - name: Build pairing library
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/build_rppairing_ios.sh
+
+      - name: Build this fork's Husk app and package IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/package_ipa.sh "$PWD/build/Husk.ipa"
           test -s build/Husk.ipa
           ls -lh build/Husk.ipa
-          df -h .
 
       - name: Upload the installable IPA
         uses: actions/upload-artifact@v4
@@ -50,13 +80,13 @@ jobs:
           compression-level: 0
           retention-days: 7
 
-      - name: Upload diagnostic logs on failure
+      - name: Upload compiler log on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: husk-build-logs
           path: |
+            /tmp/husk_ipa/build.log
             build/logs/
-            build/stamps/
           if-no-files-found: ignore
           retention-days: 7
