@@ -20,6 +20,7 @@
 
 #include "husk-tl-bionic.h"
 #include "husk-tl-ld.h"
+#include "husk-tl-ue4-graphics.h"
 
 void *tl_nwindow_native(void *window);
 int tl_nwindow_width(void *window);
@@ -304,6 +305,8 @@ static int w_vkCreateSwapchainKHR(void *device, const void *ci, const void *allo
     memcpy(&usage, c + 56, 4); memcpy(&alpha, c + 84, 4); memcpy(&mode, c + 88, 4);
     int r = real ? real(device, ci, alloc, out) : -3;
     tl_log_line("vulkan: vkCreateSwapchainKHR %ux%u images %u format %u colorspace %u usage %#x compositeAlpha %u presentMode %u -> %d", w, h, minimg, fmt, cs, usage, alpha, mode, r);
+    if (r == VK_SUCCESS && tl_ue4_sharp_graphics_enabled())
+        tl_log_line("ue4 graphics: actual presentation buffer %ux%u (inspect this size to verify the resolution change; not a measurement of internal 3D resolution)", w, h);
     /* MoltenVK changes the layer from this thread, which has no run loop: make sure the changes are committed rather than waiting for a transaction nothing will flush. */
     [CATransaction flush];
     log_layer_state(g_swapchain_layer, "after swapchain");

@@ -24,6 +24,10 @@ class GraphicsTests(unittest.TestCase):
         cls.lib.tl_ue4_graphics_prepare.restype = ctypes.c_bool
         cls.lib.tl_ue4_graphics_command_line.argtypes = [ctypes.c_char_p]
         cls.lib.tl_ue4_graphics_command_line.restype = ctypes.c_void_p
+        cls.lib.tl_ue4_graphics_command_asset.argtypes = [ctypes.c_char_p, ctypes.c_void_p, ctypes.c_size_t]
+        cls.lib.tl_ue4_graphics_command_asset.restype = ctypes.c_void_p
+        cls.lib.tl_ue4_graphics_command_file.argtypes = [ctypes.c_char_p]
+        cls.lib.tl_ue4_graphics_command_file.restype = ctypes.c_void_p
         cls.libc = ctypes.CDLL(None)
         cls.libc.free.argtypes = [ctypes.c_void_p]
 
@@ -110,10 +114,61 @@ class GraphicsTests(unittest.TestCase):
     def test_arguments_keep_existing_flags_and_use_config_not_console_execution(self):
         self.lib.husk_ue4_set_sharp_graphics(True)
         args = self.command(b"-vulkan -custom=1")
-        self.assertTrue(args.startswith("-vulkan -custom=1 -ini:Engine:"))
+        self.assertTrue(args.startswith("-vulkan -custom=1 -mcsf=0 -ini:Engine:"))
         self.assertIn("[SystemSettings]:r.ScreenPercentage=100", args)
         self.assertIn("[SystemSettings]:r.DepthOfFieldQuality=0", args)
         self.assertNotIn("ExecCmds", args)
+
+    def owned(self, p):
+        self.assertTrue(p)
+        try:
+            return ctypes.string_at(p).decode()
+        finally:
+            self.libc.free(p)
+
+    def test_startup_asset_keeps_project_and_replaces_old_scale_flag(self):
+        self.lib.husk_ue4_set_sharp_graphics(True)
+        base = b'"../../../Dungeons/My Project.uproject" -vulkan -mcsf=1 -custom=7\r\n'
+        args = self.owned(self.lib.tl_ue4_graphics_command_asset(b"UE4CommandLine.txt", base, len(base)))
+        self.assertIn('"../../../Dungeons/My Project.uproject"', args)
+        self.assertIn("-vulkan", args)
+        self.assertIn("-custom=7", args)
+        self.assertNotIn("-mcsf=1", args)
+        self.assertEqual(args.lower().count("mcsf="), 1)
+        self.assertIn("-mcsf=0", args)
+        self.assertNotIn("\n", args)
+
+    def test_startup_overlay_is_scoped_and_handles_absent_asset(self):
+        self.assertFalse(self.lib.tl_ue4_graphics_command_asset(b"UE4CommandLine.txt", None, 0))
+        self.lib.husk_ue4_set_sharp_graphics(True)
+        self.assertFalse(self.lib.tl_ue4_graphics_command_asset(b"OtherAsset.txt", b"x", 1))
+        self.assertFalse(self.lib.tl_ue4_graphics_command_asset(b"UE4CommandLine.txt", b"a\0b", 3))
+        self.assertFalse(self.lib.tl_ue4_graphics_command_asset(b"UE4CommandLine.txt", b"x" * 16000, 16000))
+        self.assertIn("-mcsf=0", self.owned(self.lib.tl_ue4_graphics_command_asset(b"UE4CommandLine.txt", None, 0)))
+
+    def test_external_startup_overlay_preserves_file_and_first_line_semantics(self):
+        p = Path(self.tmp.name) / "ue4commandline.txt"
+        original = b'../../../Dungeons/Dungeons.uproject -mcsf=2 -custom=9\nignored-second-line\n'
+        p.write_bytes(original)
+        self.assertFalse(self.lib.tl_ue4_graphics_command_file(os.fsencode(p)))
+        self.lib.husk_ue4_set_sharp_graphics(True)
+        args = self.owned(self.lib.tl_ue4_graphics_command_file(os.fsencode(p)))
+        self.assertIn("Dungeons.uproject", args)
+        self.assertIn("-custom=9", args)
+        self.assertNotIn("mcsf=2", args)
+        self.assertNotIn("ignored-second-line", args)
+        self.assertNotIn("\n", args)
+        self.assertEqual(p.read_bytes(), original)
+        p.unlink()
+        self.assertFalse(self.lib.tl_ue4_graphics_command_file(os.fsencode(p)))
+
+    def test_scale_flag_removal_respects_quotes_and_case(self):
+        self.lib.husk_ue4_set_sharp_graphics(True)
+        args = self.command(b'"a path/mcsf=1.uproject" "-MCSF=2" mcsf=1 -keep="two words"')
+        self.assertIn('"a path/mcsf=1.uproject"', args)
+        self.assertIn('-keep="two words"', args)
+        self.assertNotIn('"-MCSF=2"', args)
+        self.assertNotIn(" mcsf=1 ", args)
 
 
 if __name__ == "__main__":

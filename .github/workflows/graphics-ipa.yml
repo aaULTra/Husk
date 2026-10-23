@@ -11,13 +11,17 @@ on:
       - 'src/translation-layer-next/husk-tl-ue4-graphics.*'
       - 'src/translation-layer-next/husk-tl-jni-ue4.c'
       - 'src/translation-layer-next/husk-tl-nativeactivity.c'
+      - 'src/translation-layer-next/husk-tl-bionic-ndk.c'
+      - 'src/translation-layer-next/husk-tl-bionic-io.c'
+      - 'src/translation-layer-next/husk-tl-bionic-str.c'
+      - 'src/translation-layer-next/husk-tl-vulkan.m'
       - 'scripts/stage_graphics_build.py'
       - '.github/workflows/graphics-ipa.yml'
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: dungeons-graphics-${{ github.ref }}
+  group: dungeons-graphics-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 jobs:
   build:

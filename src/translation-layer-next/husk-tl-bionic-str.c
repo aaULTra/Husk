@@ -32,6 +32,7 @@
 
 const char *tl_path_resolve(const char *path, char *buf, size_t n);   /* husk-tl-bionic-io.c */
 int tl_synth_open(const char *path);
+int tl_ue4_graphics_file_open(const char *path);
 int tl_atomic_open(const char *real, int dflags, unsigned mode);
 void tl_atomic_closed(int fd);
 void tl_atomic_abandon(int fd);
@@ -236,6 +237,14 @@ static int b_vsscanf(const char *s, const char *fmt, tl_va_list *ap) { return tl
 
 static void *b_fopen(const char *path, const char *mode)
 {
+    if (mode[0] == 'r' && !strchr(mode, '+')) {
+        int startup = tl_ue4_graphics_file_open(path);
+        if (startup >= 0) {
+            FILE *f = fdopen(startup, mode);
+            if (!f) close(startup);
+            return f;
+        }
+    }
     char buf[1024];
     int sfd = tl_synth_open(path);
     if (sfd >= 0) return fdopen(sfd, mode[0] == 'r' ? "r" : "r");

@@ -2,9 +2,11 @@
 #define _POSIX_C_SOURCE 200809L
 #include "husk-tl-ue4-graphics.h"
 #include <errno.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -28,24 +30,93 @@ static const char *const values[] = {
 };
 
 void husk_ue4_set_sharp_graphics(bool enabled) { sharp = enabled; }
+bool tl_ue4_sharp_graphics_enabled(void) { return sharp; }
+
+/* FParse::Value takes the first matching mcsf= token. Remove old copies, while
+ * preserving quoted project paths and unrelated options, before adding ours. */
+static char *without_mcsf(const char *base)
+{
+    char *out = malloc(strlen(base) + 1);
+    if (!out) return NULL;
+    size_t used = 0;
+    for (const char *p = base; *p;) {
+        const char *start = p;
+        while (isspace((unsigned char)*p)) p++;
+        memcpy(out + used, start, (size_t)(p - start)); used += (size_t)(p - start);
+        if (!*p) break;
+        start = p;
+        bool quoted = false;
+        while (*p && (quoted || !isspace((unsigned char)*p))) {
+            if (*p == '"' && (p == start || p[-1] != '\\')) quoted = !quoted;
+            p++;
+        }
+        const char *key = start;
+        if (*key == '"') key++;
+        if (*key == '-') key++;
+        if ((size_t)(p - key) < 5 || strncasecmp(key, "mcsf=", 5)) {
+            memcpy(out + used, start, (size_t)(p - start)); used += (size_t)(p - start);
+        }
+    }
+    while (used && isspace((unsigned char)out[used - 1])) used--;
+    out[used] = 0;
+    return out;
+}
 
 char *tl_ue4_graphics_command_line(const char *base)
 {
     if (!base) base = "";
     if (!sharp) return strdup(base);
-    const char prefix[] = " -ini:Engine:";
+    char *clean = without_mcsf(base);
+    if (!clean) return NULL;
+    const char prefix[] = " -mcsf=0 -ini:Engine:";
     const char section[] = "[SystemSettings]:";
-    size_t bytes = strlen(base) + sizeof(prefix);
+    size_t bytes = strlen(clean) + sizeof(prefix);
     for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++)
         bytes += strlen(section) + strlen(values[i]) + 1;
     char *out = malloc(bytes);
-    if (!out) return NULL;
-    strcpy(out, base); strcat(out, prefix);
+    if (!out) { free(clean); return NULL; }
+    strcpy(out, clean); free(clean); strcat(out, prefix);
     for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++) {
         if (i) strcat(out, ",");
         strcat(out, section); strcat(out, values[i]);
     }
     return out;
+}
+
+static bool is_command_file(const char *name)
+{
+    if (!name) return false;
+    const char *last = strrchr(name, '/');
+    return !strcasecmp(last ? last + 1 : name, "UE4CommandLine.txt");
+}
+
+char *tl_ue4_graphics_command_asset(const char *name, const void *data, size_t length)
+{
+    if (!sharp || !is_command_file(name) || length >= 16384 || (length && !data)) return NULL;
+    /* Embedded NULs are not command-line text. Never truncate a project path. */
+    if (length && memchr(data, 0, length)) return NULL;
+    char *base = malloc(length + 1);
+    if (!base) return NULL;
+    if (length) memcpy(base, data, length);
+    base[length] = 0;
+    char *out = tl_ue4_graphics_command_line(base);
+    free(base);
+    /* UE4's InitCommandLine uses a 16 KiB buffer. Refuse a partial override. */
+    if (out && strlen(out) >= 16383) { free(out); return NULL; }
+    return out;
+}
+
+char *tl_ue4_graphics_command_file(const char *path)
+{
+    if (!sharp || !is_command_file(path)) return NULL;
+    FILE *f = fopen(path, "rb");
+    if (!f) return NULL; /* missing override must not erase the packaged project arguments */
+    char line[16384];
+    char *got = fgets(line, sizeof(line), f);
+    bool failed = ferror(f) || (got && !strchr(line, '\n') && !feof(f));
+    fclose(f);
+    if (failed) return NULL;
+    return tl_ue4_graphics_command_asset(path, got ? line : "", got ? strlen(line) : 0);
 }
 
 static bool make_parents(char *path)

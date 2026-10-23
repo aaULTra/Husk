@@ -8,6 +8,7 @@
  * errno in the guest's own numbering.
  */
 #define _DARWIN_C_SOURCE
+#include "husk-tl-ue4-graphics.h"
 #include "husk-tl-bionic.h"
 const char *tl_ld_main_apk(void);
 #include "husk-tl-internal.h"
@@ -95,6 +96,21 @@ static int synth_file_n(const void *content, size_t n)
     unlink(tmpl);
     if (write(fd, content, n) != (ssize_t)n) { close(fd); return -1; }
     lseek(fd, 0, SEEK_SET);
+    return fd;
+}
+
+/* UE4's external startup file can replace the APK's command line. Overlay its
+ * first line in memory, only for read-only opens, keeping the real file intact. */
+const char *tl_path_resolve(const char *path, char *buf, size_t n);
+int tl_ue4_graphics_file_open(const char *path)
+{
+    if (!tl_ue4_sharp_graphics_enabled()) return -1;
+    char mapped[1024];
+    char *command = tl_ue4_graphics_command_file(tl_path_resolve(path, mapped, sizeof(mapped)));
+    if (!command) return -1;
+    int fd = synth_file(command);
+    free(command);
+    if (fd >= 0) tl_log_line("ue4 graphics: serving external startup file with -mcsf=0: %s", path);
     return fd;
 }
 
@@ -549,6 +565,10 @@ static void fill_lib_standin_at(int dirfd, const char *name)
 }
 static int b_open(const char *path, int flags, unsigned mode)
 {
+    if ((flags & 3) == 0) {
+        int startup = tl_ue4_graphics_file_open(path);
+        if (startup >= 0) return startup;
+    }
     char buf[1024]; static __thread char content[32768];
     jar_entry jar;
     if (jar_lookup(path, &jar)) {
