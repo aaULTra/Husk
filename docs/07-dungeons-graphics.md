@@ -123,11 +123,11 @@ Observe Only emits these diagnostics without setting QoS; Game Default does
 neither. Balanced is experimental: reduced heat and sustained 60 FPS need an
 A/B mission comparison, and background tasks can still become dependencies.
 
-Fourteen new tests compile the actual policy with public-QoS API substitutes:
+Sixteen new tests compile the actual policy with public-QoS API substitutes:
 matching and Android aliases, critical/unknown preservation, project scoping,
 all modes, lower/unspecified classes, relative-priority restoration, setter and
-restore failures, independent per-thread state, bounded diagnostics, and all three host-name-success/failure routes. All
-40 portable checks run before the iOS build. These prove policy behaviour, not
+restore and query failures, independent per-thread state, bounded diagnostics, and all three host-name-success/failure routes. All
+42 portable checks run before the iOS build. These prove policy behaviour, not
 Apple scheduler placement or game performance.
 
 Primary source references:

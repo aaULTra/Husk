@@ -31,7 +31,7 @@ class ThreadPolicyTests(unittest.TestCase):
 #define QOS_CLASS_DEFAULT 0x15
 #define QOS_CLASS_USER_INITIATED 0x19
 #define QOS_CLASS_USER_INTERACTIVE 0x21
-qos_class_t pthread_get_qos_class_np(pthread_t, int *);
+int pthread_get_qos_class_np(pthread_t, qos_class_t *, int *);
 int pthread_set_qos_class_self_np(qos_class_t, int);
 ''')
         source = r'''
@@ -40,10 +40,12 @@ int pthread_set_qos_class_self_np(qos_class_t, int);
 #include <string.h>
 #include "husk-tl-thread-policy.c"
 static _Thread_local unsigned fake_qos;
-static _Thread_local int fake_relative, next_failure;
+static _Thread_local int fake_relative, next_failure, query_failure_at, queries;
 static atomic_int writes, lines;
-qos_class_t pthread_get_qos_class_np(pthread_t t, int *relative) {
- (void)t; *relative = fake_relative; return fake_qos;
+int pthread_get_qos_class_np(pthread_t t, qos_class_t *qos, int *relative) {
+ (void)t;
+ if (++queries == query_failure_at) return 22;
+ *qos = fake_qos; *relative = fake_relative; return 0;
 }
 int pthread_set_qos_class_self_np(qos_class_t qos, int relative) {
  atomic_fetch_add(&writes, 1);
@@ -52,7 +54,7 @@ int pthread_set_qos_class_self_np(qos_class_t qos, int relative) {
 }
 void tl_log_line(const char *fmt, ...) { (void)fmt; atomic_fetch_add(&lines, 1); }
 void reset_fake(unsigned qos, int relative, int mode, const char *project) {
- memset(&state, 0, sizeof(state)); fake_qos = qos; fake_relative = relative; next_failure = 0;
+ memset(&state, 0, sizeof(state)); fake_qos = qos; fake_relative = relative; next_failure = 0; query_failure_at = 0; queries = 0;
  atomic_store(&writes, 0); atomic_store(&lines, 0);
  husk_ue4_set_thread_policy(mode); tl_thread_policy_activate(project);
 }
@@ -60,6 +62,7 @@ unsigned current_qos(void) { return fake_qos; }
 int current_relative(void) { return fake_relative; }
 int write_count(void) { return atomic_load(&writes); }
 int log_count(void) { return atomic_load(&lines); }
+void fail_query_after(int calls) { query_failure_at = queries + calls; }
 void fail_next(int rc) { next_failure = rc; }
 void external_qos(unsigned qos, int relative) { fake_qos = qos; fake_relative = relative; }
 static void *other_thread(void *p) {
@@ -169,6 +172,21 @@ void exercise_naming(int path, const char *name, int failure) {
         self.lib.fail_next(1); self.name(b'RenderThread')
         self.assertEqual(self.lib.current_qos(), UTILITY)
         self.name(b'RenderThread')
+        self.assertEqual((self.lib.current_qos(), self.lib.current_relative()), (HIGH, -2))
+
+    def test_initial_query_failure_preserves_qos_and_saved_restore_state(self):
+        self.reset(); self.lib.fail_query_after(1); self.name(b'TaskGraphBP 0')
+        self.assertEqual((self.lib.current_qos(), self.lib.write_count()), (HIGH, 0))
+        self.name(b'TaskGraphBP 0')
+        self.lib.fail_query_after(1); self.name(b'RenderThread')
+        self.assertEqual((self.lib.current_qos(), self.lib.write_count()), (UTILITY, 1))
+        self.name(b'RenderThread')
+        self.assertEqual((self.lib.current_qos(), self.lib.current_relative()), (HIGH, -2))
+
+    def test_after_query_failure_does_not_forget_successful_cap(self):
+        self.reset(); self.lib.fail_query_after(2); self.name(b'TaskGraphNP 0')
+        self.assertEqual((self.lib.current_qos(), self.lib.write_count()), (NORMAL, 1))
+        self.name(b'GameThread')
         self.assertEqual((self.lib.current_qos(), self.lib.current_relative()), (HIGH, -2))
 
     def test_uncapped_external_qos_change_is_not_overridden(self):

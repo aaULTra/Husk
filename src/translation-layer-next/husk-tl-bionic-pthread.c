@@ -395,7 +395,7 @@ static int b_attr_getstacksize(const guest_attr *a, size_t *n) { *n = a->stack_s
 /* Scheduling attributes: a thread on this host runs at the system's own priority; the guest is told the default (SCHED_OTHER, priority 0) and its requests are accepted. */
 static int b_attr_getschedparam(const guest_attr *a, int *prio) { (void)a; *prio = 0; return 0; }
 static int b_attr_getschedpolicy(const guest_attr *a, int *policy) { (void)a; *policy = 0; return 0; }
-/* the inherit-scheduling choice: kept, as nothing here schedules threads differently */
+/* Guest inherit-scheduling attributes are kept; name-based QoS policy is separate. */
 static int b_attr_setinheritsched(void *a, int v) { (void)a; return v == 0 || v == 1 ? 0 : 22; }
 static int b_attr_getinheritsched(const void *a, int *v) { (void)a; if (v) *v = 0; return 0; }
 static int b_attr_setschedpolicy(guest_attr *a, int policy) { (void)a; (void)policy; return 0; }

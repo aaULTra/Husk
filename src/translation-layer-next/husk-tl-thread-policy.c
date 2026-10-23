@@ -64,7 +64,14 @@ void tl_thread_policy_named(const char *name)
     int mode = atomic_load(&active_mode);
     if (!mode || !name || !*name) return;
     int before_relative = 0;
-    qos_class_t before = pthread_get_qos_class_np(pthread_self(), &before_relative);
+    qos_class_t before = QOS_CLASS_UNSPECIFIED;
+    int query_result = pthread_get_qos_class_np(pthread_self(), &before, &before_relative);
+    if (query_result) {
+        if (atomic_fetch_add(&log_events, 1) < 128)
+            tl_log_line("thread-policy: name='%s' mode=%d initial QoS query failed rc=%d; policy unchanged",
+                        name, mode, query_result);
+        return;
+    }
     if (!state.changed) {
         state.original = before;
         state.relative = before_relative;
@@ -83,11 +90,12 @@ void tl_thread_policy_named(const char *name)
         if (!result) state.changed = true;
     }
     int after_relative = 0;
-    qos_class_t after = pthread_get_qos_class_np(pthread_self(), &after_relative);
+    qos_class_t after = QOS_CLASS_UNSPECIFIED;
+    query_result = pthread_get_qos_class_np(pthread_self(), &after, &after_relative);
     if (atomic_fetch_add(&log_events, 1) < 128)
-        tl_log_line("thread-policy: name='%s' role=%s mode=%d requested QoS %#x/%d -> %#x/%d rc=%d; core placement not measured",
+        tl_log_line("thread-policy: name='%s' role=%s mode=%d requested QoS %#x/%d -> %#x/%d rc=%d after_query_rc=%d; core placement not measured",
                     name, role == 1 ? "normal-worker" : role == 2 ? "background-worker" : "preserve",
-                    mode, (unsigned)before, before_relative, (unsigned)after, after_relative, result);
+                    mode, (unsigned)before, before_relative, (unsigned)after, after_relative, result, query_result);
 }
 #else
 void tl_thread_policy_named(const char *name) { (void)name; }
