@@ -63,6 +63,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
     /// mean time one frame takes it. Refreshed once a second from the runtime's own counters.
     private let stats = UILabel()
     private var statsTimer: Timer?
+    private var lifecycleObservers: [NSObjectProtocol] = []
 
     /// Called when three fingers tap at once: the way back to the interface while it is hidden.
     var onThreeFingerTap: (() -> Void)?
@@ -125,9 +126,9 @@ final class TLUnityUIView: UIView, UIKeyInput {
             addGestureRecognizer(back)
             // The keyboard covers the bottom of the app: its views are told (an adjustResize window shrinks above it).
             for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
-                NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                lifecycleObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
                     self?.keyboardMoved(note)
-                }
+                })
             }
         } else if engine == .flutter {
             TLUnityUIView.cocosView = self
@@ -138,18 +139,22 @@ final class TLUnityUIView: UIView, UIKeyInput {
             addGestureRecognizer(back)
             // The keyboard covers the bottom of the app: Flutter is told, and moves the focused field above it.
             for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
-                NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                lifecycleObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
                     self?.keyboardMoved(note)
-                }
+                })
             }
         }
         // The GPU is not the app's while it is in the background: stop drawing, and carry on when it returns.
-        NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { _ in
+        lifecycleObservers.append(NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
             husk_unity_set_paused(true)
-        }
-        NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
-            if self?.window != nil { husk_unity_set_paused(false) }
-        }
+            self?.statsTimer?.invalidate()
+            self?.statsTimer = nil
+        })
+        lifecycleObservers.append(NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            guard let self, self.window != nil else { return }
+            husk_unity_set_paused(false)
+            self.updateStatsTimer()
+        })
     }
 
     @objc private func threeFingerTapped() { onThreeFingerTap?() }
@@ -199,7 +204,19 @@ final class TLUnityUIView: UIView, UIKeyInput {
         husk_flutter_set_keyboard_inset(Int32((covered * contentScaleFactor).rounded()))
     }
 
-    deinit { statsTimer?.invalidate(); NotificationCenter.default.removeObserver(self) }
+    deinit {
+        statsTimer?.invalidate()
+        for observer in lifecycleObservers { NotificationCenter.default.removeObserver(observer) }
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    private func updateStatsTimer() {
+        statsTimer?.invalidate()
+        statsTimer = nil
+        guard window != nil, UIApplication.shared.applicationState == .active else { return }
+        statsTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in self?.updateStats() }
+        statsTimer?.tolerance = 0.1
+    }
 
     private func updateStats() {
         var p = husk_unity_perf()
@@ -243,11 +260,9 @@ final class TLUnityUIView: UIView, UIKeyInput {
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        statsTimer?.invalidate()
-        statsTimer = nil
+        updateStatsTimer()
         if window != nil {
-            husk_unity_set_paused(false)
-            statsTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in self?.updateStats() }
+            husk_unity_set_paused(UIApplication.shared.applicationState != .active)
         } else {
             husk_unity_set_paused(true)
             if isFirstResponder { resignFirstResponder() }
@@ -720,33 +735,59 @@ struct TLUnityScreen: UIViewRepresentable {
     func updateUIView(_ view: TLUnityUIView, context: Context) { view.onStats = onStats; view.onThreeFingerTap = onThreeFingerTap }
 }
 
-/// Polls the runtime for the status line and its log, ten times a second at most.
+/// Poll quickly during startup and once per second during gameplay. Copy the
+/// runtime log only when visible (or stopped), and only when its bytes changed.
 @MainActor
 final class TLUnityModel: ObservableObject {
     @Published var state: Int32 = 0
     @Published var frames: UInt = 0
     @Published var logText = ""
     private var timer: Timer?
-    private var ticks = 0
+    private var pollInterval: TimeInterval = 0
+    private var polling = false
+    private var logVisible = false
+    private var logRevision: UInt64 = 0
 
     func start() {
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.poll() }
-        }
+        guard UIApplication.shared.applicationState == .active else { return }
+        polling = true
+        poll()
     }
 
-    func stop() { timer?.invalidate(); timer = nil }
+    private func schedulePolling() {
+        guard polling else { return }
+        let interval: TimeInterval = state == Int32(HUSK_UNITY_RUNNING) ? 1.0 : 0.25
+        guard timer == nil || interval != pollInterval else { return }
+        timer?.invalidate()
+        pollInterval = interval
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.poll() }
+        }
+        timer?.tolerance = interval * 0.1
+    }
+
+    func stop() { polling = false; timer?.invalidate(); timer = nil }
+
+    func setLogVisible(_ visible: Bool) {
+        logVisible = visible
+        if visible { refreshLog() }
+    }
+
+    private func refreshLog() {
+        guard let c = husk_tl_attempt_log_if_changed(&logRevision) else { return }
+        defer { free(c) }
+        let text = String(cString: c)
+        if text != logText { logText = text }
+    }
 
     private func poll() {
-        ticks += 1
-        state = husk_unity_state()
-        frames = husk_unity_frames()
-        if ticks % 4 == 0, let c = husk_tl_attempt_log() {
-            let text = String(cString: c)
-            free(c)
-            if text != logText { logText = text }
-        }
+        guard polling else { return }
+        let nextState = husk_unity_state()
+        let nextFrames = husk_unity_frames()
+        if state != nextState { state = nextState }
+        if frames != nextFrames { frames = nextFrames }
+        if logVisible || state == Int32(HUSK_UNITY_FAILED) || state == Int32(HUSK_UNITY_ENDED) { refreshLog() }
+        schedulePolling()
     }
 
     var statusText: String {
@@ -909,8 +950,13 @@ struct TLCocosAttemptView: View {
             if uiHidden { showHint() }
             CrashReport.gameStarted(app)
             padLayout = PadLayout.load(app.id)
+            model.setLogVisible(showLog && !uiHidden)
             model.start()
         }
+        .onChange(of: showLog) { model.setLogVisible($0 && !uiHidden) }
+        .onChange(of: uiHidden) { model.setLogVisible(showLog && !$0) }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in model.stop() }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in model.start() }
         // What happened, for the library: ten seconds of frames is a game that plays; a refusal is one that did not start.
         .onChange(of: model.frames) { f in
             if f > 600, model.state == Int32(HUSK_UNITY_RUNNING) { GameStatusStore.shared.record(app.id, .plays) }

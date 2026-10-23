@@ -15,6 +15,10 @@ on:
       - 'src/translation-layer-next/husk-tl-bionic-io.c'
       - 'src/translation-layer-next/husk-tl-bionic-str.c'
       - 'src/translation-layer-next/husk-tl-vulkan.m'
+      - 'src/translation-layer-next/husk-tl-bionic-pthread.c'
+      - 'src/translation-layer/husk-tl-load.c'
+      - 'src/translation-layer/husk-tl.h'
+      - 'tests/translation-layer/test_source_efficiency.py'
       - 'scripts/stage_graphics_build.py'
       - '.github/workflows/graphics-ipa.yml'
   workflow_dispatch:
@@ -33,6 +37,7 @@ jobs:
         run: |
           python3 tests/translation-layer/test_ue4_graphics.py -v
           python3 tests/translation-layer/test_ue4_resolution_hook.py -v
+          python3 tests/translation-layer/test_source_efficiency.py -v
       - name: Install XcodeGen
         run: brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
       - name: Download pinned official libraries and resources

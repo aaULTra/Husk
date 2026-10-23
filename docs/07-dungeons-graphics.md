@@ -45,6 +45,47 @@ intervals over 120% of the selected frame budget, thermal state and cap. These
 are producer/present timing measurements, **not GPU execution time** or proof
 of internal 3D resolution.
 
+## Additional source-based efficiency pass
+
+These changes do not need phone logs to establish that work is redundant. They
+are not measured FPS or temperature improvements:
+
+- Log snapshots now have a revision cursor. An unchanged log requires no full
+  allocation, copy or Swift string conversion. The original unconditional
+  snapshot remains for crash reports and exports; failed allocations do not
+  consume updates. The underlying diagnostic log is retained in full.
+- The gameplay model copies log text only when its panel is visible, or the
+  engine has stopped. Opening the panel refreshes it immediately.
+- Running-game UI state polling changes from four checks per second to one.
+  Startup retains the faster interval. Identical state/frame values are not
+  republished. Rendering and input are not driven by these timers.
+- UI timers have 10% scheduling tolerance. Statistics and model timers stop
+  while the application is inactive, and resume when active, in both full-screen
+  and windowed screens. Notification block tokens are released with their view.
+- `sem_timedwait` passes the guest's absolute realtime deadline to the existing
+  realtime host condition variable. Lock contention and spurious wake-ups no
+  longer restart the timeout. Already-available tokens still succeed even if
+  the supplied deadline is expired or invalid.
+- The Vulkan frame pacer avoids its second monotonic clock read when it did not
+  sleep. Native resolution, the 60 FPS target and the GPU libraries are retained.
+
+CI now runs 26 tests: configuration and pacing, guarded resolution hooks, and
+compiled real log-snapshot/semaphore routines. The new tests cover unchanged and
+independent readers, allocation-failure retries, repeated spurious wake-ups,
+expired/invalid deadlines, and immediately available semaphore tokens.
+
+This exhausts the currently established source-level redundancies in this pass,
+not every possible optimization. Pipeline caching/warm-up needs an audit of the
+actual game's cache calls and storage; Vulkan synchronization, buffering and
+command encoding need evidence of the bottleneck. These are deliberately not
+hardcoded from guesses. Next collect a sustained baseline on the unfolded Duo
+and 13-inch M4 iPad Pro, then profile and change one significant variable at a time.
+
+Apple timer guidance:
+https://developer.apple.com/documentation/foundation/timer/tolerance
+POSIX absolute-deadline rationale:
+https://pubs.opengroup.org/onlinepubs/009604599/functions/pthread_cond_timedwait.html
+
 ## Priorities after this build
 
 1. Compare the same mission, camera and combat route for at least 15–20 minutes

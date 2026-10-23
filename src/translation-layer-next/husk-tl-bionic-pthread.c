@@ -309,15 +309,12 @@ static int b_sem_trywait(void *g)
 static int b_sem_timedwait(void *g, const struct timespec *abs)
 {
     host_sem *s = hs(g);
-    struct timespec now, rel;
-    clock_gettime(CLOCK_REALTIME, &now);
-    rel.tv_sec = abs->tv_sec - now.tv_sec;
-    rel.tv_nsec = abs->tv_nsec - now.tv_nsec;
-    if (rel.tv_nsec < 0) { rel.tv_sec--; rel.tv_nsec += 1000000000L; }
-    if (rel.tv_sec < 0) { rel.tv_sec = 0; rel.tv_nsec = 0; }
     pthread_mutex_lock(&s->m);
     int r = 0;
-    while (s->count <= 0 && r == 0) r = pthread_cond_timedwait_relative_np(&s->c, &s->m, &rel);
+    /* make_sem uses a default CLOCK_REALTIME condition variable. Pass the
+     * guest's absolute deadline directly: lock contention and spurious wakes
+     * must not restart the timeout or require repeated clock conversions. */
+    while (s->count <= 0 && r == 0) r = pthread_cond_timedwait(&s->c, &s->m, abs);
     if (r == 0) s->count--;
     pthread_mutex_unlock(&s->m);
     if (r) { tl_set_guest_errno(tl_errno_to_guest(r)); return -1; }

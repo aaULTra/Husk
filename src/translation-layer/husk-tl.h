@@ -73,6 +73,9 @@ int  husk_tl_attempt_start(const char *const *apks, int count, int seconds);
 bool husk_tl_attempt_done(int *exit_code);
 int  husk_tl_attempt_frames(void);
 char *husk_tl_attempt_log(void);
+/* Caller owns returned bytes. NULL means unchanged or allocation failure;
+ * revision is advanced only after a successful snapshot. Initialise it to 0. */
+char *husk_tl_attempt_log_if_changed(uint64_t *revision);
 void husk_tl_attempt_stop(void);
 void husk_tl_attempt_reset(void);
 

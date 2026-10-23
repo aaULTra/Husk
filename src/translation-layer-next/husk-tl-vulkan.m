@@ -377,8 +377,8 @@ static void pace_efficient_frame(void)
     if (delay > 0) {
         struct timespec wait = { .tv_sec = delay / 1000000000LL, .tv_nsec = delay % 1000000000LL };
         while (nanosleep(&wait, &wait) != 0 && errno == EINTR) {}
+        now = monotonic_ns();
     }
-    now = monotonic_ns();
     /* Present-to-present wall-clock cadence including pacing, not GPU time.
      * Discard background/loading gaps instead of reporting them as gameplay. */
     if (previous && now - previous < 1000000000LL) {
