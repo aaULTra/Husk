@@ -1,29 +1,6 @@
 name: Build Dungeons Efficient 60 FPS IPA
+# Legacy manual build; automatic builds use the original Build Husk IPA workflow.
 on:
-  push:
-    branches: [codex/dungeons-efficient-native]
-  pull_request:
-    paths:
-      - 'src/app/Husk/TLAppSettings.swift'
-      - 'src/app/Husk/TLUnityView.swift'
-      - 'src/app/Husk/AppWindows.swift'
-      - 'src/app/Husk/HuskBridge.h'
-      - 'src/translation-layer-next/husk-tl-ue4-graphics.*'
-      - 'src/translation-layer-next/husk-tl-jni-ue4.c'
-      - 'src/translation-layer-next/husk-tl-nativeactivity.c'
-      - 'src/translation-layer-next/husk-tl-bionic-ndk.c'
-      - 'src/translation-layer-next/husk-tl-bionic-io.c'
-      - 'src/translation-layer-next/husk-tl-bionic-str.c'
-      - 'src/translation-layer-next/husk-tl-vulkan.m'
-      - 'src/translation-layer-next/husk-tl-bionic-pthread.c'
-      - 'src/translation-layer-next/husk-tl-bionic.c'
-      - 'src/translation-layer-next/husk-tl-thread-policy.*'
-      - 'tests/translation-layer/test_thread_policy.py'
-      - 'src/translation-layer/husk-tl-load.c'
-      - 'src/translation-layer/husk-tl.h'
-      - 'tests/translation-layer/test_source_efficiency.py'
-      - 'scripts/stage_graphics_build.py'
-      - '.github/workflows/graphics-ipa.yml'
   workflow_dispatch:
 permissions:
   contents: read

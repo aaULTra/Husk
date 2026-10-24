@@ -3,6 +3,8 @@ name: Build Husk IPA
 # Builds this repository's Husk source with the previously verified staging approach.
 # Avoids recompiling WebKit ANGLE (which fails on the hosted compiler).
 on:
+  push:
+    branches: [codex/dungeons-efficient-native]
   workflow_dispatch:
     inputs:
       source_ref:
@@ -28,7 +30,7 @@ jobs:
       - name: Check out Husk fork
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.source_ref }}
+          ref: ${{ inputs.source_ref || github.sha }}
           fetch-depth: 0
 
       - name: Verify sharp-resolution source and run regression checks

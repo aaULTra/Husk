@@ -124,12 +124,34 @@ struct TLAppSettings: Codable, Equatable {
     }
     var efficientFrameRate: EfficientFrameRate = .smooth
 
+    enum EfficientResolution: Int, Codable, CaseIterable, Identifiable {
+        case automatic = 0, native = 100, sharp = 85, balanced = 75, performance = 65
+        var id: Int { rawValue }
+        var title: String {
+            switch self {
+            case .automatic: return "Automatic · Device Display"
+            case .native: return "Native · 100%"
+            case .sharp: return "Sharp · 85%"
+            case .balanced: return "Balanced · 75%"
+            case .performance: return "Performance · 65%"
+            }
+        }
+    }
+    var efficientResolution: EfficientResolution = .automatic
+
     func usesEfficientGraphics(for app: TLApp) -> Bool {
         usesSharpGraphics(for: app) && (unrealGraphics == .automatic || unrealGraphics == .efficientHigh)
     }
 
     @MainActor func renderScale(for app: TLApp) -> CGFloat {
-        usesSharpGraphics(for: app) ? UIScreen.main.scale : resolution.scale
+        guard usesSharpGraphics(for: app) else { return resolution.scale }
+        let screen = UIScreen.main
+        guard usesEfficientGraphics(for: app) else { return screen.scale }
+        let fraction = tl_ue4_resolution_fraction(
+            Int32((screen.bounds.width * screen.scale).rounded()),
+            Int32((screen.bounds.height * screen.scale).rounded()),
+            UIDevice.current.userInterfaceIdiom == .pad, Int32(efficientResolution.rawValue))
+        return screen.scale * CGFloat(fraction)
     }
 
     var orientation: Orientation = .auto
@@ -154,6 +176,7 @@ struct TLAppSettings: Codable, Equatable {
     // Settings written by an older Husk lack the keys a newer one added; each falls back to its default.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        efficientResolution = try c.decodeIfPresent(EfficientResolution.self, forKey: .efficientResolution) ?? .automatic
         workerScheduling = try c.decodeIfPresent(WorkerScheduling.self, forKey: .workerScheduling) ?? .balanced
         efficientFrameRate = try c.decodeIfPresent(EfficientFrameRate.self, forKey: .efficientFrameRate) ?? .smooth
         unrealGraphics = try c.decodeIfPresent(UnrealGraphics.self, forKey: .unrealGraphics) ?? .automatic
@@ -250,7 +273,7 @@ struct TLAppSettingsView: View {
             } header: {
                 Text("Display")
             } footer: {
-                Text("\(settings.usesSharpGraphics(for: app) ? "The graphics preset uses Native resolution." : settings.resolution.detail) Orientation and resolution apply the next time the game starts, and a game already "
+                Text("\(settings.usesEfficientGraphics(for: app) ? "Use Game Graphics to choose the rendering resolution." : (settings.usesSharpGraphics(for: app) ? "The graphics preset uses Native resolution." : settings.resolution.detail)) Orientation and resolution apply the next time the game starts, and a game already "
                    + "running in this session needs Husk closed and opened again.")
             }
 
@@ -264,6 +287,9 @@ struct TLAppSettingsView: View {
                     }
                     LabeledContent("Active Preset", value: settings.usesEfficientGraphics(for: app) ? "Sharp / Efficient" : (settings.usesSharpGraphics(for: app) ? "Sharp / High Quality" : "Game Default"))
                     if settings.usesEfficientGraphics(for: app) {
+                        Picker("Rendering Resolution", selection: $settings.efficientResolution) {
+                            ForEach(TLAppSettings.EfficientResolution.allCases) { Text($0.title).tag($0) }
+                        }
                         Picker("Frame Limit", selection: $settings.efficientFrameRate) {
                             ForEach(TLAppSettings.EfficientFrameRate.allCases) { Text($0.title).tag($0) }
                         }
@@ -271,8 +297,9 @@ struct TLAppSettingsView: View {
                 } header: {
                     Text("Game Graphics")
                 } footer: {
-                    Text("Automatic uses Sharp / Efficient for Minecraft Dungeons: native resolution, high texture detail, 8× filtering, "
+                    Text("Automatic uses Sharp / Efficient for Minecraft Dungeons: a display-based resolution budget, high texture detail, 8× filtering, "
                        + "lighter shadows and effects. The default target is 60 FPS; 30 FPS is an optional lower-power mode. "
+                       + "Automatic resolution uses a larger pixel budget on iPad than iPhone and never exceeds native size. This is a starting point, not a measured optimum or an FPS guarantee. Percentages scale both dimensions. Open a folding device to the desired display before restarting Husk; live folding is not supported. "
                        + "When iOS reports serious heat, the cap drops to 30 FPS, or 20 at critical heat, and recovers after cooling. "
                        + "Sharp / High Quality keeps the previous maximum-quality preset. Game Default removes the overrides. "
                        + "For Dungeons only, Balanced caps named normal workers at Default QoS and background workers at Utility. "

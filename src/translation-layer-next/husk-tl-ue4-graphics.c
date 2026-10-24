@@ -13,6 +13,23 @@
 static bool sharp;
 static bool efficient;
 static int frame_limit = 60;
+double tl_ue4_resolution_fraction(int width, int height, bool tablet, int percent)
+{
+    if (width <= 0 || height <= 0) return 1.0;
+    if (percent == 65 || percent == 75 || percent == 85 || percent == 100)
+        return percent / 100.0;
+    /* Larger tablets retain more spatial detail. Phones use a smaller pixel
+     * budget even when their native display is very dense. Current dimensions
+     * distinguish a smaller outer display from a larger inner display without
+     * guessing model identifiers or depending on undocumented fold APIs. */
+    int longer = width > height ? width : height;
+    int shorter = width > height ? height : width;
+    double long_budget = tablet ? 2304.0 : 2048.0;
+    double short_budget = tablet ? 1600.0 : 1280.0;
+    double fraction = long_budget / longer;
+    if (short_budget / shorter < fraction) fraction = short_budget / shorter;
+    return fraction < 1.0 ? fraction : 1.0;
+}
 static const char begin[] = "; BEGIN HUSK SHARP GRAPHICS v1\n";
 static const char end[] = "; END HUSK SHARP GRAPHICS v1\n";
 /* Runtime quality CVars only: do not change feature level, shader permutations,

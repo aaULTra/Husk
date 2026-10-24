@@ -19,6 +19,8 @@ class GraphicsTests(unittest.TestCase):
                         "-shared", "-fPIC", str(ROOT / "src/translation-layer-next/husk-tl-ue4-graphics.c"),
                         "-o", str(library)], check=True)
         cls.lib = ctypes.CDLL(str(library))
+        cls.lib.tl_ue4_resolution_fraction.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_bool, ctypes.c_int]
+        cls.lib.tl_ue4_resolution_fraction.restype = ctypes.c_double
         cls.lib.husk_ue4_set_sharp_graphics.argtypes = [ctypes.c_bool]
         cls.lib.husk_ue4_set_efficiency.argtypes = [ctypes.c_bool, ctypes.c_int]
         cls.lib.tl_ue4_effective_frame_limit.argtypes = [ctypes.c_int]
@@ -50,6 +52,31 @@ class GraphicsTests(unittest.TestCase):
 
     def prepare(self, project=b"Dungeons"):
         return self.lib.tl_ue4_graphics_prepare(*(os.fsencode(p) for p in self.roots), project)
+
+    def test_resolution_budget_preserves_aspect_and_is_orientation_independent(self):
+        f = self.lib.tl_ue4_resolution_fraction
+        for tablet in (False, True):
+            for w, h in ((2752, 2064), (2400, 1800), (2400, 1080), (1280, 720)):
+                scale = f(w, h, tablet, 0)
+                self.assertGreater(scale, 0)
+                self.assertLessEqual(scale, 1)
+                self.assertEqual(scale, f(h, w, tablet, 0))
+                self.assertLessEqual(max(w, h) * scale, 2304 if tablet else 2048)
+                self.assertLessEqual(min(w, h) * scale, 1600 if tablet else 1280)
+
+    def test_resolution_budget_retains_more_detail_on_tablet_and_never_upscales(self):
+        f = self.lib.tl_ue4_resolution_fraction
+        self.assertGreater(f(2752, 2064, True, 0), f(2752, 2064, False, 0))
+        self.assertEqual(f(1280, 720, False, 0), 1)
+        self.assertEqual(f(0, 720, True, 0), 1)
+        self.assertEqual(f(-1, 720, False, 0), 1)
+        self.assertEqual(f(2400, 1800, False, -1), f(2400, 1800, False, 0))
+
+    def test_manual_resolution_allows_repeatable_native_comparisons(self):
+        f = self.lib.tl_ue4_resolution_fraction
+        for percent in (65, 75, 85, 100):
+            self.assertEqual(f(2752, 2064, True, percent), percent / 100)
+            self.assertEqual(f(2400, 1800, False, percent), percent / 100)
 
     def command(self, base):
         p = self.lib.tl_ue4_graphics_command_line(base)

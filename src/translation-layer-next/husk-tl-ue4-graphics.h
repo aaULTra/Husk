@@ -7,8 +7,12 @@
 
 /* Set before starting the engine; one engine is loaded for the process's lifetime. */
 void husk_ue4_set_sharp_graphics(bool enabled);
+/* Launch-time quality budget. percent=0 selects a conservative display-class
+ * budget; explicit 65/75/85/100 percentages remain available for comparisons.
+ * No device model claims, runtime calibration, or guaranteed FPS. */
+double tl_ue4_resolution_fraction(int width, int height, bool tablet, int percent);
 bool tl_ue4_sharp_graphics_enabled(void);
-/* Native resolution remains enabled in both presets. fps accepts 30 or 60 (default).
+/* Resolution hooks preserve the selected launch size. fps accepts 30 or 60 (default).
  * Thermal values follow NSProcessInfo: nominal=0, fair=1, serious=2, critical=3. */
 void husk_ue4_set_efficiency(bool enabled, int fps);
 bool tl_ue4_efficiency_enabled(void);

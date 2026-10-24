@@ -371,7 +371,7 @@ static void pace_efficient_frame(void)
     if (wanted != cap) {
         cap = wanted; deadline = 0;
         count = late = 0; previous = 0; report_at = now;
-        tl_log_line("ue4 efficiency: target %d FPS, iOS thermal state %d (0 nominal, 1 fair, 2 serious, 3 critical); native resolution retained", cap, thermal);
+        tl_log_line("ue4 efficiency: target %d FPS, iOS thermal state %d (0 nominal, 1 fair, 2 serious, 3 critical); selected launch resolution retained", cap, thermal);
     }
     int64_t delay = tl_ue4_frame_delay_ns(now, cap, &deadline);
     if (delay > 0) {

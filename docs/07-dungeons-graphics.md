@@ -1,4 +1,4 @@
-# Efficient native-resolution 60 FPS target
+# Efficient high-resolution 60 FPS target
 
 The goal is sustained 60 FPS at high resolution with lower power consumption.
 This is a target, not an on-device benchmark result. Select **Sharp / Efficient**
@@ -9,7 +9,7 @@ Both full-screen and floating-window launch paths carry the new settings.
 
 | Setting | Original Sharp | Efficient |
 | --- | --- | --- |
-| Host resolution / Android content scale | Native / 0 | Native / 0 |
+| Host resolution / Android content scale | Native / 0 | Automatic display budget (or manual percentage) / 0 |
 | Scene percentage request | 100% | 100% |
 | Texture quality / streaming mip bias | 3 / 0 | 3 / 0 |
 | AA / post-process AA quality | 3 / 4 | 3 / 4 |
@@ -20,7 +20,8 @@ Both full-screen and floating-window launch paths carry the new settings.
 | Effects / foliage / view-distance groups | 3 / 3 / 3 | 2 / 2 / 2 |
 | Target frame rate | Game's behaviour | 60; optional 30 |
 
-Efficient retains the exact native resolution hooks and disables dynamic
+Efficient retains the guarded resolution hooks, enforcing the selected launch
+size instead of falling back to the APK's low-resolution request, and disables dynamic
 resolution. It preserves texture streaming and the game's memory budget. The
 trade-off is less detailed shadows/effects and reduced anisotropic filtering;
 visual equivalence is not claimed. Cooked game CVars may be ignored or
@@ -44,6 +45,35 @@ diagnosis. Mac regression screenshot capture is retained. Every ten seconds
 intervals over 120% of the selected frame budget, thermal state and cap. These
 are producer/present timing measurements, **not GPU execution time** or proof
 of internal 3D resolution.
+
+## Display-based resolution selection
+
+The first M4 device log showed 2752×1912 presentation buffers and reported
+41.6, 45.9, 46.5 and 57.4 FPS sample windows. All reported thermal state 0.
+This does not establish a GPU bottleneck or a thermal-throttling problem.
+Normal TaskGraph workers stayed at Default QoS; background workers changed to
+Utility. The earlier code changes therefore did not establish sustained 60 FPS.
+
+Sharp / Efficient now defaults to Automatic resolution. It uses the current
+screen dimensions and iPad/iPhone display class, without model-name or chip-ID
+guesses. The initial full-display budget is at most 2304 on the long edge and
+1600 on the short edge for iPad; for iPhone it is 2048 and 1280. One scale factor
+preserves aspect ratio and never increases resolution above native. A smaller
+game viewport uses that same scale. Full-screen and floating-window launch paths
+already share the settings calculation. High texture and AA requests are kept.
+
+These are conservative starting budgets, not calibrated best resolutions or
+benchmarked per-chip profiles. Changing a folding display requires restarting
+Husk in the desired configuration. No live fold handling or runtime adaptation
+is implemented. Native (100%), 85%, 75% and 65% options allow repeatable manual
+comparisons; percentages apply to both dimensions. Launch logging records the
+screen, scale and surface size; Vulkan logs the actual presentation buffer.
+Compare the same mission at native and Automatic before attributing any FPS
+change to reduced pixel work. If frame times barely change, investigate CPU,
+synchronization and frame pacing rather than repeatedly reducing resolution.
+
+The new portable budget tests plus the existing suites pass 45 checks locally.
+The updated Swift UI and iOS package still require an iOS CI build.
 
 ## Additional source-based efficiency pass
 
