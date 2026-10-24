@@ -4,6 +4,12 @@ name: Build Husk IPA
 # Avoids recompiling WebKit ANGLE (which fails on the hosted compiler).
 on:
   workflow_dispatch:
+    inputs:
+      source_ref:
+        description: "Source branch/tag/SHA (must include the Dungeons sharp and efficiency changes)"
+        required: true
+        default: codex/dungeons-efficient-native
+        type: string
 
 permissions:
   contents: read
@@ -21,6 +27,28 @@ jobs:
     steps:
       - name: Check out Husk fork
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+          fetch-depth: 0
+
+      - name: Verify sharp-resolution source and run regression checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Refuse main/old PR branches that predate the integrated graphics fixes.
+          if ! git merge-base --is-ancestor 6c74b72b000cbb5bd5f0dce2b6343fc9a9a95337 HEAD; then
+            echo "::error::Selected source lacks the integrated Dungeons graphics/efficiency changes. Use codex/dungeons-efficient-native or a descendant."
+            exit 1
+          fi
+          python3 tests/translation-layer/test_ue4_graphics.py -v
+          python3 tests/translation-layer/test_ue4_resolution_hook.py -v
+          python3 tests/translation-layer/test_source_efficiency.py -v
+          python3 tests/translation-layer/test_thread_policy.py -v
+          {
+            echo "## Husk IPA source"
+            echo "Commit: $(git rev-parse HEAD)"
+            echo "Sharp native-resolution and efficiency regression checks passed."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Install XcodeGen
         shell: bash
