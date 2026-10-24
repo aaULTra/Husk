@@ -59,6 +59,7 @@ static struct {
     char *(*get_clipboard)(void);
     void (*share)(const char *utf8);
     void (*orientation)(int android_orientation);
+    void (*pick_documents)(const char *mime_types, int multiple);
 } g_java_host;
 
 static unsigned long engine_frames(void);
@@ -354,6 +355,7 @@ static void *launch_thread(void *arg)
                 .density = g_java_density, .metal_layer = A.layer, .angle_egl = A.angle, .angle_gles = NULL,
                 .framework_res = fwres, .show_keyboard = g_java_host.keyboard, .set_clipboard = g_java_host.set_clipboard,
                 .get_clipboard = g_java_host.get_clipboard, .share = g_java_host.share, .set_orientation = g_java_host.orientation,
+                .pick_documents = g_java_host.pick_documents,
                 .insets = { g_java_insets[0], g_java_insets[1], g_java_insets[2], g_java_insets[3] }, .night_mode = g_java_night,
             };
             ok = tl_javaapp_start(&cfg);
@@ -524,6 +526,8 @@ void husk_java_set_night_mode(int night) { g_java_night = night != 0; }
 void husk_java_insert_text(const char *utf8) { if (java_running()) tl_javaapp_text(utf8); }
 void husk_java_delete_backward(void) { if (java_running()) tl_javaapp_text_delete(); }
 void husk_java_text_action(void) { if (java_running()) tl_javaapp_text_action(); }
+void husk_java_set_document_picker(void (*pick)(const char *mime_types, int multiple)) { g_java_host.pick_documents = pick; }
+void husk_java_documents_picked(const char *const *paths, int n) { if (java_running()) tl_javaapp_documents_picked(paths, n); }
 void husk_java_keyboard_closed(void) { if (java_running()) tl_javaapp_keyboard_closed(); }
 void husk_java_back(void) { if (atomic_load(&A.state) == HUSK_UNITY_RUNNING && A.engine == ENGINE_JAVA) tl_javaapp_back(); }
 void tl_web_attach(void *screen_view, void *container, float scale, bool fresh);
@@ -546,6 +550,8 @@ void husk_flutter_set_close_handler(void (*fn)(void)) { tl_flutter_set_close_han
 void tl_set_cacerts_dir(const char *dir);
 void tl_set_system_fonts_dir(const char *dir);
 /* The certificates and fonts Android keeps under /system, as copies the app carries (cacerts/, and fonts/ + etc/fonts.xml). */
+void tl_set_extra_fonts_dir(const char *dir);
+void husk_native_set_extra_fonts(const char *dir) { tl_set_extra_fonts_dir(dir); }
 void husk_native_set_system_files(const char *cacerts_dir, const char *fonts_root)
 {
     if (cacerts_dir) tl_set_cacerts_dir(cacerts_dir);
@@ -589,6 +595,14 @@ void husk_cocos_insert_text(const char *utf8) { if (atomic_load(&A.state) == HUS
 void husk_cocos_delete_backward(void) { if (atomic_load(&A.state) == HUSK_UNITY_RUNNING && A.engine == ENGINE_COCOS) tl_cocos_delete_backward(); }
 void husk_cocos_key_down(int keycode) { if (atomic_load(&A.state) == HUSK_UNITY_RUNNING && A.engine == ENGINE_COCOS) tl_cocos_key_down(keycode); }
 void husk_cocos_request_text(void (*cb)(const char *utf8)) { if (atomic_load(&A.state) == HUSK_UNITY_RUNNING && A.engine == ENGINE_COCOS) tl_cocos_request_content_text(cb); }
+
+/* Unity games: TouchScreenKeyboard's field (an InputField, a player name), typed into from the iPhone's keyboard. */
+void husk_unity_set_keyboard_handler(void (*handler)(int action, int kind)) { tl_unity_set_keyboard_handler(handler); }
+static bool unity_running(void) { return atomic_load(&A.state) == HUSK_UNITY_RUNNING && A.engine == ENGINE_UNITY; }
+void husk_unity_insert_text(const char *utf8) { if (unity_running()) tl_unity_insert_text(utf8); }
+void husk_unity_delete_backward(void) { if (unity_running()) tl_unity_delete_backward(); }
+void husk_unity_finish_text(int done) { if (unity_running()) tl_unity_finish_text(done != 0); }
+void husk_unity_text(char *out, unsigned long cap) { if (cap) out[0] = 0; if (unity_running()) tl_unity_text_copy(out, cap); }
 
 /* Minecraft and other GameActivity games: GameTextInput's field, typed into from the iPhone's keyboard. */
 void husk_ga_set_keyboard_handler(void (*handler)(int action)) { tl_ga_set_keyboard_handler(handler); }

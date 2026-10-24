@@ -23,6 +23,7 @@
 #include "husk-tl-internal.h"
 #include "husk-tl-ld.h"
 #include "husk-tl-jni.h"
+#include "husk-tl-ue4-graphics.h"
 
 /* ---------------------------------------------------------------- looper */
 
@@ -292,7 +293,7 @@ typedef struct { const uint8_t *data; size_t len; size_t pos; uint8_t *owned; ch
 
 static void *b_AAssetManager_fromJava(void *env, void *obj) { (void)env; (void)obj; static int mgr; return &mgr; }
 
-static void *b_AAssetManager_open(void *mgr, const char *name, int mode)
+static void *asset_open_original(void *mgr, const char *name, int mode)
 {
     (void)mgr; (void)mode;
     char path[1024];
@@ -334,6 +335,22 @@ static void *b_AAssetManager_open(void *mgr, const char *name, int mode)
         return a;
     }
     return NULL;
+}
+
+static void *b_AAssetManager_open(void *mgr, const char *name, int mode)
+{
+    tl_asset *a = asset_open_original(mgr, name, mode);
+    char *command = tl_ue4_graphics_command_asset(name, a ? a->data : NULL, a ? a->len : 0);
+    if (!command) return a;
+    if (!a) a = calloc(1, sizeof(*a));
+    if (!a) { free(command); return NULL; }
+    free(a->owned);
+    a->owned = (uint8_t *)command;
+    a->data = a->owned; a->len = strlen(command); a->pos = 0;
+    /* A descriptor on the original APK would bypass this synthetic text. */
+    a->name[0] = 0;
+    tl_log_line("ue4 graphics: serving startup asset %s with -mcsf=0 (%zu bytes)", name, a->len);
+    return a;
 }
 /*
  * AAudio, the way FMOD (Minecraft's audio) prefers to play: a stream whose data callback the system calls for the next burst of

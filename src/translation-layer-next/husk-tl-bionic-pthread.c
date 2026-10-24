@@ -16,6 +16,7 @@
 #define _DARWIN_C_SOURCE
 #include "husk-tl-bionic.h"
 #include "husk-tl-ld.h"
+#include "husk-tl-thread-policy.h"
 
 #include <errno.h>
 #include <pthread.h>
@@ -309,15 +310,12 @@ static int b_sem_trywait(void *g)
 static int b_sem_timedwait(void *g, const struct timespec *abs)
 {
     host_sem *s = hs(g);
-    struct timespec now, rel;
-    clock_gettime(CLOCK_REALTIME, &now);
-    rel.tv_sec = abs->tv_sec - now.tv_sec;
-    rel.tv_nsec = abs->tv_nsec - now.tv_nsec;
-    if (rel.tv_nsec < 0) { rel.tv_sec--; rel.tv_nsec += 1000000000L; }
-    if (rel.tv_sec < 0) { rel.tv_sec = 0; rel.tv_nsec = 0; }
     pthread_mutex_lock(&s->m);
     int r = 0;
-    while (s->count <= 0 && r == 0) r = pthread_cond_timedwait_relative_np(&s->c, &s->m, &rel);
+    /* make_sem uses a default CLOCK_REALTIME condition variable. Pass the
+     * guest's absolute deadline directly: lock contention and spurious wakes
+     * must not restart the timeout or require repeated clock conversions. */
+    while (s->count <= 0 && r == 0) r = pthread_cond_timedwait(&s->c, &s->m, abs);
     if (r == 0) s->count--;
     pthread_mutex_unlock(&s->m);
     if (r) { tl_set_guest_errno(tl_errno_to_guest(r)); return -1; }
@@ -382,6 +380,11 @@ static int b_attr_setdetachstate(guest_attr *a, int s)
     a->flags = (a->flags & ~GATTR_DETACHED) | (s ? GATTR_DETACHED : 0);
     return 0;
 }
+static int b_attr_getdetachstate(const guest_attr *a, int *s)
+{
+    if (s) *s = (a->flags & GATTR_DETACHED) ? 1 : 0;
+    return 0;
+}
 static int b_attr_setstacksize(guest_attr *a, size_t n)
 {
     if (n < 16384) return 22;
@@ -392,7 +395,7 @@ static int b_attr_getstacksize(const guest_attr *a, size_t *n) { *n = a->stack_s
 /* Scheduling attributes: a thread on this host runs at the system's own priority; the guest is told the default (SCHED_OTHER, priority 0) and its requests are accepted. */
 static int b_attr_getschedparam(const guest_attr *a, int *prio) { (void)a; *prio = 0; return 0; }
 static int b_attr_getschedpolicy(const guest_attr *a, int *policy) { (void)a; *policy = 0; return 0; }
-/* the inherit-scheduling choice: kept, as nothing here schedules threads differently */
+/* Guest inherit-scheduling attributes are kept; name-based QoS policy is separate. */
 static int b_attr_setinheritsched(void *a, int v) { (void)a; return v == 0 || v == 1 ? 0 : 22; }
 static int b_attr_getinheritsched(const void *a, int *v) { (void)a; if (v) *v = 0; return 0; }
 static int b_attr_setschedpolicy(guest_attr *a, int policy) { (void)a; (void)policy; return 0; }
@@ -476,7 +479,7 @@ static int b_kill(pthread_t t, int sig)
 
 static int b_setname_np(pthread_t t, const char *name)
 {
-    if (pthread_equal(t, pthread_self())) pthread_setname_np(name);
+    if (pthread_equal(t, pthread_self()) && pthread_setname_np(name) == 0) tl_thread_policy_named(name);
     return 0;
 }
 
@@ -530,7 +533,7 @@ const tl_bionic_entry tl_tab_pthread[] = {
     TL_WRAP("pthread_key_create", b_key_create), TL_WRAP("pthread_key_delete", b_key_delete),
     TL_WRAP("pthread_getspecific", b_getspecific), TL_WRAP("pthread_setspecific", b_setspecific),
     TL_WRAP("pthread_attr_init", b_attr_init), TL_WRAP("pthread_attr_destroy", b_attr_destroy),
-    TL_WRAP("pthread_attr_setdetachstate", b_attr_setdetachstate), TL_WRAP("pthread_attr_setstacksize", b_attr_setstacksize),
+    TL_WRAP("pthread_attr_setdetachstate", b_attr_setdetachstate), TL_WRAP("pthread_attr_getdetachstate", b_attr_getdetachstate), TL_WRAP("pthread_attr_setstacksize", b_attr_setstacksize),
     TL_WRAP("pthread_attr_getstacksize", b_attr_getstacksize), TL_WRAP("pthread_attr_getguardsize", b_attr_getguardsize), TL_WRAP("pthread_attr_setguardsize", b_attr_setguardsize), TL_WRAP("pthread_attr_setscope", b_attr_setscope), TL_WRAP("pthread_attr_getscope", b_attr_getscope), TL_WRAP("pthread_attr_getstack", b_attr_getstack),
     TL_WRAP("pthread_attr_getschedparam", b_attr_getschedparam),
     TL_WRAP("pthread_attr_getschedpolicy", b_attr_getschedpolicy), TL_WRAP("pthread_attr_setinheritsched", b_attr_setinheritsched), TL_WRAP("pthread_attr_getinheritsched", b_attr_getinheritsched), TL_WRAP("pthread_attr_setschedpolicy", b_attr_setschedpolicy),

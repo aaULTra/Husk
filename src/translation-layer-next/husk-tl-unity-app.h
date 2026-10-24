@@ -83,6 +83,10 @@ void husk_java_insert_text(const char *utf8);
 void husk_java_delete_backward(void);
 void husk_java_text_action(void);
 void husk_java_keyboard_closed(void);
+/* The system's file picker for a Java app: the app asks with MIME types (comma-separated) and whether several files may be
+   picked; the host shows its document picker and answers with the paths of copies it made in the app's folder (n = 0: cancelled). */
+void husk_java_set_document_picker(void (*pick)(const char *mime_types, int multiple));
+void husk_java_documents_picked(const char *const *paths, int n);
 void husk_java_key(int android_keycode, int down);
 /* A Java app's WebViews are WKWebViews in a container the host puts right under the app's screen view, the same size, at the screen's
    scale (surface pixels per point). fresh: a new app (1), or the running one shown on a new screen view (0: its pages move over).
@@ -102,6 +106,8 @@ bool husk_flutter_text_multiline(void);
 void husk_flutter_set_keyboard_inset(int bottom);                     /* pixels of the view the keyboard covers */
 void husk_flutter_back(void);                                         /* Android's back button */
 void husk_flutter_set_close_handler(void (*fn)(void));                /* the app closed itself */
+/* Where fonts downloaded after install are (the CJK ones): /system/fonts files the bundle lacks are looked for there. */
+void husk_native_set_extra_fonts(const char *dir);
 void husk_native_set_system_files(const char *cacerts_dir, const char *fonts_root);
 /* Another APK of the app about to be launched (a split, an asset pack). Before the launch call; at most three. */
 void husk_native_add_package(const char *apk);
@@ -121,6 +127,15 @@ void husk_sdl_commit_text(const char *utf8);
 void husk_sdl_key(int keycode, int down);
 /* Soft keyboard for a cocos2d-x game. The handler is told (on the game's GL thread) 0 = toggle, 1 = show, 2 = hide. */
 void husk_cocos_set_keyboard_handler(void (*handler)(int action));
+/* A Unity game's keyboard (TouchScreenKeyboard): the game asks for it (action 1 with kind = TouchScreenKeyboardType | 0x100 secure
+ * | 0x200 multi-line) or puts it away (2), on its own thread. The keys edit the game's field; finish_text(1) is Done, (0) a dismissal;
+ * husk_unity_text copies the field as it stands. */
+void husk_unity_set_keyboard_handler(void (*handler)(int action, int kind));
+void husk_unity_insert_text(const char *utf8);
+void husk_unity_delete_backward(void);
+void husk_unity_finish_text(int done);
+void husk_unity_text(char *out, unsigned long cap);
+
 /* Soft keyboard for a GameActivity game (Minecraft): 1 = show, 2 = hide; the field's text is kept on the C side. */
 void husk_ga_set_keyboard_handler(void (*handler)(int action));
 void husk_ga_insert_text(const char *utf8);

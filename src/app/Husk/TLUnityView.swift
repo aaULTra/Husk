@@ -3,6 +3,7 @@ import SwiftUI
 import UIKit
 import QuartzCore
 import AVFoundation
+import UniformTypeIdentifiers
 
 /// The engines the native runtime drives. Both draw into a CAMetalLayer through ANGLE, and both are one game per
 /// process: an engine cannot be unloaded once it has started.
@@ -38,6 +39,10 @@ final class TLUnityUIView: UIView, UIKeyInput {
     nonisolated(unsafe) static weak var cocosView: TLUnityUIView?
 
     private let apk: String
+    private let sharpGraphics: Bool
+    private let efficientGraphics: Bool
+    private let efficientFrameLimit: Int
+    private let threadPolicy: Int
     /// The app's other APKs -- splits, an asset pack -- which an SDL game's libraries and data may be in.
     private let extraApks: [String]
     private let dataDir: String
@@ -59,12 +64,17 @@ final class TLUnityUIView: UIView, UIKeyInput {
     /// mean time one frame takes it. Refreshed once a second from the runtime's own counters.
     private let stats = UILabel()
     private var statsTimer: Timer?
+    private var lifecycleObservers: [NSObjectProtocol] = []
 
     /// Called when three fingers tap at once: the way back to the interface while it is hidden.
     var onThreeFingerTap: (() -> Void)?
 
-    init(apk: String, extraApks: [String] = [], dataDir: String, engine: TLNativeEngine, portrait: Bool = false, scale: CGFloat = 2) {
+    init(apk: String, extraApks: [String] = [], dataDir: String, engine: TLNativeEngine, portrait: Bool = false, scale: CGFloat = 2, sharpGraphics: Bool = false, efficientGraphics: Bool = false, efficientFrameLimit: Int = 60, threadPolicy: Int = 0) {
         self.apk = apk
+        self.sharpGraphics = sharpGraphics
+        self.efficientGraphics = efficientGraphics
+        self.efficientFrameLimit = efficientFrameLimit
+        self.threadPolicy = threadPolicy
         self.portrait = portrait
         self.dataDir = dataDir
         self.engine = engine
@@ -97,7 +107,10 @@ final class TLUnityUIView: UIView, UIKeyInput {
         stats.isUserInteractionEnabled = false
         stats.text = " "
         if engine == .unity { addSubview(stats) }
-        if engine == .cocos {
+        if engine == .unity {
+            TLUnityUIView.cocosView = self
+            TLUnityUIView.installUnityKeyboardHandler()
+        } else if engine == .cocos {
             TLUnityUIView.cocosView = self
             TLUnityUIView.installKeyboardHandler()
         } else if engine == .sdl {
@@ -115,9 +128,9 @@ final class TLUnityUIView: UIView, UIKeyInput {
             addGestureRecognizer(back)
             // The keyboard covers the bottom of the app: its views are told (an adjustResize window shrinks above it).
             for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
-                NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                lifecycleObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
                     self?.keyboardMoved(note)
-                }
+                })
             }
         } else if engine == .flutter {
             TLUnityUIView.cocosView = self
@@ -128,18 +141,22 @@ final class TLUnityUIView: UIView, UIKeyInput {
             addGestureRecognizer(back)
             // The keyboard covers the bottom of the app: Flutter is told, and moves the focused field above it.
             for name in [UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardWillHideNotification] {
-                NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                lifecycleObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
                     self?.keyboardMoved(note)
-                }
+                })
             }
         }
         // The GPU is not the app's while it is in the background: stop drawing, and carry on when it returns.
-        NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { _ in
+        lifecycleObservers.append(NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
             husk_unity_set_paused(true)
-        }
-        NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
-            if self?.window != nil { husk_unity_set_paused(false) }
-        }
+            self?.statsTimer?.invalidate()
+            self?.statsTimer = nil
+        })
+        lifecycleObservers.append(NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            guard let self, self.window != nil else { return }
+            husk_unity_set_paused(false)
+            self.updateStatsTimer()
+        })
     }
 
     @objc private func threeFingerTapped() { onThreeFingerTap?() }
@@ -189,7 +206,19 @@ final class TLUnityUIView: UIView, UIKeyInput {
         husk_flutter_set_keyboard_inset(Int32((covered * contentScaleFactor).rounded()))
     }
 
-    deinit { statsTimer?.invalidate(); NotificationCenter.default.removeObserver(self) }
+    deinit {
+        statsTimer?.invalidate()
+        for observer in lifecycleObservers { NotificationCenter.default.removeObserver(observer) }
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    private func updateStatsTimer() {
+        statsTimer?.invalidate()
+        statsTimer = nil
+        guard window != nil, UIApplication.shared.applicationState == .active else { return }
+        statsTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in self?.updateStats() }
+        statsTimer?.tolerance = 0.1
+    }
 
     private func updateStats() {
         var p = husk_unity_perf()
@@ -233,11 +262,9 @@ final class TLUnityUIView: UIView, UIKeyInput {
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        statsTimer?.invalidate()
-        statsTimer = nil
+        updateStatsTimer()
         if window != nil {
-            husk_unity_set_paused(false)
-            statsTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in self?.updateStats() }
+            husk_unity_set_paused(UIApplication.shared.applicationState != .active)
         } else {
             husk_unity_set_paused(true)
             if isFirstResponder { resignFirstResponder() }
@@ -276,6 +303,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
         if let sys = Bundle.main.resourcePath.map({ $0 + "/android-system" }), FileManager.default.fileExists(atPath: sys) {
             husk_native_set_system_files(sys + "/cacerts", sys)
         }
+        husk_native_set_extra_fonts(CJKFonts.directory.path)
         let started: Bool
         switch engine {
         case .sdl:
@@ -292,6 +320,10 @@ final class TLUnityUIView: UIView, UIKeyInput {
         case .nativeactivity: started = husk_ue4_launch(apk, dataDir, layerPtr, Int32(width), Int32(height), angle, ca)       // the NativeActivity driver; with no Unreal in the APK it runs the plain game
         case .ue4:
             // Unreal draws with Vulkan, which on this device is MoltenVK, a framework of the app's own.
+            husk_ue4_set_sharp_graphics(sharpGraphics)
+            husk_ue4_set_efficiency(efficientGraphics, Int32(efficientFrameLimit))
+            husk_ue4_set_thread_policy(Int32(threadPolicy))
+            HuskLog.log("tl", "ue4: requested graphics preset: \(efficientGraphics ? "Sharp / Efficient" : (sharpGraphics ? "Sharp / High Quality" : "Game Default")), surface \(width)x\(height)")
             if let fw = Bundle.main.privateFrameworksPath { husk_ue4_set_vulkan(fw + "/MoltenVK.framework/MoltenVK") }
             started = husk_ue4_launch(apk, dataDir, layerPtr, Int32(width), Int32(height), angle, ca)
         case .cocos:
@@ -330,7 +362,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
 
     /// A game asks for the keyboard when its text field is tapped. The keyboard belongs to this view; what it types goes
     /// to the game, and a strip above the keyboard shows the text, because in landscape the keyboard covers the game's field.
-    override var canBecomeFirstResponder: Bool { engine == .cocos || engine == .sdl || engine == .minecraft || engine == .flutter || engine == .java }
+    override var canBecomeFirstResponder: Bool { engine == .cocos || engine == .sdl || engine == .minecraft || engine == .flutter || engine == .java || engine == .unity }
     var hasText: Bool { true }
     var autocorrectionType: UITextAutocorrectionType = .no
     var autocapitalizationType: UITextAutocapitalizationType = .none
@@ -367,7 +399,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
         bar.addSubview(done)
         return bar
     }()
-    override var inputAccessoryView: UIView? { engine == .cocos || engine == .sdl || engine == .minecraft ? keyboardBar : nil }
+    override var inputAccessoryView: UIView? { engine == .cocos || engine == .sdl || engine == .minecraft || engine == .unity ? keyboardBar : nil }
 
     func insertText(_ text: String) {
         if engine == .java {
@@ -380,7 +412,16 @@ final class TLUnityUIView: UIView, UIKeyInput {
             if text == "\n", !husk_flutter_text_multiline() { husk_flutter_text_action() } else { husk_flutter_insert_text(text) }
             return
         }
-        if text == "\n" { finishTyping(); return }
+        if text == "\n", !(engine == .unity && unityMultiline) { finishTyping(); return }
+        if engine == .unity {
+            // The game's field may refuse characters past its limit: the strip shows what the field holds.
+            husk_unity_insert_text(text)
+            var buf = [CChar](repeating: 0, count: 4096)
+            husk_unity_text(&buf, UInt(buf.count))
+            let field = String(cString: buf)
+            setTyped(isSecureTextEntry ? String(repeating: "•", count: field.count) : field)
+            return
+        }
         typed += text
         typedLabel.text = typed
         if engine == .sdl { husk_sdl_commit_text(text) } else if engine == .minecraft { husk_ga_insert_text(text) } else { husk_cocos_insert_text(text) }
@@ -389,18 +430,20 @@ final class TLUnityUIView: UIView, UIKeyInput {
     func deleteBackward() {
         if engine == .java { husk_java_delete_backward(); return }
         if engine == .flutter { husk_flutter_delete_backward(); return }
+        if engine == .unity { husk_unity_delete_backward() }
         if !typed.isEmpty { typed.removeLast() }
         typedLabel.text = typed
         if engine == .sdl { husk_sdl_key(67, 1); husk_sdl_key(67, 0) }   // KEYCODE_DEL
         else if engine == .minecraft { husk_ga_delete_backward() }
-        else { husk_cocos_delete_backward() }
+        else if engine != .unity { husk_cocos_delete_backward() }
     }
 
     private func setTyped(_ text: String) { typed = text; typedLabel.text = text }
 
     /// Return, or the Done button: what Android's "done" action does -- the game gets a newline, and the keyboard goes.
     private func finishTyping() {
-        if engine == .sdl { husk_sdl_key(66, 1); husk_sdl_key(66, 0) }   // KEYCODE_ENTER
+        if engine == .unity { husk_unity_finish_text(1) }   // the dialog's OK: the field keeps the text, and the game hears it is done
+        else if engine == .sdl { husk_sdl_key(66, 1); husk_sdl_key(66, 0) }   // KEYCODE_ENTER
         else if engine == .minecraft { husk_ga_editor_action() }        // the field's own action: send the chat, name the world
         else { husk_cocos_insert_text("\n") }
         resignFirstResponder()
@@ -482,6 +525,52 @@ final class TLUnityUIView: UIView, UIKeyInput {
         }, { orientation in
             HuskLog.log("tl", "java: the app asks for orientation \(orientation)")
         })
+        husk_java_set_document_picker { mimeTypes, multiple in
+            let types = TLUnityUIView.contentTypes(mimeTypes.map { String(cString: $0) } ?? "*/*")
+            DispatchQueue.main.async {
+                HuskFilePicker.present(types: types, multiple: multiple != 0, onPick: { urls in
+                    // copies in a folder of their own: the app reads them by path, long after the picker's access ends
+                    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("picked/\(UUID().uuidString)", isDirectory: true)
+                    try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+                    var paths: [String] = []
+                    for url in urls {
+                        let scoped = url.startAccessingSecurityScopedResource()
+                        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                        let dest = dir.appendingPathComponent(url.lastPathComponent)
+                        do { try FileManager.default.copyItem(at: url, to: dest); paths.append(dest.path) }
+                        catch { HuskLog.log("tl", "java: could not copy the picked \(url.lastPathComponent): \(error.localizedDescription)") }
+                    }
+                    TLUnityUIView.answerDocumentPicker(paths)
+                }, onCancel: { TLUnityUIView.answerDocumentPicker([]) })
+            }
+        }
+    }
+
+    /// The picker's answer to the Java app (no paths: it was cancelled).
+    private static func answerDocumentPicker(_ paths: [String]) {
+        let c = paths.map { strdup($0) }
+        defer { c.forEach { free($0) } }
+        var ptrs = c.map { UnsafePointer<CChar>($0) }
+        ptrs.withUnsafeMutableBufferPointer { husk_java_documents_picked($0.baseAddress, Int32(paths.count)) }
+    }
+
+    /// The document types for an intent's MIME types ("image/*,application/pdf"); anything unknown opens the picker to all files.
+    private static func contentTypes(_ mimeTypes: String) -> [UTType] {
+        var types: [UTType] = []
+        for m in mimeTypes.split(separator: ",").map({ $0.trimmingCharacters(in: .whitespaces).lowercased() }) {
+            switch m {
+            case "*/*", "": return [.item]
+            case "image/*": types.append(.image)
+            case "video/*": types.append(.movie)
+            case "audio/*": types.append(.audio)
+            case "text/*": types.append(.text)
+            case "application/*": types.append(.data)
+            default:
+                guard let t = UTType(mimeType: m) else { return [.item] }
+                types.append(t)
+            }
+        }
+        return types.isEmpty ? [.item] : types
     }
 
     /// A Flutter app closed itself (back on its first screen): whatever shows it closes.
@@ -527,6 +616,48 @@ final class TLUnityUIView: UIView, UIKeyInput {
                 }
             }
         }
+    }
+
+    /// Whether the Unity field that asked for the keyboard takes new lines (Return types one instead of finishing).
+    private var unityMultiline = false
+
+    /// A Unity game's requests (TouchScreenKeyboard.Open from an InputField, on its own thread): 1 shows the keyboard, 2 hides it.
+    static func installUnityKeyboardHandler() {
+        husk_unity_set_keyboard_handler { action, kind in
+            DispatchQueue.main.async {
+                guard let view = TLUnityUIView.cocosView, view.engine == .unity else { return }
+                if action == 1 {
+                    // TouchScreenKeyboardType
+                    switch kind & 0xFF {
+                    case 2: view.keyboardType = .numbersAndPunctuation
+                    case 3: view.keyboardType = .URL
+                    case 4: view.keyboardType = .numberPad
+                    case 5: view.keyboardType = .phonePad
+                    case 6: view.keyboardType = .namePhonePad
+                    case 7: view.keyboardType = .emailAddress
+                    case 8: view.keyboardType = .twitter
+                    case 9: view.keyboardType = .webSearch
+                    case 10: view.keyboardType = .decimalPad
+                    case 1: view.keyboardType = .asciiCapable
+                    default: view.keyboardType = .default
+                    }
+                    view.isSecureTextEntry = kind & 0x100 != 0
+                    view.unityMultiline = kind & 0x200 != 0
+                    var buf = [CChar](repeating: 0, count: 4096)
+                    husk_unity_text(&buf, UInt(buf.count))
+                    view.setTyped(view.isSecureTextEntry ? "" : String(cString: buf))
+                    if view.isFirstResponder { view.reloadInputViews() } else { view.becomeFirstResponder() }
+                } else {
+                    view.resignFirstResponder()
+                }
+            }
+        }
+    }
+
+    override func resignFirstResponder() -> Bool {
+        // Put away without Done (the game hid it, or the view went): the field is dismissed, as the dialog's back button does.
+        if engine == .unity { husk_unity_finish_text(0) }
+        return super.resignFirstResponder()
     }
 
     /// An SDL game's requests (SDL_StartTextInput / SDL_StopTextInput, from its main thread): 1 shows the keyboard, 2 hides it.
@@ -575,6 +706,10 @@ struct TLUnityScreen: UIViewRepresentable {
     var engine: TLNativeEngine = .unity
     var portrait = false
     var scale: CGFloat = 2
+    var sharpGraphics: Bool = false
+    var efficientGraphics: Bool = false
+    var efficientFrameLimit: Int = 60
+    var threadPolicy: Int = 0
     var onStats: ((String) -> Void)? = nil
     var onThreeFingerTap: (() -> Void)? = nil
     /// One view per game for the life of the process. The engine's GPU surface belongs to this view's layer and an
@@ -582,9 +717,9 @@ struct TLUnityScreen: UIViewRepresentable {
     private static var shared: [String: TLUnityUIView] = [:]
 
     /// The game's one view, made the first time it is asked for.
-    static func view(apk: String, extraApks: [String], dataDir: String, engine: TLNativeEngine, portrait: Bool, scale: CGFloat) -> TLUnityUIView {
+    static func view(apk: String, extraApks: [String], dataDir: String, engine: TLNativeEngine, portrait: Bool, scale: CGFloat, sharpGraphics: Bool = false, efficientGraphics: Bool = false, efficientFrameLimit: Int = 60, threadPolicy: Int = 0) -> TLUnityUIView {
         if let view = shared[apk] { return view }
-        let view = TLUnityUIView(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine, portrait: portrait, scale: scale)
+        let view = TLUnityUIView(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine, portrait: portrait, scale: scale, sharpGraphics: sharpGraphics, efficientGraphics: efficientGraphics, efficientFrameLimit: efficientFrameLimit, threadPolicy: threadPolicy)
         shared[apk] = view
         return view
     }
@@ -595,7 +730,7 @@ struct TLUnityScreen: UIViewRepresentable {
             view.transform = .identity
             view.onStats = onStats; view.onThreeFingerTap = onThreeFingerTap; return view
         }
-        let view = TLUnityUIView(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine, portrait: portrait, scale: scale)
+        let view = TLUnityUIView(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine, portrait: portrait, scale: scale, sharpGraphics: sharpGraphics, efficientGraphics: efficientGraphics, efficientFrameLimit: efficientFrameLimit, threadPolicy: threadPolicy)
         view.onStats = onStats
         view.onThreeFingerTap = onThreeFingerTap
         Self.shared[apk] = view
@@ -604,33 +739,59 @@ struct TLUnityScreen: UIViewRepresentable {
     func updateUIView(_ view: TLUnityUIView, context: Context) { view.onStats = onStats; view.onThreeFingerTap = onThreeFingerTap }
 }
 
-/// Polls the runtime for the status line and its log, ten times a second at most.
+/// Poll quickly during startup and once per second during gameplay. Copy the
+/// runtime log only when visible (or stopped), and only when its bytes changed.
 @MainActor
 final class TLUnityModel: ObservableObject {
     @Published var state: Int32 = 0
     @Published var frames: UInt = 0
     @Published var logText = ""
     private var timer: Timer?
-    private var ticks = 0
+    private var pollInterval: TimeInterval = 0
+    private var polling = false
+    private var logVisible = false
+    private var logRevision: UInt64 = 0
 
     func start() {
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.poll() }
-        }
+        guard UIApplication.shared.applicationState == .active else { return }
+        polling = true
+        poll()
     }
 
-    func stop() { timer?.invalidate(); timer = nil }
+    private func schedulePolling() {
+        guard polling else { return }
+        let interval: TimeInterval = state == Int32(HUSK_UNITY_RUNNING) ? 1.0 : 0.25
+        guard timer == nil || interval != pollInterval else { return }
+        timer?.invalidate()
+        pollInterval = interval
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.poll() }
+        }
+        timer?.tolerance = interval * 0.1
+    }
+
+    func stop() { polling = false; timer?.invalidate(); timer = nil }
+
+    func setLogVisible(_ visible: Bool) {
+        logVisible = visible
+        if visible { refreshLog() }
+    }
+
+    private func refreshLog() {
+        guard let c = husk_tl_attempt_log_if_changed(&logRevision) else { return }
+        defer { free(c) }
+        let text = String(cString: c)
+        if text != logText { logText = text }
+    }
 
     private func poll() {
-        ticks += 1
-        state = husk_unity_state()
-        frames = husk_unity_frames()
-        if ticks % 4 == 0, let c = husk_tl_attempt_log() {
-            let text = String(cString: c)
-            free(c)
-            if text != logText { logText = text }
-        }
+        guard polling else { return }
+        let nextState = husk_unity_state()
+        let nextFrames = husk_unity_frames()
+        if state != nextState { state = nextState }
+        if frames != nextFrames { frames = nextFrames }
+        if logVisible || state == Int32(HUSK_UNITY_FAILED) || state == Int32(HUSK_UNITY_ENDED) { refreshLog() }
+        schedulePolling()
     }
 
     var statusText: String {
@@ -740,7 +901,7 @@ struct TLCocosAttemptView: View {
                     // The game always has the whole screen: it is told its size once, as it starts, so nothing may take space from it.
                     // The bar and the log are drawn over it instead, and hiding them shows everything underneath.
                     TLUnityScreen(apk: apk, extraApks: Array(app.apks.dropFirst()), dataDir: dataDir, engine: engine, portrait: portrait,
-                                  scale: settings.resolution.scale, onStats: { stats = $0 }, onThreeFingerTap: { toggleInterface() })
+                                  scale: settings.renderScale(for: app), sharpGraphics: settings.usesSharpGraphics(for: app), efficientGraphics: settings.usesEfficientGraphics(for: app), efficientFrameLimit: settings.efficientFrameRate.rawValue, threadPolicy: settings.workerScheduling.rawValue, onStats: { stats = $0 }, onThreeFingerTap: { toggleInterface() })
                         .background(Color.black)
                     .overlay {
                         // A game whose menus answer only a controller: with none paired, one on the glass. Hiding the bar leaves
@@ -784,17 +945,22 @@ struct TLCocosAttemptView: View {
             }
         }
         .statusBarHidden(true)
-        .persistentSystemOverlays(.hidden)
+        .huskHideSystemOverlays()
         // Swipes near the edges are the game's.
-        .defersSystemGestures(on: .all)
+        .huskDefersSystemGestures(on: .all)
         .onAppear {
             HuskOrientation.set(portrait ? .portrait : .landscape)
             UIApplication.shared.isIdleTimerDisabled = settings.keepAwake
             if uiHidden { showHint() }
             CrashReport.gameStarted(app)
             padLayout = PadLayout.load(app.id)
+            model.setLogVisible(showLog && !uiHidden)
             model.start()
         }
+        .onChange(of: showLog) { model.setLogVisible($0 && !uiHidden) }
+        .onChange(of: uiHidden) { model.setLogVisible(showLog && !$0) }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in model.stop() }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in model.start() }
         // What happened, for the library: ten seconds of frames is a game that plays; a refusal is one that did not start.
         .onChange(of: model.frames) { f in
             if f > 600, model.state == Int32(HUSK_UNITY_RUNNING) { GameStatusStore.shared.record(app.id, .plays) }

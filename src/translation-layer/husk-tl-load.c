@@ -232,6 +232,7 @@ typedef struct {
 } tl_logbuf;
 
 static pthread_mutex_t g_log_mutex = PTHREAD_MUTEX_INITIALIZER;
+static uint64_t g_log_revision = 1; /* protected by g_log_mutex; zero means no snapshot yet */
 
 static void tl_log_put(tl_logbuf *l, const char *s, size_t n)
 {
@@ -336,7 +337,12 @@ void tl_log_line(const char *fmt, ...)
     /* A file written line by line with write(2): what a process killed without warning still leaves behind. */
     if (tl_log_sink_fd >= 0) { ssize_t ignored = write(tl_log_sink_fd, line, strlen(line)); (void)ignored; }
     pthread_mutex_lock(&g_log_mutex);
+    size_t old_len = g_run.log.len;
+    bool old_failed = g_run.log.failed;
     tl_log_put(&g_run.log, line, (size_t)w + 1);
+    if (old_len != g_run.log.len || old_failed != g_run.log.failed) {
+        if (++g_log_revision == 0) g_log_revision = 1;
+    }
     pthread_mutex_unlock(&g_log_mutex);
 }
 
@@ -1281,7 +1287,7 @@ static bool load_library(const char *name, const uint8_t *file, size_t flen)
 
     if (stik && stik->rw_addr && stik->rx_addr) {
         size_t need = npages * TL_PAGE;
-        if (g_prewarmed_used + need <= stik->size) {
+        if (g_prewarmed_used + need <= stik->size && tl_jit_reserve_bottom(g_prewarmed_used + need)) {
             base = stik->rx_addr + g_prewarmed_used;
             base_rw = stik->rw_addr + g_prewarmed_used;
             g_prewarmed_used += need;
@@ -1943,17 +1949,35 @@ bool husk_tl_attempt_done(int *exit_code)
     return done;
 }
 
+/* Caller holds g_log_mutex. Keep the unconditional API for crash reports,
+ * exports and existing callers; UI readers can skip an unchanged snapshot. */
+static char *attempt_log_snapshot_locked(void)
+{
+    if (!g_run.log.failed && g_run.log.buf) {
+        char *out = malloc(g_run.log.len + 1);
+        if (out) memcpy(out, g_run.log.buf, g_run.log.len + 1);
+        return out;
+    }
+    return strdup(g_run.log.failed ? "(log lost: out of memory)\n" : "");
+}
+
 char *husk_tl_attempt_log(void)
 {
     pthread_mutex_lock(&g_log_mutex);
+    char *out = attempt_log_snapshot_locked();
+    pthread_mutex_unlock(&g_log_mutex);
+    return out;
+}
+
+char *husk_tl_attempt_log_if_changed(uint64_t *revision)
+{
+    if (!revision) return husk_tl_attempt_log();
+    pthread_mutex_lock(&g_log_mutex);
     char *out = NULL;
-    if (!g_run.log.failed && g_run.log.buf) {
-        out = malloc(g_run.log.len + 1);
-        if (out) {
-            memcpy(out, g_run.log.buf, g_run.log.len + 1);
-        }
-    } else {
-        out = strdup(g_run.log.failed ? "(log lost: out of memory)\n" : "");
+    if (*revision != g_log_revision) {
+        out = attempt_log_snapshot_locked();
+        /* Retry next time if allocation failed; do not lose the update. */
+        if (out) *revision = g_log_revision;
     }
     pthread_mutex_unlock(&g_log_mutex);
     return out;

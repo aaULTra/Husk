@@ -14,12 +14,15 @@
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdint.h>
+#include <errno.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "husk-tl-bionic.h"
 #include "husk-tl-ld.h"
+#include "husk-tl-ue4-graphics.h"
 
 void *tl_nwindow_native(void *window);
 int tl_nwindow_width(void *window);
@@ -49,6 +52,7 @@ static struct {
     void *lib;
     pfn_gipa gipa;
     int trace;
+    bool probe_frames;
     char frame_dir[700];
     int frame_every;
     atomic_ulong frames;
@@ -70,6 +74,10 @@ static void vk_load(void)
     /* One failed Metal command buffer (a GPU fault, or iOS cutting off a frame that kept the GPU too long) would otherwise lose the device for good, and a game
      * has no way back from VK_ERROR_DEVICE_LOST: DXVK reports it as a removed device and the game ends itself. Read once, when MoltenVK first needs its settings. */
     setenv("MVK_CONFIG_RESUME_LOST_DEVICE", "1", 0);
+    /* GPU readback probes stall the queue. Opt in only when diagnosing a
+     * blank image; normal gameplay never calls vkQueueWaitIdle for logging. */
+    const char *probe = getenv("TL_VK_PROBE_FRAMES");
+    V.probe_frames = probe && !strcmp(probe, "1");
     V.lib = V.have_path ? dlopen(V.path, RTLD_NOW | RTLD_LOCAL) : RTLD_DEFAULT;
     V.gipa = V.lib ? (pfn_gipa)dlsym(V.lib, "vkGetInstanceProcAddr") : NULL;
     tl_log_line("vulkan: %s", V.gipa ? (V.have_path ? V.path : "MoltenVK linked into the process") : "MoltenVK not found");
@@ -304,6 +312,8 @@ static int w_vkCreateSwapchainKHR(void *device, const void *ci, const void *allo
     memcpy(&usage, c + 56, 4); memcpy(&alpha, c + 84, 4); memcpy(&mode, c + 88, 4);
     int r = real ? real(device, ci, alloc, out) : -3;
     tl_log_line("vulkan: vkCreateSwapchainKHR %ux%u images %u format %u colorspace %u usage %#x compositeAlpha %u presentMode %u -> %d", w, h, minimg, fmt, cs, usage, alpha, mode, r);
+    if (r == VK_SUCCESS && tl_ue4_sharp_graphics_enabled())
+        tl_log_line("ue4 graphics: actual presentation buffer %ux%u (inspect this size to verify the resolution change; not a measurement of internal 3D resolution)", w, h);
     /* MoltenVK changes the layer from this thread, which has no run loop: make sure the changes are committed rather than waiting for a transaction nothing will flush. */
     [CATransaction flush];
     log_layer_state(g_swapchain_layer, "after swapchain");
@@ -322,6 +332,72 @@ static int w_vkAcquireNextImageKHR(void *device, uint64_t swapchain, uint64_t ti
     return r;
 }
 
+static int64_t monotonic_ns(void)
+{
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (int64_t)t.tv_sec * 1000000000LL + t.tv_nsec;
+}
+static int compare_frame_ms(const void *a, const void *b)
+{
+    double x = *(const double *)a, y = *(const double *)b;
+    return (x > y) - (x < y);
+}
+/* Back-pressure on the producer after presenting, so the next frame's game
+ * work cannot run unbounded. Sleep releases the CPU; no spin loop, GPU idle,
+ * frame skipping, render-target resizing, or changes to Vulkan sync objects.
+ * This is scoped to the explicit efficient UE4 preset, not other games. */
+static void pace_efficient_frame(void)
+{
+    if (!tl_ue4_efficiency_enabled()) return;
+    static _Thread_local int64_t deadline, sampled_at, recovered_at, previous, report_at;
+    static _Thread_local int thermal, cap;
+    static _Thread_local double intervals[600];
+    static _Thread_local unsigned count, late;
+    int64_t now = monotonic_ns();
+    if (!sampled_at || now - sampled_at >= 1000000000LL) {
+        int observed = 0;
+#if TARGET_OS_IOS
+        observed = (int)[NSProcessInfo processInfo].thermalState;
+#endif
+        /* Escalate on the next sample; recover only after 15 seconds at a
+         * lower state, avoiding repeated speed changes near a threshold. */
+        if (observed >= thermal) { thermal = observed; recovered_at = 0; }
+        else if (!recovered_at) recovered_at = now;
+        else if (now - recovered_at >= 15000000000LL) { thermal = observed; recovered_at = 0; }
+        sampled_at = now;
+    }
+    int wanted = tl_ue4_effective_frame_limit(thermal);
+    if (wanted != cap) {
+        cap = wanted; deadline = 0;
+        count = late = 0; previous = 0; report_at = now;
+        tl_log_line("ue4 efficiency: target %d FPS, iOS thermal state %d (0 nominal, 1 fair, 2 serious, 3 critical); native resolution retained", cap, thermal);
+    }
+    int64_t delay = tl_ue4_frame_delay_ns(now, cap, &deadline);
+    if (delay > 0) {
+        struct timespec wait = { .tv_sec = delay / 1000000000LL, .tv_nsec = delay % 1000000000LL };
+        while (nanosleep(&wait, &wait) != 0 && errno == EINTR) {}
+        now = monotonic_ns();
+    }
+    /* Present-to-present wall-clock cadence including pacing, not GPU time.
+     * Discard background/loading gaps instead of reporting them as gameplay. */
+    if (previous && now - previous < 1000000000LL) {
+        double ms = (double)(now - previous) / 1e6;
+        intervals[count++] = ms;
+        if (ms > 1000.0 / cap * 1.2) late++;
+    } else { count = late = 0; report_at = now; }
+    previous = now;
+    if (count && (count == 600 || now - report_at >= 10000000000LL)) {
+        double sum = 0;
+        for (unsigned i = 0; i < count; i++) sum += intervals[i];
+        qsort(intervals, count, sizeof(intervals[0]), compare_frame_ms);
+        unsigned p95 = (count * 95 + 99) / 100 - 1;
+        tl_log_line("ue4 efficiency: present cadence %.1f FPS, p95 %.2f ms, %u/%u intervals >120%% of target budget, thermal %d, cap %d; not GPU execution time",
+                    count * 1000.0 / sum, intervals[p95], late, count, thermal, cap);
+        count = late = 0; report_at = now;
+    }
+}
+
 typedef int (*pfn_queue_present)(void *, const void *);
 static int w_vkQueuePresentKHR(void *queue, const void *info)
 {
@@ -331,7 +407,7 @@ static int w_vkQueuePresentKHR(void *queue, const void *info)
 #if TARGET_OS_OSX
     if (V.frame_dir[0] && n % (V.frame_every > 0 ? (unsigned)V.frame_every : 60u) == 0) capture_frame(queue, info);
 #endif
-    if (n == 3 || n == 60 || n == 400 || n == 3000) { probe_frame(queue, info, n); log_layer_state(g_swapchain_layer, "present"); }
+    if (V.probe_frames && (n == 3 || n == 60 || n == 400 || n == 3000)) { probe_frame(queue, info, n); log_layer_state(g_swapchain_layer, "present"); }
     /* VK_GOOGLE_display_timing: the game may ask for each frame to appear at a time of its own choosing. MoltenVK hands that to Metal as an absolute time on the system's media
      * clock, which is not the clock an Android game counted its nanoseconds on, so a time that was "now" to the game can be hours away to Metal and the frame is never shown.
      * Frames are shown when they are ready instead. */
@@ -347,6 +423,7 @@ static int w_vkQueuePresentKHR(void *queue, const void *info)
         }
     }
     int r = real ? real(queue, info) : -3;
+    if (r >= 0) pace_efficient_frame();
     { static atomic_int bad; if (r != VK_SUCCESS && atomic_fetch_add(&bad, 1) < 20) tl_log_line("vulkan: vkQueuePresentKHR #%lu -> %d", n, r); }
     { static int tr = -1; if (tr < 0) tr = getenv("TL_VK_TRACE") ? 1 : 0; if (tr && n <= 5) tl_log_line("vulkan: vkQueuePresentKHR #%lu -> %d", n, r); }
     return r;

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// A page pushed onto Home or the Library: a game's page, its settings or its technical details, an Android app's page,
 /// or Android's own.
@@ -24,6 +25,8 @@ enum LibraryRoute: Hashable {
     @Published var home: [LibraryRoute] = []
     @Published var library: [LibraryRoute] = []
     @Published var libraryFilter: LibraryFilter = .all
+    /// The platform chips on Home and in the Library: one choice, shared by both.
+    @Published var platform: PlatformFilter = .all
     /// Downloads, as a sheet: Home's Downloads tile opens it.
     @Published var showDownloads = false
     /// Android's storage, as a sheet over whatever is showing.
@@ -72,7 +75,8 @@ enum LibraryRoute: Hashable {
 
     /// Pick APKs or bundles; Husk then asks where they go.
     func addSomething() {
-        HuskFilePicker.present { urls in IncomingFiles.shared.receive(urls) }
+        // .folder too: a PS4 game is an extracted folder
+        HuskFilePicker.present(types: [.item, .folder]) { urls in IncomingFiles.shared.receive(urls) }
     }
 }
 

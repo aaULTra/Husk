@@ -35,7 +35,7 @@ extern "C" {
 typedef struct tl_lib tl_lib;
 
 /* Where libraries come from: the APKs' lib/arm64-v8a/ directories. */
-#define TL_LD_MAX_APKS 16
+#define TL_LD_MAX_APKS 48   /* a big game ships a dozen asset-pack splits besides its config ones (Disney Speedstorm: 16) */
 bool tl_ld_add_apk(const char *path);
 /* A split APK of the app about to start; added right after its base APK, whichever engine adds that. */
 void tl_ld_queue_split(const char *path);
@@ -70,6 +70,14 @@ tl_lib *tl_ld_find_lib(const char *name);
 
 /* A symbol exported by `lib`, or (lib == NULL) by any loaded library, in load order. */
 void *tl_ld_sym(tl_lib *lib, const char *name);
+/* Replace an exported function before any guest threads execute it. Refuses
+ * non-functions, undersized symbols and addresses outside executable code. */
+bool tl_ld_replace_function(tl_lib *lib, const char *name, void *replacement);
+/* Retain the original through a trampoline. The caller supplies an exact,
+ * reviewed 16-byte PC-independent prologue; mismatches are never patched.
+ * Install before guest threads start. NULL means no patch was installed. */
+void *tl_ld_hook_prologue(tl_lib *lib, const char *name, void *replacement,
+                         const uint32_t expected[4]);
 void *tl_ld_sym_deep(tl_lib *lib, const char *name, tl_lib **found_in);   /* the library, then its dependencies, as bionic's dlsym(handle) */
 
 /* The library an address belongs to (either view), and the nearest exported symbol. */

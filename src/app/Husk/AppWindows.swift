@@ -155,6 +155,8 @@ private struct AppWindow: View {
                 GameStatusStore.shared.record(app.id, st == Int32(HUSK_UNITY_FAILED) ? .failed : .crashed, diagnosis: d)
             } else if st == Int32(HUSK_UNITY_FAILED) { GameStatusStore.shared.record(app.id, .failed) }
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in model.stop() }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in model.start() }
         .onReceive(NotificationCenter.default.publisher(for: TLUnityUIView.appClosedItself)) { _ in windows.close() }
         .overlay { if let d = stoppedWhy { AppStoppedOverlay(app: app, diagnosis: d) { windows.close() } } }
         .onReceive(NotificationCenter.default.publisher(for: WebAppRuntime.closed)) { n in
@@ -176,7 +178,7 @@ private struct AppWindow: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let apk = app.apks.first {
             TLWindowScreen(apk: apk, extraApks: Array(app.apks.dropFirst()), dataDir: app.nativeDataDir,
-                           engine: app.screenEngine, portrait: portrait, scale: settings.resolution.scale)
+                           engine: app.screenEngine, portrait: portrait, scale: settings.renderScale(for: app), sharpGraphics: settings.usesSharpGraphics(for: app), efficientGraphics: settings.usesEfficientGraphics(for: app), efficientFrameLimit: settings.efficientFrameRate.rawValue, threadPolicy: settings.workerScheduling.rawValue)
                 .overlay {
                     if model.frames == 0 {
                         VStack(spacing: 10) {
@@ -324,10 +326,14 @@ struct TLWindowScreen: UIViewRepresentable {
     let engine: TLNativeEngine
     let portrait: Bool
     let scale: CGFloat
+    var sharpGraphics: Bool = false
+    var efficientGraphics: Bool = false
+    var efficientFrameLimit: Int = 60
+    var threadPolicy: Int = 0
 
     func makeUIView(context: Context) -> TLWindowHost {
         TLWindowHost(game: TLUnityScreen.view(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine,
-                                              portrait: portrait, scale: scale))
+                                              portrait: portrait, scale: scale, sharpGraphics: sharpGraphics, efficientGraphics: efficientGraphics, efficientFrameLimit: efficientFrameLimit, threadPolicy: threadPolicy))
     }
     func updateUIView(_ view: TLWindowHost, context: Context) { view.setNeedsLayout() }
 }

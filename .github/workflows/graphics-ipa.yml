@@ -1,0 +1,80 @@
+name: Build Dungeons Efficient 60 FPS IPA
+on:
+  push:
+    branches: [codex/dungeons-efficient-native]
+  pull_request:
+    paths:
+      - 'src/app/Husk/TLAppSettings.swift'
+      - 'src/app/Husk/TLUnityView.swift'
+      - 'src/app/Husk/AppWindows.swift'
+      - 'src/app/Husk/HuskBridge.h'
+      - 'src/translation-layer-next/husk-tl-ue4-graphics.*'
+      - 'src/translation-layer-next/husk-tl-jni-ue4.c'
+      - 'src/translation-layer-next/husk-tl-nativeactivity.c'
+      - 'src/translation-layer-next/husk-tl-bionic-ndk.c'
+      - 'src/translation-layer-next/husk-tl-bionic-io.c'
+      - 'src/translation-layer-next/husk-tl-bionic-str.c'
+      - 'src/translation-layer-next/husk-tl-vulkan.m'
+      - 'src/translation-layer-next/husk-tl-bionic-pthread.c'
+      - 'src/translation-layer-next/husk-tl-bionic.c'
+      - 'src/translation-layer-next/husk-tl-thread-policy.*'
+      - 'tests/translation-layer/test_thread_policy.py'
+      - 'src/translation-layer/husk-tl-load.c'
+      - 'src/translation-layer/husk-tl.h'
+      - 'tests/translation-layer/test_source_efficiency.py'
+      - 'scripts/stage_graphics_build.py'
+      - '.github/workflows/graphics-ipa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dungeons-graphics-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test graphics configuration and restoration
+        run: |
+          python3 tests/translation-layer/test_ue4_graphics.py -v
+          python3 tests/translation-layer/test_ue4_resolution_hook.py -v
+          python3 tests/translation-layer/test_source_efficiency.py -v
+          python3 tests/translation-layer/test_thread_policy.py -v
+      - name: Install XcodeGen
+        run: brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+      - name: Download pinned official libraries and resources
+        run: |
+          mkdir -p build
+          curl --fail --location --retry 3 https://github.com/Leviidev/Husk/releases/download/3.0/Husk.ipa -o build/Husk-3.0-base.ipa
+          python3 scripts/stage_graphics_build.py build/Husk-3.0-base.ipa
+      - name: Install Rust iOS target
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add aarch64-apple-ios
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src/rppairing-ios/target
+          key: graphics-pairing-${{ runner.os }}-${{ hashFiles('src/rppairing-ios/Cargo.lock') }}
+      - name: Build on-device pairing library
+        run: bash scripts/build_rppairing_ios.sh
+      - name: Build and validate IPA
+        run: bash scripts/package_ipa.sh "$PWD/build/Husk-Dungeons-Efficient-60.ipa"
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Husk-Dungeons-Efficient-60
+          path: build/Husk-Dungeons-Efficient-60.ipa
+          if-no-files-found: error
+      - name: Upload compiler log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: graphics-build-log
+          path: /tmp/husk_ipa/build.log
+          if-no-files-found: ignore

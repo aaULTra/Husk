@@ -16,6 +16,8 @@
 #include "husk-tl-egl.h"
 #include "husk-tl-gamepad.h"
 #include "husk-tl-vulkan.h"
+#include "husk-tl-ue4-graphics.h"
+#include "husk-tl-thread-policy.h"
 #include "husk-tl-jni.h"
 #include "husk-tl-internal.h"
 #include "husk-tl-ld.h"
@@ -138,6 +140,105 @@ static bool patch_return(tl_lib *lib, const char *symbol, unsigned value)
     return true;
 }
 
+/* UE4 Android returns this 16-byte, non-HFA aggregate in x0/x1, on both
+ * Android AAPCS64 and Darwin arm64. The bool parameter added in UE4.26 is
+ * deliberately unused: neither window-thread choice changes our host size.
+ * Resolve exact exported names, never guessed addresses or instruction scans. */
+typedef struct { int32_t left, top, right, bottom; } tl_ue4_screen_rect;
+static tl_ue4_screen_rect sharp_screen_rect;
+typedef void (*tl_ue4_resolution_request)(int, int, int);
+static tl_ue4_resolution_request original_resolution_request;
+typedef bool (*tl_ue4_parse_resolution)(const uint16_t *, uint32_t *, uint32_t *, int *);
+static tl_ue4_parse_resolution original_parse_resolution;
+static bool sharp_parse_resolution(const uint16_t *text, uint32_t *width, uint32_t *height, int *mode)
+{
+    bool valid = original_parse_resolution(text, width, height, mode);
+    if (valid && *width > 0 && *height > 0 &&
+        (*width != (uint32_t)sharp_screen_rect.right || *height != (uint32_t)sharp_screen_rect.bottom)) {
+        tl_log_line("ue4 graphics: parsed resolution v4 %ux%u -> %dx%d, mode %d",
+                    *width, *height, sharp_screen_rect.right, sharp_screen_rect.bottom, *mode);
+        *width = (uint32_t)sharp_screen_rect.right;
+        *height = (uint32_t)sharp_screen_rect.bottom;
+    }
+    return valid;
+}
+static void sharp_request_resolution(int width, int height, int mode)
+{
+    if (width > 0 && height > 0 &&
+        (width != sharp_screen_rect.right || height != sharp_screen_rect.bottom)) {
+        tl_log_line("ue4 graphics: resolution request v4 %dx%d -> %dx%d, mode %d",
+                    width, height, sharp_screen_rect.right, sharp_screen_rect.bottom, mode);
+        width = sharp_screen_rect.right;
+        height = sharp_screen_rect.bottom;
+    }
+    /* Preserve mode, the original CVar priority, delegates and engine resize
+     * behaviour. Do not directly resize Vulkan images or persist game saves. */
+    original_resolution_request(width, height, mode);
+}
+static atomic_uint sharp_rect_calls;
+static tl_ue4_screen_rect sharp_get_screen_rect(void)
+{
+    unsigned call = atomic_fetch_add(&sharp_rect_calls, 1);
+    if (call < 8)
+        tl_log_line("ue4 graphics: engine screen rect call %u held at %dx%d", call + 1,
+                    sharp_screen_rect.right, sharp_screen_rect.bottom);
+    return sharp_screen_rect;
+}
+
+static void install_sharp_screen_rect(tl_lib *ue, const char *project, int width, int height)
+{
+    /* This changes engine behaviour, so limit it to the game that supplied
+     * the reproducing log. Game Default and other UE4 games keep stock code. */
+    if (!tl_ue4_sharp_graphics_enabled() || !project || strcmp(project, "Dungeons") ||
+        !ue || width < 8 || height < 8 || width > 16384 || height > 16384) return;
+    sharp_screen_rect = (tl_ue4_screen_rect){0, 0, width & ~7, height & ~7};
+    atomic_store(&sharp_rect_calls, 0);
+    static const char *const names[] = {
+        "_ZN14FAndroidWindow13GetScreenRectEb", /* UE4.26 */
+        "_ZN14FAndroidWindow13GetScreenRectEv"  /* older UE4 */
+    };
+    unsigned installed = 0;
+    for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+        if (tl_ld_replace_function(ue, names[i], (void *)sharp_get_screen_rect)) {
+            installed++;
+            tl_log_line("ue4 graphics: native engine screen rect override v3 installed: %s, %dx%d",
+                        names[i], sharp_screen_rect.right, sharp_screen_rect.bottom);
+        }
+    }
+    if (!installed)
+        tl_log_line("ue4 graphics: native engine screen rect override v3 unavailable; keeping startup override only");
+
+    /* Verified in the supplied libUE4.so (build ID
+     * 2b5d2a005213e32589cdd34f53882fe49e02cd4f), function at 0xb203870:
+     * sub sp,sp,#0x60; stp x22,x21,[sp,#0x30];
+     * stp x20,x19,[sp,#0x40]; stp x29,x30,[sp,#0x50].
+     * All four are PC independent and neither read nor write x16.
+     * ApplySettings -> ApplyResolutionSettings and HandleSetResCommand call
+     * this function directly, independently of GetScreenRect. */
+    static const uint32_t prologue[4] = {
+        0xD10183FFu, 0xA90357F6u, 0xA9044FF4u, 0xA9057BFDu
+    };
+    original_resolution_request = (tl_ue4_resolution_request)tl_ld_hook_prologue(
+        ue, "_ZN17FSystemResolution23RequestResolutionChangeEiiN11EWindowMode4TypeE",
+        (void *)sharp_request_resolution, prologue);
+    tl_log_line("ue4 graphics: saved-resolution request override v4 %s",
+                original_resolution_request ? "installed" : "unavailable (engine prologue did not match or allocation failed)");
+
+    /* The game's ExecuteResolutionCommand constructs "r.SetRes ", bypassing
+     * RequestResolutionChange. Its value is consumed by SystemResolutionSinkCallback
+     * through ParseResolution (BL at 0xb1e7fb0 -> 0xb1e612c). Keep the original
+     * parser's validation and mode handling; change only valid positive sizes.
+     * Reviewed prefix: sub sp,sp,#0xb0; stp x28,x27,[sp,#0x50];
+     * stp x26,x25,[sp,#0x60]; stp x24,x23,[sp,#0x70]. */
+    static const uint32_t parse_prologue[4] = {
+        0xD102C3FFu, 0xA9056FFCu, 0xA90667FAu, 0xA9075FF8u
+    };
+    original_parse_resolution = (tl_ue4_parse_resolution)tl_ld_hook_prologue(
+        ue, "_Z15ParseResolutionPKDsRjS1_Ri", (void *)sharp_parse_resolution, parse_prologue);
+    tl_log_line("ue4 graphics: r.SetRes parser override v4 %s",
+                original_parse_resolution ? "installed" : "unavailable (engine prologue did not match or allocation failed)");
+}
+
 /* The OBB the engine looks for: <package>.obb in the OBB directory, named main.<version>.<package>.obb. */
 #define OBB_VERSION 42
 
@@ -249,6 +350,14 @@ bool tl_na_start(const tl_ga_config *cfg)
         return start_generic();
     }
     tl_ue4_hle_install(cfg->package_name, cfg->apk_path, cfg->data_dir, N.ext_dir);
+    tl_log_line("ue4 graphics: preset %s; offered surface %dx%d; startup-file override v2",
+                tl_ue4_efficiency_enabled() ? "Sharp / Efficient" : (tl_ue4_sharp_graphics_enabled() ? "Sharp / High Quality" : "Game Default"), cfg->width, cfg->height);
+    const char *project = tl_ue4_meta("com.epicgames.ue4.GameActivity.ProjectName");
+    tl_thread_policy_activate(project);
+    if (!tl_ue4_graphics_prepare(N.internal_dir, N.ext_dir, project))
+        tl_log_line("ue4: graphics config could not be prepared completely; launch arguments will still be supplied");
+    else
+        tl_log_line("ue4: graphics config prepared for project %s (individual CVars still depend on the game)", project ? project : "(unknown)");
     drop_empty_saves(N.data, 0);
 
     N.activity = tl_jni_new_object(tl_jni_class(CLS));
@@ -262,6 +371,7 @@ bool tl_na_start(const tl_ga_config *cfg)
         load_library(libs[i]);
         if (tl_jni_pending()) { tl_log_line("ue4: loading lib%s.so failed", libs[i]); return false; }
     }
+    install_sharp_screen_rect(tl_ld_find_lib("libUE4.so"), project, cfg->width, cfg->height);
     if (getenv("TL_UE4_NO_VULKAN")) {
         tl_lib *ue = tl_ld_find_lib("libUE4.so");
         if (ue) { patch_return(ue, "_ZN12FAndroidMisc15ShouldUseVulkanEv", 0); patch_return(ue, "_ZN12FAndroidMisc22ShouldUseDesktopVulkanEv", 0); }
