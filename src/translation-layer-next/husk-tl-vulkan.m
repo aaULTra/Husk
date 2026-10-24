@@ -303,6 +303,17 @@ static void probe_frame(void *queue, const void *info, unsigned long n)
 }
 
 typedef int (*pfn_create_swapchain)(void *, const void *, const void *, uint64_t *);
+static int64_t monotonic_ns(void);
+enum { TIMING_ACQUIRE, TIMING_SUBMIT, TIMING_PRESENT, TIMING_SLEEP, TIMING_GRAPHICS_PIPELINES, TIMING_COMPUTE_PIPELINES, TIMING_COUNT };
+/* Host API durations only. These calls may overlap between threads and are not
+ * GPU execution time. Relaxed counters avoid locks or GPU synchronization. */
+static struct { atomic_uint_fast64_t ns, calls; } host_timings[TIMING_COUNT];
+static void record_host_timing(unsigned stage, int64_t start)
+{
+    uint64_t elapsed = (uint64_t)(monotonic_ns() - start);
+    atomic_fetch_add_explicit(&host_timings[stage].ns, elapsed, memory_order_relaxed);
+    atomic_fetch_add_explicit(&host_timings[stage].calls, 1, memory_order_relaxed);
+}
 static int w_vkCreateSwapchainKHR(void *device, const void *ci, const void *alloc, uint64_t *out)
 {
     static pfn_create_swapchain real;
@@ -326,10 +337,105 @@ static int w_vkAcquireNextImageKHR(void *device, uint64_t swapchain, uint64_t ti
     static pfn_acquire real;
     static atomic_int bad, seen;
     if (!real && V.lib) real = (pfn_acquire)dlsym(V.lib, "vkAcquireNextImageKHR");
+    bool measure = tl_ue4_sharp_graphics_enabled();
+    int64_t start = measure ? monotonic_ns() : 0;
     int r = real ? real(device, swapchain, timeout, sem, fence, index) : -3;
+    if (measure) record_host_timing(TIMING_ACQUIRE, start);
     if (r != VK_SUCCESS && atomic_fetch_add(&bad, 1) < 20) tl_log_line("vulkan: vkAcquireNextImageKHR -> %d", r);
     else if (atomic_fetch_add(&seen, 1) < 2) tl_log_line("vulkan: vkAcquireNextImageKHR -> %d (image %u)", r, index ? *index : 0);
     return r;
+}
+
+typedef int (*pfn_queue_submit)(void *, uint32_t, const void *, uint64_t);
+static int w_vkQueueSubmit(void *queue, uint32_t count, const void *submits, uint64_t fence)
+{
+    static _Atomic(pfn_queue_submit) cached;
+    pfn_queue_submit real = atomic_load_explicit(&cached, memory_order_acquire);
+    if (!real && V.lib) {
+        real = (pfn_queue_submit)dlsym(V.lib, "vkQueueSubmit");
+        atomic_store_explicit(&cached, real, memory_order_release);
+    }
+    bool measure = tl_ue4_sharp_graphics_enabled();
+    int64_t start = measure ? monotonic_ns() : 0;
+    int result = real ? real(queue, count, submits, fence) : -3;
+    if (measure) record_host_timing(TIMING_SUBMIT, start);
+    return result;
+}
+
+/* Observe guest cache use without changing cache contents, pipeline options,
+ * compilation order or synchronization. Data returned is not proof of a disk save. */
+static atomic_uint cache_log_events;
+static atomic_uint_fast64_t cache_creates, cache_seeded, cache_readbacks, cached_pipeline_calls, uncached_pipeline_calls;
+typedef int (*pfn_cache_create)(void *, const void *, const void *, uint64_t *);
+static int w_vkCreatePipelineCache(void *device, const void *ci, const void *alloc, uint64_t *out)
+{
+    static _Atomic(pfn_cache_create) cached;
+    pfn_cache_create real = atomic_load_explicit(&cached, memory_order_acquire);
+    if (!real && V.lib) {
+        real = (pfn_cache_create)dlsym(V.lib, "vkCreatePipelineCache");
+        atomic_store_explicit(&cached, real, memory_order_release);
+    }
+    int result = real ? real(device, ci, alloc, out) : -3;
+    if (tl_ue4_sharp_graphics_enabled()) {
+        size_t bytes = 0;
+        if (ci) memcpy(&bytes, (const uint8_t *)ci + 24, sizeof(bytes));
+        if (result == VK_SUCCESS) {
+            atomic_fetch_add_explicit(&cache_creates, 1, memory_order_relaxed);
+            if (bytes) atomic_fetch_add_explicit(&cache_seeded, 1, memory_order_relaxed);
+        }
+        if (atomic_fetch_add_explicit(&cache_log_events, 1, memory_order_relaxed) < 24)
+            tl_log_line("ue4 cache: create initial data %llu bytes, result %d; data supplied by game, not proof of cache hit", (unsigned long long)bytes, result);
+    }
+    return result;
+}
+typedef int (*pfn_cache_data)(void *, uint64_t, size_t *, void *);
+static int w_vkGetPipelineCacheData(void *device, uint64_t cache, size_t *size, void *data)
+{
+    static _Atomic(pfn_cache_data) cached;
+    pfn_cache_data real = atomic_load_explicit(&cached, memory_order_acquire);
+    if (!real && V.lib) {
+        real = (pfn_cache_data)dlsym(V.lib, "vkGetPipelineCacheData");
+        atomic_store_explicit(&cached, real, memory_order_release);
+    }
+    int result = real ? real(device, cache, size, data) : -3;
+    if (tl_ue4_sharp_graphics_enabled()) {
+        if (data && result >= 0) atomic_fetch_add_explicit(&cache_readbacks, 1, memory_order_relaxed);
+        if (atomic_fetch_add_explicit(&cache_log_events, 1, memory_order_relaxed) < 24)
+            tl_log_line("ue4 cache: %s %llu bytes, result %d; readback does not confirm disk persistence", data ? "data readback" : "size query", (unsigned long long)(size ? *size : 0), result);
+    }
+    return result;
+}
+typedef int (*pfn_create_pipelines)(void *, uint64_t, uint32_t, const void *, const void *, uint64_t *);
+static int measure_pipeline_create(pfn_create_pipelines real, unsigned stage, void *device, uint64_t cache, uint32_t count, const void *ci, const void *alloc, uint64_t *out)
+{
+    bool measure = tl_ue4_sharp_graphics_enabled();
+    int64_t start = measure ? monotonic_ns() : 0;
+    int result = real ? real(device, cache, count, ci, alloc, out) : -3;
+    if (measure) {
+        record_host_timing(stage, start);
+        atomic_fetch_add_explicit(cache ? &cached_pipeline_calls : &uncached_pipeline_calls, 1, memory_order_relaxed);
+    }
+    return result;
+}
+static int w_vkCreateGraphicsPipelines(void *device, uint64_t cache, uint32_t count, const void *ci, const void *alloc, uint64_t *out)
+{
+    static _Atomic(pfn_create_pipelines) cached;
+    pfn_create_pipelines real = atomic_load_explicit(&cached, memory_order_acquire);
+    if (!real && V.lib) {
+        real = (pfn_create_pipelines)dlsym(V.lib, "vkCreateGraphicsPipelines");
+        atomic_store_explicit(&cached, real, memory_order_release);
+    }
+    return measure_pipeline_create(real, TIMING_GRAPHICS_PIPELINES, device, cache, count, ci, alloc, out);
+}
+static int w_vkCreateComputePipelines(void *device, uint64_t cache, uint32_t count, const void *ci, const void *alloc, uint64_t *out)
+{
+    static _Atomic(pfn_create_pipelines) cached;
+    pfn_create_pipelines real = atomic_load_explicit(&cached, memory_order_acquire);
+    if (!real && V.lib) {
+        real = (pfn_create_pipelines)dlsym(V.lib, "vkCreateComputePipelines");
+        atomic_store_explicit(&cached, real, memory_order_release);
+    }
+    return measure_pipeline_create(real, TIMING_COMPUTE_PIPELINES, device, cache, count, ci, alloc, out);
 }
 
 static int64_t monotonic_ns(void)
@@ -343,23 +449,29 @@ static int compare_frame_ms(const void *a, const void *b)
     double x = *(const double *)a, y = *(const double *)b;
     return (x > y) - (x < y);
 }
-/* Back-pressure on the producer after presenting, so the next frame's game
- * work cannot run unbounded. Sleep releases the CPU; no spin loop, GPU idle,
- * frame skipping, render-target resizing, or changes to Vulkan sync objects.
- * This is scoped to the explicit efficient UE4 preset, not other games. */
+/* Observe every Sharp mode. Keep the working Efficient limiter unchanged.
+ * Timings do not add GPU waits, readbacks or per-frame log messages. */
 static void pace_efficient_frame(void)
 {
-    if (!tl_ue4_efficiency_enabled()) return;
+    if (!tl_ue4_sharp_graphics_enabled()) return;
     static _Thread_local int64_t deadline, sampled_at, recovered_at, previous, report_at;
     static _Thread_local int thermal, cap;
+    static _Thread_local int last_observed = -1, last_low_power = -1;
     static _Thread_local double intervals[600];
     static _Thread_local unsigned count, late;
+    static _Thread_local uint64_t last_ns[TIMING_COUNT], last_calls[TIMING_COUNT];
     int64_t now = monotonic_ns();
     if (!sampled_at || now - sampled_at >= 1000000000LL) {
-        int observed = 0;
+        int observed = 0, low_power = 0;
 #if TARGET_OS_IOS
-        observed = (int)[NSProcessInfo processInfo].thermalState;
+        NSProcessInfo *process = [NSProcessInfo processInfo];
+        observed = (int)process.thermalState;
+        low_power = process.lowPowerModeEnabled ? 1 : 0;
 #endif
+        if (observed != last_observed || low_power != last_low_power) {
+            tl_log_line("ue4 power: low-power mode %d, reported thermal %d (0 nominal, 1 fair, 2 serious, 3 critical); settings and pacing unchanged by observation", low_power, observed);
+            last_observed = observed; last_low_power = low_power;
+        }
         /* Escalate on the next sample; recover only after 15 seconds at a
          * lower state, avoiding repeated speed changes near a threshold. */
         if (observed >= thermal) { thermal = observed; recovered_at = 0; }
@@ -368,15 +480,18 @@ static void pace_efficient_frame(void)
         sampled_at = now;
     }
     int wanted = tl_ue4_effective_frame_limit(thermal);
+    int host_cap = wanted;
     if (wanted != cap) {
         cap = wanted; deadline = 0;
         count = late = 0; previous = 0; report_at = now;
-        tl_log_line("ue4 efficiency: target %d FPS, iOS thermal state %d (0 nominal, 1 fair, 2 serious, 3 critical); selected launch resolution retained", cap, thermal);
+        tl_log_line("ue4 timing: requested cap %d FPS (0 game controlled), host cap %d (0 no extra limiter), thermal %d; selected launch resolution retained", cap, host_cap, thermal);
     }
-    int64_t delay = tl_ue4_frame_delay_ns(now, cap, &deadline);
+    int64_t delay = tl_ue4_frame_delay_ns(now, host_cap, &deadline);
     if (delay > 0) {
+        int64_t sleep_started = now;
         struct timespec wait = { .tv_sec = delay / 1000000000LL, .tv_nsec = delay % 1000000000LL };
         while (nanosleep(&wait, &wait) != 0 && errno == EINTR) {}
+        record_host_timing(TIMING_SLEEP, sleep_started);
         now = monotonic_ns();
     }
     /* Present-to-present wall-clock cadence including pacing, not GPU time.
@@ -384,16 +499,41 @@ static void pace_efficient_frame(void)
     if (previous && now - previous < 1000000000LL) {
         double ms = (double)(now - previous) / 1e6;
         intervals[count++] = ms;
-        if (ms > 1000.0 / cap * 1.2) late++;
-    } else { count = late = 0; report_at = now; }
+        if (ms > 1000.0 / (cap ? cap : 60) * 1.2) late++;
+    } else {
+        count = late = 0; report_at = now;
+        for (unsigned i = 0; i < TIMING_COUNT; i++) {
+            last_ns[i] = atomic_load_explicit(&host_timings[i].ns, memory_order_relaxed);
+            last_calls[i] = atomic_load_explicit(&host_timings[i].calls, memory_order_relaxed);
+        }
+    }
     previous = now;
     if (count && (count == 600 || now - report_at >= 10000000000LL)) {
         double sum = 0;
         for (unsigned i = 0; i < count; i++) sum += intervals[i];
         qsort(intervals, count, sizeof(intervals[0]), compare_frame_ms);
         unsigned p95 = (count * 95 + 99) / 100 - 1;
-        tl_log_line("ue4 efficiency: present cadence %.1f FPS, p95 %.2f ms, %u/%u intervals >120%% of target budget, thermal %d, cap %d; not GPU execution time",
-                    count * 1000.0 / sum, intervals[p95], late, count, thermal, cap);
+        double avg[TIMING_COUNT];
+        uint64_t samples[TIMING_COUNT];
+        for (unsigned i = 0; i < TIMING_COUNT; i++) {
+            uint64_t ns = atomic_load_explicit(&host_timings[i].ns, memory_order_relaxed);
+            uint64_t calls = atomic_load_explicit(&host_timings[i].calls, memory_order_relaxed);
+            samples[i] = calls - last_calls[i];
+            avg[i] = samples[i] ? (double)(ns - last_ns[i]) / samples[i] / 1e6 : 0;
+            last_ns[i] = ns; last_calls[i] = calls;
+        }
+        tl_log_line("ue4 timing: cadence %.1f FPS, p95 %.2f ms, max %.2f ms, %u/%u intervals >120%% of %d FPS reference; thermal %d, engine cap %d, host cap %d; host call averages acquire %.3f ms (%llu), submit %.3f ms (%llu), present %.3f ms (%llu), sleep %.3f ms (%llu); calls may overlap; not GPU execution or displayed-frame timing",
+                    count * 1000.0 / sum, intervals[p95], intervals[count - 1], late, count, cap ? cap : 60, thermal, cap, host_cap,
+                    avg[0], (unsigned long long)samples[0], avg[1], (unsigned long long)samples[1],
+                    avg[2], (unsigned long long)samples[2], avg[3], (unsigned long long)samples[3]);
+        tl_log_line("ue4 cache totals: created %llu, supplied initial data %llu, readbacks %llu, pipeline calls with cache %llu / null %llu; window graphics create %.3f ms (%llu), compute create %.3f ms (%llu); host times, not GPU execution or verified cache hits",
+                    (unsigned long long)atomic_load_explicit(&cache_creates, memory_order_relaxed),
+                    (unsigned long long)atomic_load_explicit(&cache_seeded, memory_order_relaxed),
+                    (unsigned long long)atomic_load_explicit(&cache_readbacks, memory_order_relaxed),
+                    (unsigned long long)atomic_load_explicit(&cached_pipeline_calls, memory_order_relaxed),
+                    (unsigned long long)atomic_load_explicit(&uncached_pipeline_calls, memory_order_relaxed),
+                    avg[TIMING_GRAPHICS_PIPELINES], (unsigned long long)samples[TIMING_GRAPHICS_PIPELINES],
+                    avg[TIMING_COMPUTE_PIPELINES], (unsigned long long)samples[TIMING_COMPUTE_PIPELINES]);
         count = late = 0; report_at = now;
     }
 }
@@ -422,7 +562,10 @@ static int w_vkQueuePresentKHR(void *queue, const void *info)
             uint64_t zero = 0; memcpy(times + i * 16 + 8, &zero, 8);
         }
     }
+    bool measure = tl_ue4_sharp_graphics_enabled();
+    int64_t start = measure ? monotonic_ns() : 0;
     int r = real ? real(queue, info) : -3;
+    if (measure) record_host_timing(TIMING_PRESENT, start);
     if (r >= 0) pace_efficient_frame();
     { static atomic_int bad; if (r != VK_SUCCESS && atomic_fetch_add(&bad, 1) < 20) tl_log_line("vulkan: vkQueuePresentKHR #%lu -> %d", n, r); }
     { static int tr = -1; if (tr < 0) tr = getenv("TL_VK_TRACE") ? 1 : 0; if (tr && n <= 5) tl_log_line("vulkan: vkQueuePresentKHR #%lu -> %d", n, r); }
@@ -783,6 +926,11 @@ static const struct { const char *name; void *fn; } k_over[] = {
     { "vkEnumerateInstanceExtensionProperties", w_vkEnumerateInstanceExtensionProperties },
     { "vkCreateAndroidSurfaceKHR", w_vkCreateAndroidSurfaceKHR },
     { "vkQueuePresentKHR", w_vkQueuePresentKHR },
+    { "vkQueueSubmit", w_vkQueueSubmit },
+    { "vkCreatePipelineCache", w_vkCreatePipelineCache },
+    { "vkGetPipelineCacheData", w_vkGetPipelineCacheData },
+    { "vkCreateGraphicsPipelines", w_vkCreateGraphicsPipelines },
+    { "vkCreateComputePipelines", w_vkCreateComputePipelines },
     { "vkCreateSwapchainKHR", w_vkCreateSwapchainKHR },
     { "vkAcquireNextImageKHR", w_vkAcquireNextImageKHR },
     { "vkGetPhysicalDeviceFeatures", w_vkGetPhysicalDeviceFeatures },

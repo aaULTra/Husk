@@ -349,3 +349,42 @@ Device validation: use the same scene and camera position, compare Game Default
 and Sharp after a complete restart, inspect texture detail and motion, and check
 performance after the device has warmed up. The host tests verify configuration
 handling; only this device comparison verifies the visual improvement.
+
+
+## Power and frame-wait diagnostics (working settings preserved)
+
+The user reports stable 60 FPS on the M4 iPad with Low Power Mode disabled.
+The proposed recovery/rollback branch remains parked. This pass does not
+change graphics, resolution, scheduling, cache contents or the working limiter.
+
+All Sharp modes now sample Low Power Mode and thermal state once per second
+while presenting. Startup and state changes are logged; thermal raw state is
+separate from the limiter's existing recovery hysteresis. They report OS states,
+not chassis temperature or power consumption in watts. Neither stable 60 FPS nor
+nominal thermal state alone proves that the device is cool indefinitely.
+
+Monotonic timestamps around acquire, submit, present and host sleeps report
+average host call durations and sample counts. Cadence reports include p95,
+maximum interval and late intervals. Calls on different threads may overlap;
+these are not GPU execution times or actual display timestamps. New counters
+use relaxed atomics; no GPU waits, readbacks, fences or per-frame log messages
+are added. There is a small instrumentation cost, not a claim of zero overhead.
+QueueSubmit2 is not timed, and absent submit samples must not be treated as
+proof that the game did no submission work.
+
+Cache observation covers vkCreatePipelineCache, vkGetPipelineCacheData,
+vkCreateGraphicsPipelines and vkCreateComputePipelines. Initial-data size,
+readback counts, null versus non-null cache arguments and pipeline-creation
+host durations make the next cache decision evidence-based. Initial data does
+not prove a cache hit; readback does not prove disk persistence. Cache log
+events are bounded. No cache files are written, injected, merged or cleared.
+Parallel pipeline workers use atomic function-pointer lookup. Guest arguments,
+results and output buffers are passed through, including errors and partial
+results.
+
+Four compiled tests exercise the actual wrappers with a fake Vulkan host,
+checking argument/result forwarding, cache inputs and outputs, report-window
+execution and the existing limiter's lack of extra waits on over-budget frames.
+These supplement the 45 existing checks (49 total). They do not benchmark the
+real game or prove cooling/FPS benefits. An ordinary sustained gameplay log now
+provides power-state context, host waits and cache adoption in one collection.
