@@ -960,6 +960,10 @@ struct TLCocosAttemptView: View {
         .onAppear {
             HuskOrientation.set(portrait ? .portrait : .landscape)
             UIApplication.shared.isIdleTimerDisabled = settings.keepAwake
+            if engine == .ue4 {
+                let selection = settings.efficientResolution == .custom ? "Custom \(settings.customResolutionPercent)%" : settings.efficientResolution.title
+                HuskLog.log("tl", "ue4 settings: saved graphics '\(settings.unrealGraphics.title)', rendering resolution '\(selection)', worker '\(settings.workerScheduling.title)', submission '\(settings.vulkanSubmission.title)'; legacy Display resolution '\(settings.resolution.title)' applies only outside Sharp presets; restart required for changes")
+            }
             if uiHidden { showHint() }
             CrashReport.gameStarted(app)
             padLayout = PadLayout.load(app.id)

@@ -20,17 +20,24 @@ unambiguous numeric index never receive the extra Utility cap.
 
 Balanced remains the saved/default choice. Adaptive Trial is a separate opt-in
 mode for the exact Dungeons project. It begins with the existing Balanced caps.
-At least 20 seconds of valid sampled windows at >=59 FPS, p95 <=20.5 ms, nominal
-thermal state and no graphics/compute pipeline creation admits extra Utility
-caps on recognised normal workers outside the capacity-hint budget. These are
-heuristic admission thresholds, not measured CPU headroom or an energy model.
+At least 20 seconds of valid sampled windows at >=59 FPS, p95 <=20.5 ms, maximum
+interval <=50 ms and nominal thermal state admits extra Utility caps on recognised
+normal workers outside the capacity-hint budget. Pipeline creation is allowed
+when individual host calls take <=2 ms and their summed host time is <=0.5% of
+the window (50 ms in 10 seconds), with no call still in flight at the sample.
+The previous zero-pipeline rule never admitted a trial in the supplied log,
+even during healthy windows with only cheap pipeline calls. These revised
+thresholds are conservative hypotheses, not measured CPU headroom or an energy model.
 
 The controller requests a return to Balanced on unhealthy sampled cadence,
-pipeline creation, thermal pressure, Low Power Mode transition or a sampling
+expensive pipeline creation, thermal pressure, Low Power Mode transition or a sampling
 discontinuity. A quicker per-frame guard reacts to six consecutive intervals
 above 20.5 ms, or one interval above 50 ms. A failed trial waits 60 seconds before
 readmission. Pausing releases the extra caps and clears admission progress.
-No baseline QoS is raised to compensate for slow frames.
+Completion of an individual pipeline call above 2 ms also requests rollback
+without waiting for the next reporting window. No baseline QoS is raised to
+compensate for slow frames. Waiting reasons and trial transitions are logged;
+repeated identical waiting reasons are rate-limited to once per 30 seconds.
 
 Workers apply requests to themselves at condition/semaphore waits, futex returns
 or explicit guest yields. No cross-thread QoS writes, live pthread handle
@@ -60,6 +67,50 @@ The native game's r.SetRes/UGameUserSettings paths are intentionally overridden
 because the supplied game repeatedly requests 1280x720 and previously fell to
 816x720. Simply removing those guards would reintroduce the original problem.
 Supporting the native slider needs verified semantics and aspect-ratio handling.
+
+The Sharp presets replace the unused Display resolution picker with "See Game
+Graphics". Automatic is labelled "Reduced Resolution", and a Fullscreen Target
+shows the estimated landscape size for the next launch. Saved values and output
+budgets are unchanged. A settings log records the selected controls separately
+from the actual swapchain dimensions, so selection/application mismatches can
+be distinguished from the old inactive Native label.
+
+## Cache checkpoint and stall follow-up
+
+Cache snapshots now track a per-device mutation generation. Cache creation,
+pipeline creation using a tracked cache, and destination-cache merges invalidate
+the saved generation. Failures are also treated as possibly mutating because
+Vulkan can return partial pipeline results. Repeated pauses without a mutation
+skip temporary-cache creation, merge, serialization and disk replacement; the
+async entry point also skips creating its worker thread. Failed saves remain
+dirty. Mutations during unlocked disk I/O remain dirty, and a device incarnation
+serial prevents an old snapshot from marking a recycled device handle clean.
+This reduces redundant pause work, not first-use shader compilation time.
+
+Cache diagnostics distinguish game-supplied initial bytes from Husk-restored
+bytes accepted by the driver. Acceptance is not proof of shader cache hits.
+Each reporting window includes total/max pipeline host time, slow-call count and
+in-flight count. At most one worst slow call is detailed per reporting period,
+including batch size, result and store-lock wait. Recording uses try-locks and
+never waits for a diagnostic lock, adds GPU synchronization or logs on every
+pipeline call. A missed try-lock can omit the detailed record; aggregate counters
+still update. Durations can overlap and include CPU scheduling delays; neither
+the detail nor an inventory/firework coincidence proves exclusive stall causation.
+
+## Device check for this revision
+
+Keep the working graphics and resolution selections; Automatic on the supplied
+M4 fullscreen display should still produce 2128x1600. Keep Driver Default and
+the 60 FPS target. Enable Adaptive Trial, fully restart Husk, and keep LPM and
+charging conditions fixed for a short repeatable session. Allow at least 20
+seconds of qualifying windows, then open inventory and use the same firework
+ability that previously hitched. Export the complete log, including startup
+and a normal pause. The log should explain admission or refusal, worker changes,
+any rollback, restored cache acceptance and checkpoint outcomes. Compare the
+first and repeated uses within the session, without assuming repetition or
+cache acceptance guarantees hitch removal. Return to Balanced and restart if
+the trial causes persistent stutter. This is a guarded device experiment; the
+portable checks and successful IPA build cannot establish an energy/FPS gain.
 
 ## MetalFX feasibility
 

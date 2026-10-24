@@ -24,8 +24,10 @@ class PipelineStoreTests(unittest.TestCase):
 #include <stdio.h>
 #include <pthread.h>
 #include <time.h>
+#include <unistd.h>
 static uint32_t payload[256], next_id, header[8];
 static int fail_export, creates, merges, reads, destroys;
+static int write_action;
 void tl_log_line(const char *fmt, ...) { (void)fmt; }
 static int create(void *d, const void *raw, const void *a, uint64_t *out) {
  (void)d;(void)a; const tl_pc_create_info *ci=raw;
@@ -59,7 +61,22 @@ uint64_t add(unsigned value) {
  bool locked=tl_pc_enter();create((void *)1,&ci,NULL,&cache);payload[cache]=value;tl_pc_track((void *)1,cache);tl_pc_leave(locked);return cache;
 }
 unsigned cache_value(uint64_t cache) { return payload[cache]; }
+void mutate(uint64_t cache, unsigned value) {
+ bool locked=tl_pc_enter();payload[cache]=value;tl_pc_changed((void *)1,cache);tl_pc_leave(locked);
+}
+void during_write(int action) { write_action=action; }
+ssize_t test_write(int fd, const void *bytes, size_t count) {
+ int action=write_action;write_action=0;
+ if (action==1) mutate(1,23);
+ if (action==2) {
+  tl_pc_forget_device((void *)1,NULL,NULL);
+  tl_pc_device((void *)1,header[2],header[3],(uint8_t *)header+16);
+  add(23);
+ }
+ return write(fd,bytes,count);
+}
 void unsupported(void) { fail_export=1; }
+void supported(void) { fail_export=0; }
 void *load(size_t *size) { return tl_pc_load((void *)1,size); }
 void counts(int *out) { out[0]=creates;out[1]=merges;out[2]=reads;out[3]=destroys; }
 static pthread_mutex_t test_mu=PTHREAD_MUTEX_INITIALIZER;
@@ -80,11 +97,13 @@ int parallel_readers(void) {
 }
 ''')
         tl=ROOT/'src/translation-layer-next'
-        subprocess.run([os.environ.get('CC','cc'),'-std=c11','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(tl),str(root/'driver.c'),str(tl/'husk-tl-pipeline-store.c'),'-o',str(root/'store.so')],check=True)
+        (root/'store.c').write_text('#define _DARWIN_C_SOURCE 1\n#define _POSIX_C_SOURCE 200809L\n#include <unistd.h>\nssize_t test_write(int,const void *,size_t);\n#define write test_write\n#include "husk-tl-pipeline-store.c"\n')
+        subprocess.run([os.environ.get('CC','cc'),'-std=c11','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(tl),str(root/'driver.c'),str(root/'store.c'),'-o',str(root/'store.so')],check=True)
         cls.lib=ctypes.CDLL(str(root/'store.so'))
         cls.lib.setup.argtypes=[ctypes.c_char_p,ctypes.c_int]
         cls.lib.add.argtypes=[ctypes.c_uint];cls.lib.add.restype=ctypes.c_uint64
         cls.lib.cache_value.argtypes=[ctypes.c_uint64];cls.lib.cache_value.restype=ctypes.c_uint
+        cls.lib.mutate.argtypes=[ctypes.c_uint64,ctypes.c_uint]
         cls.lib.load.argtypes=[ctypes.POINTER(ctypes.c_size_t)];cls.lib.load.restype=ctypes.c_void_p
         cls.free=ctypes.CDLL(None).free;cls.free.argtypes=[ctypes.c_void_p]
 
@@ -121,8 +140,45 @@ int parallel_readers(void) {
         self.assertIsNone(self.blob())
 
     def test_unsupported_serialization_leaves_existing_file_intact(self):
-        self.lib.add(7);self.lib.tl_pc_checkpoint();path=next(self.root.glob('*.bin'));original=path.read_bytes()
+        cache=self.lib.add(7);self.lib.tl_pc_checkpoint();path=next(self.root.glob('*.bin'));original=path.read_bytes()
+        self.lib.mutate(cache,9)
         self.lib.unsupported();self.lib.tl_pc_checkpoint();self.assertEqual(path.read_bytes(),original)
+        self.lib.supported();self.lib.tl_pc_checkpoint()
+        self.assertEqual(struct.unpack('<I',self.blob()[32:])[0],9)
+
+    def counts(self):
+        out=(ctypes.c_int*4)();self.lib.counts(out);return tuple(out)
+
+    def test_unchanged_pause_skips_driver_snapshot_and_file_replacement(self):
+        cache=self.lib.add(7);self.lib.tl_pc_checkpoint()
+        counts=self.counts();path=next(self.root.glob('*.bin'));stat=path.stat()
+        self.lib.tl_pc_checkpoint();self.lib.tl_pc_checkpoint_async()
+        self.assertEqual(self.counts(),counts)
+        self.assertEqual((path.stat().st_ino,path.stat().st_mtime_ns),(stat.st_ino,stat.st_mtime_ns))
+        self.lib.mutate(cache,11);self.lib.tl_pc_checkpoint()
+        self.assertGreater(self.counts()[1],counts[1])
+        self.assertEqual(struct.unpack('<I',self.blob()[32:])[0],11)
+
+    def test_mutation_during_unlocked_disk_write_remains_dirty(self):
+        self.lib.add(7);self.lib.during_write(1);self.lib.tl_pc_checkpoint()
+        self.assertEqual(struct.unpack('<I',self.blob()[32:])[0],7)
+        self.lib.tl_pc_checkpoint()
+        self.assertEqual(struct.unpack('<I',self.blob()[32:])[0],23)
+
+    def test_recycled_device_during_disk_write_is_not_marked_saved(self):
+        self.lib.add(7);self.lib.during_write(2);self.lib.tl_pc_checkpoint()
+        self.assertEqual(struct.unpack('<I',self.blob()[32:])[0],7)
+        self.lib.tl_pc_checkpoint()
+        self.assertEqual(struct.unpack('<I',self.blob()[32:])[0],23)
+
+    def test_failed_disk_write_does_not_mark_generation_saved(self):
+        self.lib.add(7)
+        header=struct.pack('<4I',32,1,0x1234,0x5678)+bytes([7])*16
+        path=self.root/(header.hex()+'.bin');path.mkdir()
+        self.lib.tl_pc_checkpoint();before=self.counts();path.rmdir()
+        self.lib.tl_pc_checkpoint()
+        self.assertGreater(self.counts()[1],before[1])
+        self.assertEqual(struct.unpack('<I',self.blob()[32:])[0],7)
 
     def test_untracked_cache_is_not_saved_and_parallel_creators_remain_parallel(self):
         self.assertEqual(self.lib.parallel_readers(),2)

@@ -117,7 +117,8 @@ void exercise_naming(int path, const char *name, int failure) {
         cls.lib.tl_thread_policy_named.argtypes = [ctypes.c_char_p]
         cls.lib.tl_thread_policy_role.argtypes = [ctypes.c_char_p]
         cls.lib.current_qos.restype = ctypes.c_uint
-        cls.lib.tl_thread_policy_sample.argtypes = [ctypes.c_int64, ctypes.c_int64, ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_bool, ctypes.c_bool]
+        cls.lib.tl_thread_policy_sample.argtypes = [ctypes.c_int64, ctypes.c_int64, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_bool, ctypes.c_uint64, ctypes.c_uint64, ctypes.c_uint]
+        cls.lib.tl_thread_policy_pipeline_completed.argtypes = [ctypes.c_int64, ctypes.c_int64]
         cls.lib.tl_thread_policy_frame.argtypes = [ctypes.c_int64, ctypes.c_int64]
         cls.lib.external_qos.argtypes = [ctypes.c_uint, ctypes.c_int]
         cls.lib.exercise_naming.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
@@ -126,8 +127,10 @@ void exercise_naming(int path, const char *name, int failure) {
         self.lib.reset_fake(qos, relative, mode, project)
     def name(self, value): self.lib.tl_thread_policy_named(value)
 
-    def sample(self, seconds, fps=60, p95=18, thermal=0, low=False, pipelines=False, span=10):
-        self.lib.tl_thread_policy_sample(int(seconds*1e9), int(span*1e9), fps, p95, thermal, low, pipelines)
+    def sample(self, seconds, fps=60, p95=18, maximum=20, thermal=0, low=False,
+               pipeline_ms=0, pipeline_max_ms=0, inflight=0, span=10):
+        self.lib.tl_thread_policy_sample(int(seconds*1e9), int(span*1e9), fps, p95, maximum,
+                                       thermal, low, int(pipeline_ms*1e6), int(pipeline_max_ms*1e6), inflight)
 
     def admit(self):
         self.sample(10); self.sample(20)
@@ -152,12 +155,45 @@ void exercise_naming(int path, const char *name, int failure) {
         self.sample(90); self.sample(100)
         self.assertTrue(self.lib.tl_thread_policy_trial_active())
 
-    def test_pipeline_work_heat_power_transition_and_loading_do_not_admit_trial(self):
-        for kwargs in ({'pipelines':True},{'thermal':1},{'span':1},{'fps':58},{'p95':21}):
+    def test_expensive_pipeline_work_heat_power_transition_and_loading_do_not_admit_trial(self):
+        for kwargs in ({'pipeline_max_ms':2.01},{'pipeline_ms':50.01},{'inflight':1},
+                       {'maximum':50.01},{'thermal':1},{'span':1},{'fps':58},{'p95':21}):
             self.reset(mode=3); self.sample(10,**kwargs); self.sample(20,**kwargs)
             self.assertFalse(self.lib.tl_thread_policy_trial_active())
         self.reset(mode=3); self.admit(); self.sample(30,low=True)
         self.assertFalse(self.lib.tl_thread_policy_trial_active())
+
+    def test_small_pipeline_activity_no_longer_permanently_blocks_healthy_trial(self):
+        self.reset(mode=3)
+        for t in (10,20): self.sample(t,pipeline_ms=32.4,pipeline_max_ms=1.2)
+        self.assertTrue(self.lib.tl_thread_policy_trial_active())
+
+    def test_pipeline_budget_scales_with_valid_window_duration(self):
+        for span, total, expected in ((8,40,True),(8,40.01,False),(15,75,True),(15,75.01,False)):
+            self.reset(mode=3)
+            for t in (span,span*2,span*3): self.sample(t,span=span,pipeline_ms=total,pipeline_max_ms=2)
+            self.assertEqual(bool(self.lib.tl_thread_policy_trial_active()),expected)
+
+    def test_expensive_pipeline_completion_releases_trial_before_next_sample(self):
+        self.reset(mode=3); self.name(b'TaskGraphNP 2'); self.admit()
+        self.lib.tl_thread_policy_checkpoint(); self.assertEqual(self.lib.current_qos(),UTILITY)
+        self.lib.tl_thread_policy_pipeline_completed(21000000000,2000001)
+        self.assertFalse(self.lib.tl_thread_policy_trial_active())
+        self.lib.tl_thread_policy_checkpoint(); self.assertEqual(self.lib.current_qos(),NORMAL)
+        self.sample(30); self.sample(40)
+        self.assertFalse(self.lib.tl_thread_policy_trial_active())
+
+    def test_cheap_pipeline_completion_preserves_trial(self):
+        self.reset(mode=3); self.admit()
+        self.lib.tl_thread_policy_pipeline_completed(21000000000,2000000)
+        self.assertTrue(self.lib.tl_thread_policy_trial_active())
+
+    def test_waiting_diagnostics_are_rate_limited_for_same_reason(self):
+        self.reset(mode=3)
+        for t in (10,20,30): self.sample(t,pipeline_ms=100,pipeline_max_ms=10)
+        self.assertEqual(self.lib.log_count(),3) # two activation lines, one reason
+        self.sample(40,pipeline_ms=100,pipeline_max_ms=10)
+        self.assertEqual(self.lib.log_count(),4)
 
     def test_critical_and_ambiguous_roles_preserved_and_pause_releases_trial(self):
         for name in (b'TaskGraphHP 4',b'RenderThread',b'AudioThread',b'TaskGraphNP'):

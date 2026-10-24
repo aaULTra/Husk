@@ -137,7 +137,7 @@ struct TLAppSettings: Codable, Equatable {
         var title: String {
             switch self {
             case .custom: return "Custom · 1% Steps"
-            case .automatic: return "Automatic · Device Display"
+            case .automatic: return "Automatic · Reduced Resolution"
             case .native: return "Native · 100%"
             case .ultra: return "95% · Compare with Native"
             case .verySharp: return "90%"
@@ -165,6 +165,14 @@ struct TLAppSettings: Codable, Equatable {
             Int32((screen.bounds.height * screen.scale).rounded()),
             UIDevice.current.userInterfaceIdiom == .pad, Int32(efficientResolution == .custom ? customResolutionPercent : efficientResolution.rawValue))
         return screen.scale * CGFloat(fraction)
+    }
+
+    @MainActor func fullscreenResolutionEstimate(for app: TLApp) -> String {
+        let size = UIScreen.main.bounds.size
+        let scale = renderScale(for: app)
+        let width = Int((max(size.width, size.height) * scale).rounded()) & ~7
+        let height = Int((min(size.width, size.height) * scale).rounded()) & ~7
+        return "\(width) × \(height)"
     }
 
     var orientation: Orientation = .auto
@@ -279,10 +287,13 @@ struct TLAppSettingsView: View {
                 Picker("Orientation", selection: $settings.orientation) {
                     ForEach(TLAppSettings.Orientation.allCases) { Text($0.title).tag($0) }
                 }
-                Picker("Resolution", selection: $settings.resolution) {
-                    ForEach(TLAppSettings.Resolution.allCases) { Text($0.title).tag($0) }
+                if settings.usesSharpGraphics(for: app) {
+                    LabeledContent("Resolution", value: "See Game Graphics")
+                } else {
+                    Picker("Resolution", selection: $settings.resolution) {
+                        ForEach(TLAppSettings.Resolution.allCases) { Text($0.title).tag($0) }
+                    }
                 }
-                .disabled(settings.usesSharpGraphics(for: app))
                 Toggle("Performance readout", isOn: $settings.showStats)
                 Toggle("Keep the screen on", isOn: $settings.keepAwake)
             } header: {
@@ -308,6 +319,7 @@ struct TLAppSettingsView: View {
                         Picker("Rendering Resolution", selection: $settings.efficientResolution) {
                             ForEach(TLAppSettings.EfficientResolution.allCases) { Text($0.title).tag($0) }
                         }
+                        LabeledContent("Fullscreen Target", value: settings.fullscreenResolutionEstimate(for: app))
                         if settings.efficientResolution == .custom {
                             LabeledContent("Render Scale", value: "\(settings.customResolutionPercent)%")
                             Slider(value: Binding(get: { Double(settings.customResolutionPercent) }, set: { settings.customResolutionPercent = Int($0.rounded()) }), in: 65...100, step: 1)
@@ -322,12 +334,12 @@ struct TLAppSettingsView: View {
                     Text("Automatic uses Sharp / Efficient for Minecraft Dungeons: a display-based resolution budget, high texture detail, 8× filtering and lighter shadows/effects. "
                        + "Async submission is experimental; keep Driver Default if it causes instability. Compare resolution steps from Native downward at your usual viewing distance and keep the lowest that still looks equally sharp to you. "
                        + "The default target is 60 FPS; 30 FPS is an optional lower-power mode. "
-                       + "Automatic resolution uses a larger pixel budget on iPad than iPhone and never exceeds native size. This is a starting point, not a measured optimum or an FPS guarantee. Percentages scale both dimensions. Open a folding device to the desired display before restarting Husk; live folding is not supported. "
+                       + "Automatic deliberately uses reduced resolution, with a larger pixel budget on iPad than iPhone. Native · 100% requests the full display resolution. Fullscreen Target estimates the next landscape launch on this display; windowed sizes can differ, and changes require Husk to be fully restarted. This is a starting point, not a measured optimum or an FPS guarantee. Percentages scale both dimensions. Open a folding device to the desired display before restarting Husk; live folding is not supported. "
                        + "When iOS reports serious heat, the cap drops to 30 FPS, or 20 at critical heat, and recovers after cooling. "
                        + "Sharp / High Quality keeps the previous maximum-quality preset. Game Default removes the overrides. "
                        + "For Dungeons only, Balanced caps named normal workers at Default QoS and background workers at Utility. "
                        + "Other thread roles are preserved. Observe Only logs requested QoS without changing it. "
-                       + "Adaptive Trial uses a CPU-capacity hint, preserves critical roles, waits for healthy 60 FPS cadence, and requests rollback when cadence worsens. Changes apply on worker self checkpoints, not immediately to busy threads. It does not know individual job deadlines or measure energy savings. "
+                       + "Adaptive Trial uses a CPU-capacity hint, preserves critical roles, and waits for healthy 60 FPS cadence with only inexpensive pipeline creation before requesting extra worker caps. Frame spikes or expensive pipeline calls request rollback. Changes apply on worker self checkpoints, not immediately to busy threads. It does not know individual job deadlines or measure energy savings. "
                        + "This does not pin CPU cores and may affect frame times. Close Husk completely and reopen after changes.")
                 }
             }

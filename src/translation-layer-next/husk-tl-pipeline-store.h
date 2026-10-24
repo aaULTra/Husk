@@ -25,6 +25,9 @@ void tl_pc_device(void *device, uint32_t vendor, uint32_t id, const uint8_t uuid
 bool tl_pc_enter(void);
 void tl_pc_leave(bool locked);
 void tl_pc_track(void *device, uint64_t cache);
+/* Call inside shared access after a potentially mutating pipeline/cache call,
+ * including failures that may have produced partial results. */
+void tl_pc_changed(void *device, uint64_t cache);
 void tl_pc_untrack(void *device, uint64_t cache);
 void tl_pc_forget_device(void *device, void (*destroy)(void *, const void *), const void *alloc);
 void *tl_pc_load(void *device, size_t *size);

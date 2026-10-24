@@ -329,11 +329,47 @@ enum { TIMING_ACQUIRE, TIMING_SUBMIT, TIMING_PRESENT, TIMING_SLEEP, TIMING_GRAPH
 /* Host API durations only. These calls may overlap between threads and are not
  * GPU execution time. Relaxed counters avoid locks or GPU synchronization. */
 static struct { atomic_uint_fast64_t ns, calls; } host_timings[TIMING_COUNT];
-static void record_host_timing(unsigned stage, int64_t start)
+static atomic_uint pipeline_inflight;
+static atomic_uint_fast64_t pipeline_window_max, pipeline_window_slow;
+static pthread_mutex_t pipeline_event_mu = PTHREAD_MUTEX_INITIALIZER;
+static struct pipeline_event {
+    uint64_t elapsed, lock_wait;
+    int64_t finished;
+    unsigned stage, count;
+    bool cache;
+    int result;
+} worst_pipeline;
+static uint64_t record_host_timing(unsigned stage, int64_t start)
 {
     uint64_t elapsed = (uint64_t)(monotonic_ns() - start);
     atomic_fetch_add_explicit(&host_timings[stage].ns, elapsed, memory_order_relaxed);
     atomic_fetch_add_explicit(&host_timings[stage].calls, 1, memory_order_relaxed);
+    return elapsed;
+}
+/* Keep one worst slow call per reporting period. Producers never wait for the
+ * diagnostic mutex, and no pipeline thread writes a per-call log or waits GPU idle. */
+static void record_pipeline_event(unsigned stage, uint32_t count, bool cache, int result,
+                                  int64_t finished, uint64_t elapsed, uint64_t lock_wait)
+{
+    uint_fast64_t old = atomic_load_explicit(&pipeline_window_max, memory_order_relaxed);
+    while (elapsed > old && !atomic_compare_exchange_weak_explicit(&pipeline_window_max, &old, elapsed,
+                                                                  memory_order_relaxed, memory_order_relaxed)) {}
+    if (elapsed < 16666667) return;
+    atomic_fetch_add_explicit(&pipeline_window_slow, 1, memory_order_relaxed);
+    if (pthread_mutex_trylock(&pipeline_event_mu)) return;
+    if (elapsed > worst_pipeline.elapsed)
+        worst_pipeline = (struct pipeline_event){elapsed, lock_wait, finished, stage, count, cache, result};
+    pthread_mutex_unlock(&pipeline_event_mu);
+}
+static void report_pipeline_event(void)
+{
+    if (pthread_mutex_trylock(&pipeline_event_mu)) return;
+    struct pipeline_event event = worst_pipeline; worst_pipeline = (struct pipeline_event){0};
+    pthread_mutex_unlock(&pipeline_event_mu);
+    if (event.elapsed)
+        tl_log_line("ue4 pipeline stall: worst observed %s call %.3f ms, store-lock wait %.3f ms, batch %u, cache %s, result %d, finished monotonic %.6f s; host duration, not exclusive frame/GPU time or verified cache miss",
+                    event.stage == TIMING_GRAPHICS_PIPELINES ? "graphics" : "compute", event.elapsed / 1e6,
+                    event.lock_wait / 1e6, event.count, event.cache ? "yes" : "no", event.result, event.finished / 1e9);
 }
 static int w_vkCreateSwapchainKHR(void *device, const void *ci, const void *alloc, uint64_t *out)
 {
@@ -386,7 +422,7 @@ static int w_vkQueueSubmit(void *queue, uint32_t count, const void *submits, uin
 /* Observe guest cache use without changing cache contents, pipeline options,
  * compilation order or synchronization. Data returned is not proof of a disk save. */
 static atomic_uint cache_log_events;
-static atomic_uint_fast64_t cache_creates, cache_seeded, cache_readbacks, cached_pipeline_calls, uncached_pipeline_calls;
+static atomic_uint_fast64_t cache_creates, cache_seeded, cache_host_seeded, cache_host_seed_bytes, cache_readbacks, cached_pipeline_calls, uncached_pipeline_calls;
 typedef int (*pfn_cache_create)(void *, const void *, const void *, uint64_t *);
 static int w_vkCreatePipelineCache(void *device, const void *ci, const void *alloc, uint64_t *out)
 {
@@ -401,11 +437,13 @@ static int w_vkCreatePipelineCache(void *device, const void *ci, const void *all
     tl_pc_create_info seeded;
     size_t stored_size = 0;
     void *stored = original && !original->next && !original->flags && !original->size ? tl_pc_load(device, &stored_size) : NULL;
+    bool host_seed_used = stored != NULL;
     if (stored) { seeded = *original; seeded.size = stored_size; seeded.data = stored; }
     int result = real ? real(device, stored ? &seeded : ci, alloc, out) : -3;
     if (stored && result == -3) {
         tl_log_line("ue4 cache store: driver rejected seed (%d); retrying original empty cache", result);
         tl_pc_discard(device);
+        host_seed_used = false;
         result = real ? real(device, ci, alloc, out) : -3;
     }
     if (result == VK_SUCCESS && out) tl_pc_track(device, *out);
@@ -417,9 +455,14 @@ static int w_vkCreatePipelineCache(void *device, const void *ci, const void *all
         if (result == VK_SUCCESS) {
             atomic_fetch_add_explicit(&cache_creates, 1, memory_order_relaxed);
             if (bytes) atomic_fetch_add_explicit(&cache_seeded, 1, memory_order_relaxed);
+            if (host_seed_used) {
+                atomic_fetch_add_explicit(&cache_host_seeded, 1, memory_order_relaxed);
+                atomic_fetch_add_explicit(&cache_host_seed_bytes, stored_size, memory_order_relaxed);
+            }
         }
         if (atomic_fetch_add_explicit(&cache_log_events, 1, memory_order_relaxed) < 24)
-            tl_log_line("ue4 cache: create initial data %llu bytes, result %d; data supplied by game, not proof of cache hit", (unsigned long long)bytes, result);
+            tl_log_line("ue4 cache: game initial data %llu bytes, host restored %llu bytes, host seed accepted %d, result %d; acceptance is not proof of cache hits",
+                        (unsigned long long)bytes, (unsigned long long)(host_seed_used ? stored_size : 0), host_seed_used && result == VK_SUCCESS, result);
     }
     return result;
 }
@@ -447,11 +490,17 @@ static int measure_pipeline_create(pfn_create_pipelines real, unsigned stage, vo
 {
     bool measure = tl_ue4_sharp_graphics_enabled();
     int64_t start = measure ? monotonic_ns() : 0;
+    if (measure) atomic_fetch_add_explicit(&pipeline_inflight, 1, memory_order_relaxed);
     bool locked = tl_pc_enter();
+    int64_t entered = measure ? monotonic_ns() : 0;
     int result = real ? real(device, cache, count, ci, alloc, out) : -3;
+    if (real && count) tl_pc_changed(device, cache);
     tl_pc_leave(locked);
     if (measure) {
-        record_host_timing(stage, start);
+        uint64_t elapsed = record_host_timing(stage, start);
+        record_pipeline_event(stage, count, cache != 0, result, start + (int64_t)elapsed, elapsed, (uint64_t)(entered - start));
+        tl_thread_policy_pipeline_completed(start + (int64_t)elapsed, (int64_t)elapsed);
+        atomic_fetch_sub_explicit(&pipeline_inflight, 1, memory_order_relaxed);
         atomic_fetch_add_explicit(cache ? &cached_pipeline_calls : &uncached_pipeline_calls, 1, memory_order_relaxed);
     }
     return result;
@@ -483,6 +532,7 @@ static int w_vkMergePipelineCaches(void *device, uint64_t dst, uint32_t count, c
     fn real = V.lib ? (fn)dlsym(V.lib, "vkMergePipelineCaches") : NULL;
     bool locked = tl_pc_enter();
     int result = real ? real(device, dst, count, src) : -3;
+    if (real && count) tl_pc_changed(device, dst);
     tl_pc_leave(locked); return result;
 }
 static void w_vkDestroyPipelineCache(void *device, uint64_t cache, const void *alloc)
@@ -567,6 +617,9 @@ static void pace_efficient_frame(void)
         if (ms > 1000.0 / (cap ? cap : 60) * 1.2) late++;
     } else {
         count = late = 0; report_at = now;
+        atomic_exchange_explicit(&pipeline_window_max, 0, memory_order_relaxed);
+        atomic_exchange_explicit(&pipeline_window_slow, 0, memory_order_relaxed);
+        if (!pthread_mutex_trylock(&pipeline_event_mu)) { worst_pipeline = (struct pipeline_event){0}; pthread_mutex_unlock(&pipeline_event_mu); }
         for (unsigned i = 0; i < TIMING_COUNT; i++) {
             last_ns[i] = atomic_load_explicit(&host_timings[i].ns, memory_order_relaxed);
             last_calls[i] = atomic_load_explicit(&host_timings[i].calls, memory_order_relaxed);
@@ -579,17 +632,23 @@ static void pace_efficient_frame(void)
         qsort(intervals, count, sizeof(intervals[0]), compare_frame_ms);
         unsigned p95 = (count * 95 + 99) / 100 - 1;
         double avg[TIMING_COUNT];
+        uint64_t window_ns[TIMING_COUNT];
         uint64_t samples[TIMING_COUNT];
         for (unsigned i = 0; i < TIMING_COUNT; i++) {
             uint64_t ns = atomic_load_explicit(&host_timings[i].ns, memory_order_relaxed);
             uint64_t calls = atomic_load_explicit(&host_timings[i].calls, memory_order_relaxed);
             samples[i] = calls - last_calls[i];
-            avg[i] = samples[i] ? (double)(ns - last_ns[i]) / samples[i] / 1e6 : 0;
+            window_ns[i] = ns - last_ns[i];
+            avg[i] = samples[i] ? (double)window_ns[i] / samples[i] / 1e6 : 0;
             last_ns[i] = ns; last_calls[i] = calls;
         }
+        uint64_t pipeline_ns = window_ns[TIMING_GRAPHICS_PIPELINES] + window_ns[TIMING_COMPUTE_PIPELINES];
+        uint64_t pipeline_max = atomic_exchange_explicit(&pipeline_window_max, 0, memory_order_relaxed);
+        uint64_t pipeline_slow = atomic_exchange_explicit(&pipeline_window_slow, 0, memory_order_relaxed);
+        unsigned inflight = atomic_load_explicit(&pipeline_inflight, memory_order_relaxed);
         tl_thread_policy_sample(now, (int64_t)(sum * 1e6), count * 1000.0 / sum,
-                                intervals[p95], last_observed, last_low_power > 0,
-                                samples[TIMING_GRAPHICS_PIPELINES] || samples[TIMING_COMPUTE_PIPELINES]);
+                                intervals[p95], intervals[count - 1], last_observed, last_low_power > 0,
+                                pipeline_ns, pipeline_max, inflight);
         tl_log_line("ue4 timing: cadence %.1f FPS, p95 %.2f ms, max %.2f ms, %u/%u intervals >120%% of %d FPS reference; thermal %d, engine cap %d, host cap %d; host call averages acquire %.3f ms (%llu), submit %.3f ms (%llu), present %.3f ms (%llu), sleep %.3f ms (%llu); calls may overlap; not GPU execution or displayed-frame timing",
                     count * 1000.0 / sum, intervals[p95], intervals[count - 1], late, count, cap ? cap : 60, thermal, cap, host_cap,
                     avg[0], (unsigned long long)samples[0], avg[1], (unsigned long long)samples[1],
@@ -602,6 +661,11 @@ static void pace_efficient_frame(void)
                     (unsigned long long)atomic_load_explicit(&uncached_pipeline_calls, memory_order_relaxed),
                     avg[TIMING_GRAPHICS_PIPELINES], (unsigned long long)samples[TIMING_GRAPHICS_PIPELINES],
                     avg[TIMING_COMPUTE_PIPELINES], (unsigned long long)samples[TIMING_COMPUTE_PIPELINES]);
+        tl_log_line("ue4 cache detail: host seeds accepted %llu (%llu bytes); pipeline window total %.3f ms, max %.3f ms, calls >=16.67 ms %llu, in-flight %u; aggregate calls may overlap",
+                    (unsigned long long)atomic_load_explicit(&cache_host_seeded, memory_order_relaxed),
+                    (unsigned long long)atomic_load_explicit(&cache_host_seed_bytes, memory_order_relaxed),
+                    pipeline_ns / 1e6, pipeline_max / 1e6, (unsigned long long)pipeline_slow, inflight);
+        report_pipeline_event();
         count = late = 0; report_at = now;
     }
 }

@@ -32,6 +32,7 @@ class VulkanTimingTests(unittest.TestCase):
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+#include <pthread.h>
 #include "husk-tl-ue4-graphics.h"
 #include "husk-tl-pipeline-store.h"
 #include "husk-tl-thread-policy.h"
@@ -46,6 +47,7 @@ static int64_t fake_clock;
 static unsigned sleep_calls, acquire_calls, submit_calls, present_calls;
 static int native_status, forwarding_failures;
 static int reject_seed, seed_attempts;
+static int64_t pipeline_delay_ns;
 static unsigned cache_create_calls, cache_data_calls, graphics_calls, compute_calls;
 static int64_t monotonic_ns(void) { fake_clock += 1000000; return fake_clock; }
 static int test_nanosleep(const struct timespec *delay, struct timespec *remaining) {
@@ -88,6 +90,7 @@ static int host_cache_data(void *device, uint64_t cache, size_t *size, void *dat
 }
 static int host_graphics(void *device, uint64_t cache, uint32_t count, const void *ci, const void *alloc, uint64_t *out) {
     ++graphics_calls;
+    fake_clock += pipeline_delay_ns;
     if (device!=(void *)7 || (cache!=37 && cache!=0) || count!=2 || ci!=(void *)41 || alloc!=(void *)31) ++forwarding_failures;
     out[0]=43; out[1]=47; return native_status;
 }
@@ -123,11 +126,39 @@ void configure_store(const char *path) {
 }
 int exercise_seed(int reject, int status) {
     reject_seed=reject;seed_attempts=cache_create_calls=0;native_status=status;
+    atomic_store(&cache_host_seeded,0);atomic_store(&cache_host_seed_bytes,0);
     tl_pc_create_info ci={.type=17};uint64_t cache=0;
     int result=w_vkCreatePipelineCache((void *)7,&ci,(void *)31,&cache);
     reject_seed=0;
     if (ci.size || ci.data || result!=status || seed_attempts!=1) return -1;
     return cache_create_calls;
+}
+uint64_t restored_seed_count(void) { return atomic_load(&cache_host_seeded); }
+uint64_t restored_seed_bytes(void) { return atomic_load(&cache_host_seed_bytes); }
+int exercise_pipeline_observation(int diagnostic_mutex_busy) {
+    husk_ue4_set_sharp_graphics(true);native_status=0;
+    atomic_store(&pipeline_window_slow,0);atomic_store(&pipeline_window_max,0);
+    worst_pipeline=(struct pipeline_event){0};
+    husk_ue4_set_thread_policy(3);tl_thread_policy_activate("Dungeons");
+    tl_thread_policy_sample(10000000000LL,10000000000LL,60,18,20,0,false,0,0,0);
+    tl_thread_policy_sample(20000000000LL,10000000000LL,60,18,20,0,false,0,0,0);
+    if (!tl_thread_policy_trial_active()) return 1;
+    fake_clock=25000000000LL;pipeline_delay_ns=20000000;
+    if (diagnostic_mutex_busy) pthread_mutex_lock(&pipeline_event_mu);
+    uint64_t out[2];
+    int result=w_vkCreateGraphicsPipelines((void *)7,37,2,(void *)41,(void *)31,out);
+    if (diagnostic_mutex_busy) pthread_mutex_unlock(&pipeline_event_mu);
+    pipeline_delay_ns=0;
+    if (result || out[1]!=47 || atomic_load(&pipeline_inflight)) return 2;
+    if (tl_thread_policy_trial_active()) return 3;
+    if (atomic_load(&pipeline_window_slow)!=1 || atomic_load(&pipeline_window_max)!=22000000) return 4;
+    if (diagnostic_mutex_busy) { if (worst_pipeline.elapsed) return 5; }
+    else {
+        if (worst_pipeline.elapsed!=22000000 || worst_pipeline.lock_wait!=1000000 || worst_pipeline.count!=2 || !worst_pipeline.cache) return 6;
+        report_pipeline_event();if (worst_pipeline.elapsed) return 7;
+    }
+    husk_ue4_set_thread_policy(0);tl_thread_policy_activate("Dungeons");
+    return 0;
 }
 int exercise_cache(int status) {
     husk_ue4_set_sharp_graphics(true);
@@ -176,6 +207,8 @@ int exercise(int enabled, int efficient, int fps, int status) {
                         "-o", str(root / "timing.so")], check=True)
         cls.lib = ctypes.CDLL(str(root / "timing.so"))
         cls.lib.exercise.argtypes = [ctypes.c_int] * 4
+        cls.lib.restored_seed_count.restype=ctypes.c_uint64
+        cls.lib.restored_seed_bytes.restype=ctypes.c_uint64
 
     def test_original_sharp_passes_through_without_added_host_sleeps(self):
         self.assertEqual(self.lib.exercise(1, 0, 60, 0), 0)
@@ -202,6 +235,13 @@ int exercise(int enabled, int efficient, int fps, int status) {
                 path.write_bytes(payload+struct.pack('<Q',hash_value))
                 self.assertEqual(self.lib.exercise_seed(reject,status),calls)
                 self.assertEqual(path.exists(),not reject)
+                accepted=status==0 and not reject
+                self.assertEqual(self.lib.restored_seed_count(),int(accepted))
+                self.assertEqual(self.lib.restored_seed_bytes(),len(payload) if accepted else 0)
+
+    def test_slow_pipeline_tracking_requests_rollback_without_waiting_for_diagnostic_mutex(self):
+        for busy in (0,1):
+            self.assertEqual(self.lib.exercise_pipeline_observation(busy),0)
 
     def test_status_codes_and_arguments_are_forwarded_without_retry_or_gpu_wait(self):
         for status in (-4, 1000001003):

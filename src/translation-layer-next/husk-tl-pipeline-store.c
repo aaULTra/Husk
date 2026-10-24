@@ -26,7 +26,9 @@ static struct device {
     uint8_t header[32];
     uint64_t caches[MAX_CACHES];
     unsigned count;
+    uint64_t serial, generation, saved_generation;
 } devices[MAX_DEVICES];
+static uint64_t next_serial;
 static char directory[768];
 static tl_pc_api api;
 static pthread_rwlock_t access_lock = PTHREAD_RWLOCK_INITIALIZER;
@@ -63,7 +65,7 @@ void tl_pc_device(void *handle, uint32_t vendor, uint32_t id, const uint8_t uuid
     struct device *d = find(handle);
     if (!d) for (unsigned i = 0; i < MAX_DEVICES; ++i) if (!devices[i].handle) { d = &devices[i]; break; }
     if (d) {
-        memset(d, 0, sizeof(*d)); d->handle = handle;
+        memset(d, 0, sizeof(*d)); d->handle = handle; d->serial = ++next_serial;
         uint32_t header[] = {32, 1, vendor, id};
         memcpy(d->header, header, 16); memcpy(d->header + 16, uuid, 16);
     }
@@ -124,7 +126,17 @@ void tl_pc_track(void *handle, uint64_t cache)
     if (!directory[0]) return;
     pthread_mutex_lock(&metadata_lock);
     struct device *d = find(handle);
-    if (d && d->count < MAX_CACHES) d->caches[d->count++] = cache;
+    if (d && d->count < MAX_CACHES) { d->caches[d->count++] = cache; ++d->generation; }
+    pthread_mutex_unlock(&metadata_lock);
+}
+void tl_pc_changed(void *handle, uint64_t cache)
+{
+    if (!directory[0] || !cache) return;
+    pthread_mutex_lock(&metadata_lock);
+    struct device *d = find(handle);
+    if (d) for (unsigned i = 0; i < d->count; ++i) if (d->caches[i] == cache) {
+        ++d->generation; break;
+    }
     pthread_mutex_unlock(&metadata_lock);
 }
 void tl_pc_untrack(void *handle, uint64_t cache)
@@ -177,7 +189,7 @@ void tl_pc_checkpoint(void)
         pthread_mutex_unlock(&metadata_lock);
         uint64_t combined = 0;
         tl_pc_create_info info = {.type = 17}; /* VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO */
-        if (d.handle && d.count && path_for(d.handle, path, header) &&
+        if (d.handle && d.count && d.generation != d.saved_generation && path_for(d.handle, path, header) &&
             !api.create(d.handle, &info, NULL, &combined)) {
             if (!api.merge(d.handle, combined, d.count, d.caches) &&
                 !api.data(d.handle, combined, &size, NULL) && size > 32 && size <= MAX_BYTES) {
@@ -192,6 +204,14 @@ void tl_pc_checkpoint(void)
         pthread_rwlock_unlock(&access_lock);
         if (data) {
             bool saved = write_blob(path, data, size);
+            if (saved) {
+                pthread_mutex_lock(&metadata_lock);
+                /* Work can resume during disk I/O. Mark only this snapshot's
+                 * generation saved, and never mark a recycled device clean. */
+                struct device *current = find(d.handle);
+                if (current && current->serial == d.serial) current->saved_generation = d.generation;
+                pthread_mutex_unlock(&metadata_lock);
+            }
             tl_log_line("ue4 cache store: pause checkpoint %s (%zu bytes)", saved ? "saved" : "failed", size);
             free(data);
         }
@@ -207,7 +227,14 @@ static void *save_worker(void *unused)
 }
 void tl_pc_checkpoint_async(void)
 {
-    if (!directory[0] || atomic_exchange(&saving, true)) return;
+    if (!directory[0]) return;
+    bool dirty = false;
+    pthread_mutex_lock(&metadata_lock);
+    for (unsigned i = 0; i < MAX_DEVICES; ++i)
+        if (devices[i].handle && devices[i].count && devices[i].generation != devices[i].saved_generation) { dirty = true; break; }
+    pthread_mutex_unlock(&metadata_lock);
+    if (!dirty) { tl_log_line("ue4 cache store: unchanged; skipped pause snapshot and disk write"); return; }
+    if (atomic_exchange(&saving, true)) return;
     pthread_t thread;
     if (pthread_create(&thread, NULL, save_worker, NULL)) { atomic_store(&saving, false); return; }
     pthread_detach(thread);

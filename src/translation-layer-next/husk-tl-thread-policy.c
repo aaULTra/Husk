@@ -27,6 +27,8 @@ static atomic_bool trial_active;
 static pthread_mutex_t controller_mu = PTHREAD_MUTEX_INITIALIZER;
 static int64_t stable_ns, cooldown_until, last_sample;
 static int previous_power = -1;
+static const char *last_reason;
+static int64_t reason_at;
 
 void husk_ue4_set_worker_capacity(int cpu_count)
 {
@@ -36,19 +38,19 @@ void husk_ue4_set_worker_capacity(int cpu_count)
 }
 int tl_thread_policy_fast_worker_budget(void) { return atomic_load(&fast_workers); }
 bool tl_thread_policy_trial_active(void) { return atomic_load(&trial_active); }
-static void set_trial(bool enabled)
+static void set_trial(bool enabled, const char *reason)
 {
     if (atomic_exchange(&trial_active, enabled) != enabled) {
         atomic_fetch_add(&revision, 1);
-        tl_log_line("thread-policy adaptive: requested %s, normal worker budget %d; applied at worker self checkpoints; no core affinity or energy measurement",
-                    enabled ? "extra Utility caps" : "Balanced baseline", atomic_load(&fast_workers));
+        tl_log_line("thread-policy adaptive: requested %s, reason %s, normal worker budget %d; applied at worker self checkpoints; no core affinity or energy measurement",
+                    enabled ? "extra Utility caps" : "Balanced baseline", reason, atomic_load(&fast_workers));
     }
 }
 void tl_thread_policy_suspend(void)
 {
     if (atomic_load(&active_mode) != 3) return;
     pthread_mutex_lock(&controller_mu);
-    set_trial(false); stable_ns = last_sample = 0;
+    set_trial(false, "pause or power/thermal change"); stable_ns = last_sample = 0; last_reason = NULL;
     pthread_mutex_unlock(&controller_mu);
 }
 void tl_thread_policy_frame(int64_t now, int64_t interval_ns)
@@ -58,11 +60,19 @@ void tl_thread_policy_frame(int64_t now, int64_t interval_ns)
     if (interval_ns <= 20500000LL) { misses = 0; return; }
     if (++misses < 6 && interval_ns <= 50000000LL) return;
     if (pthread_mutex_trylock(&controller_mu)) return;
-    set_trial(false); cooldown_until = now + 60000000000LL; stable_ns = 0; misses = 0;
+    set_trial(false, "frame spike"); cooldown_until = now + 60000000000LL; stable_ns = 0; misses = 0;
+    pthread_mutex_unlock(&controller_mu);
+}
+void tl_thread_policy_pipeline_completed(int64_t now, int64_t elapsed_ns)
+{
+    if (elapsed_ns <= TL_WORKER_PIPELINE_MAX_NS || atomic_load(&active_mode) != 3 ||
+        !atomic_load(&trial_active) || pthread_mutex_trylock(&controller_mu)) return;
+    set_trial(false, "expensive pipeline call"); cooldown_until = now + 60000000000LL; stable_ns = 0;
     pthread_mutex_unlock(&controller_mu);
 }
 void tl_thread_policy_sample(int64_t now, int64_t span, double fps, double p95_ms,
-                            int thermal, bool low_power, bool pipeline_work)
+                            double max_frame_ms, int thermal, bool low_power,
+                            uint64_t pipeline_ns, uint64_t pipeline_max_ns, unsigned pipeline_inflight)
 {
     if (atomic_load(&active_mode) != 3 || pthread_mutex_trylock(&controller_mu)) return;
     bool transition = previous_power >= 0 && previous_power != (int)low_power;
@@ -70,14 +80,26 @@ void tl_thread_policy_sample(int64_t now, int64_t span, double fps, double p95_m
     bool discontinuity = last_sample && (now <= last_sample || now - last_sample > 15000000000LL);
     last_sample = now;
     bool valid = span >= 8000000000LL && span <= 15000000000LL && !discontinuity;
-    /* Healthy cadence admits an experiment; it does not prove CPU headroom. */
-    bool healthy = valid && !transition && thermal == 0 && !pipeline_work && fps >= 59.0 && p95_ms > 0 && p95_ms <= 20.5;
+    const char *reason = !valid ? "sample gap/loading" : transition ? "LPM transition" :
+        thermal != 0 ? "thermal pressure" : pipeline_inflight ? "pipeline in flight" :
+        pipeline_max_ns > TL_WORKER_PIPELINE_MAX_NS || pipeline_ns > (uint64_t)span / 200 ? "pipeline cost" :
+        !(fps >= 59.0 && p95_ms > 0 && p95_ms <= 20.5 && max_frame_ms > 0 && max_frame_ms <= 50) ? "frame cadence" : NULL;
+    /* Small measured pipeline work is allowed; cadence does not prove headroom. */
+    bool healthy = !reason;
     if (atomic_load(&trial_active)) {
-        if (!healthy) { set_trial(false); cooldown_until = now + 60000000000LL; stable_ns = 0; }
+        if (!healthy) { set_trial(false, reason); cooldown_until = now + 60000000000LL; stable_ns = 0; }
     } else if (healthy && now >= cooldown_until) {
         stable_ns += span;
-        if (stable_ns >= 20000000000LL) { set_trial(true); stable_ns = 0; }
+        if (stable_ns >= 20000000000LL) { set_trial(true, "healthy cadence and bounded pipeline cost"); stable_ns = 0; }
     } else stable_ns = 0;
+    if (!atomic_load(&trial_active)) {
+        if (!reason) reason = now < cooldown_until ? "cooldown" : "collecting healthy cadence";
+        if (!last_reason || strcmp(last_reason, reason) || now - reason_at >= 30000000000LL) {
+            tl_log_line("thread-policy adaptive: waiting: %s; stable %.1f/20 s, pipeline total %.3f ms max %.3f ms in-flight %u; heuristic limits 2 ms/call and 0.5%%/window",
+                        reason, stable_ns / 1e9, pipeline_ns / 1e6, pipeline_max_ns / 1e6, pipeline_inflight);
+            last_reason = reason; reason_at = now;
+        }
+    } else last_reason = NULL;
     pthread_mutex_unlock(&controller_mu);
 }
 
@@ -92,6 +114,7 @@ void tl_thread_policy_activate(const char *project)
     atomic_store(&log_events, 0);
     atomic_store(&trial_active, false); atomic_fetch_add(&revision, 1);
     stable_ns = cooldown_until = last_sample = 0; previous_power = -1;
+    last_reason = NULL; reason_at = 0;
     if (mode == 3) tl_log_line("thread-policy adaptive: runtime CPU count %d, reserved normal-worker budget %d; total-capacity heuristic, not detected P/E topology", atomic_load(&capacity_cpus), atomic_load(&fast_workers));
     if (mode) tl_log_line("thread-policy: %s for Dungeons; normal Default and background Utility baseline; extra caps only in admitted Adaptive trials; no core affinity",
                          mode == 3 ? "Adaptive Trial (experimental)" : mode == 2 ? "Balanced (experimental)" : "Observe Only");
