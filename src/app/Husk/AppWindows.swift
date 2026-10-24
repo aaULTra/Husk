@@ -330,10 +330,11 @@ struct TLWindowScreen: UIViewRepresentable {
     var efficientGraphics: Bool = false
     var efficientFrameLimit: Int = 60
     var threadPolicy: Int = 0
+    var submissionMode: Int = 0
 
     func makeUIView(context: Context) -> TLWindowHost {
         TLWindowHost(game: TLUnityScreen.view(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine,
-                                              portrait: portrait, scale: scale, sharpGraphics: sharpGraphics, efficientGraphics: efficientGraphics, efficientFrameLimit: efficientFrameLimit, threadPolicy: threadPolicy))
+                                              portrait: portrait, scale: scale, sharpGraphics: sharpGraphics, efficientGraphics: efficientGraphics, efficientFrameLimit: efficientFrameLimit, threadPolicy: threadPolicy, submissionMode: submissionMode))
     }
     func updateUIView(_ view: TLWindowHost, context: Context) { view.setNeedsLayout() }
 }
