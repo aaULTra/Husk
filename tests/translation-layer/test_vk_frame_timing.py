@@ -32,6 +32,8 @@ class VulkanTimingTests(unittest.TestCase):
 #include <errno.h>
 #include <time.h>
 #include "husk-tl-ue4-graphics.h"
+#undef TARGET_OS_IOS
+#undef TARGET_OS_OSX
 #define TARGET_OS_IOS 0
 #define TARGET_OS_OSX 0
 #define VK_SUCCESS 0
