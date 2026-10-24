@@ -25,6 +25,7 @@
 #include "husk-tl-ue4-graphics.h"
 #include "husk-tl-pipeline-store.h"
 #include "husk-tl-thread-policy.h"
+#include "husk-tl-driver-profile.h"
 
 void *tl_nwindow_native(void *window);
 int tl_nwindow_width(void *window);
@@ -84,6 +85,11 @@ static void vk_load(void)
     V.probe_frames = probe && !strcmp(probe, "1");
     if (submission_mode == 1) setenv("MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", "0", 1);
     V.lib = V.have_path ? dlopen(V.path, RTLD_NOW | RTLD_LOCAL) : RTLD_DEFAULT;
+    typedef void (*version_fn)(char *, uint32_t, char *, uint32_t);
+    version_fn versions = V.lib ? (version_fn)dlsym(V.lib, "vkGetVersionStringsMVK") : NULL;
+    char mvk_version[64] = {0}, vulkan_version[64] = {0};
+    if (versions) versions(mvk_version, sizeof(mvk_version), vulkan_version, sizeof(vulkan_version));
+    tl_dp_set_api(V.lib ? (int (*)(void *, void *, size_t *))dlsym(V.lib, "vkGetPerformanceStatisticsMVK") : NULL, mvk_version);
     tl_pc_set_api((tl_pc_api){
         .create = V.lib ? (void *)dlsym(V.lib, "vkCreatePipelineCache") : NULL,
         .data = V.lib ? (void *)dlsym(V.lib, "vkGetPipelineCacheData") : NULL,
@@ -546,6 +552,7 @@ static void w_vkDestroyPipelineCache(void *device, uint64_t cache, const void *a
 }
 static void w_vkDestroyDevice(void *device, const void *alloc)
 {
+    tl_dp_forget(device);
     typedef void (*fn)(void *, const void *);
     fn real = V.lib ? (fn)dlsym(V.lib, "vkDestroyDevice") : NULL;
     tl_pc_forget_device(device, real, alloc);
@@ -666,6 +673,7 @@ static void pace_efficient_frame(void)
                     (unsigned long long)atomic_load_explicit(&cache_host_seed_bytes, memory_order_relaxed),
                     pipeline_ns / 1e6, pipeline_max / 1e6, (unsigned long long)pipeline_slow, inflight);
         report_pipeline_event();
+        tl_dp_report();
         count = late = 0; report_at = now;
     }
 }
@@ -994,6 +1002,7 @@ static int w_vkCreateDevice(void *pd, const vk_device_ci *ci, const void *alloc,
     if (!dxvk_game()) {
         int result = g_real_create_device(pd, ci, alloc, out);
         if (result == VK_SUCCESS && out && *out) {
+            tl_dp_device(*out);
             typedef void (*properties_fn)(void *, void *);
             properties_fn properties = V.lib ? (properties_fn)dlsym(V.lib, "vkGetPhysicalDeviceProperties") : NULL;
             if (properties) {
@@ -1045,6 +1054,7 @@ static int w_vkCreateDevice(void *pd, const vk_device_ci *ci, const void *alloc,
     if (f2) reclaim(f2->f, saved2);
     tl_log_line("vulkan: vkCreateDevice(%u extensions) -> %d", ci->extCount, r);
     if (r == VK_SUCCESS && out && *out) {
+        tl_dp_device(*out);
         make_null_buffer(pd, *out);
     }
     return r;

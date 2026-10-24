@@ -122,6 +122,7 @@ struct TLAppSettings: Codable, Equatable {
         var title: String { self == .driverDefault ? "Driver Default" : "Async (Experimental)" }
     }
     var vulkanSubmission: VulkanSubmission = .driverDefault
+    var driverPhaseProfiling = false
     var workerScheduling: WorkerScheduling = .balanced
 
     enum EfficientFrameRate: Int, Codable, CaseIterable, Identifiable {
@@ -200,6 +201,7 @@ struct TLAppSettings: Codable, Equatable {
         customResolutionPercent = min(100, max(65, try c.decodeIfPresent(Int.self, forKey: .customResolutionPercent) ?? 80))
         efficientResolution = try c.decodeIfPresent(EfficientResolution.self, forKey: .efficientResolution) ?? .automatic
         vulkanSubmission = try c.decodeIfPresent(VulkanSubmission.self, forKey: .vulkanSubmission) ?? .driverDefault
+        driverPhaseProfiling = try c.decodeIfPresent(Bool.self, forKey: .driverPhaseProfiling) ?? false
         workerScheduling = try c.decodeIfPresent(WorkerScheduling.self, forKey: .workerScheduling) ?? .balanced
         efficientFrameRate = try c.decodeIfPresent(EfficientFrameRate.self, forKey: .efficientFrameRate) ?? .smooth
         unrealGraphics = try c.decodeIfPresent(UnrealGraphics.self, forKey: .unrealGraphics) ?? .automatic
@@ -311,6 +313,7 @@ struct TLAppSettingsView: View {
                     Picker("Vulkan Submission", selection: $settings.vulkanSubmission) {
                         ForEach(TLAppSettings.VulkanSubmission.allCases) { Text($0.title).tag($0) }
                     }
+                    Toggle("Driver Phase Profiling", isOn: $settings.driverPhaseProfiling)
                     Picker("Worker Scheduling", selection: $settings.workerScheduling) {
                         ForEach(TLAppSettings.WorkerScheduling.allCases) { Text($0.title).tag($0) }
                     }
@@ -332,7 +335,7 @@ struct TLAppSettingsView: View {
                     Text("Game Graphics")
                 } footer: {
                     Text("Automatic uses Sharp / Efficient for Minecraft Dungeons: a display-based resolution budget, high texture detail, 8× filtering and lighter shadows/effects. "
-                       + "Async submission is experimental; keep Driver Default if it causes instability. Compare resolution steps from Native downward at your usual viewing distance and keep the lowest that still looks equally sharp to you. "
+                       + "Async submission is experimental; keep Driver Default if it causes instability. Driver Phase Profiling is off by default and adds MoltenVK activity counters to the log for short diagnostic sessions; it adds overhead and does not measure pure GPU execution or power. Fully restart after enabling or disabling it. Compare resolution steps from Native downward at your usual viewing distance and keep the lowest that still looks equally sharp to you. "
                        + "The default target is 60 FPS; 30 FPS is an optional lower-power mode. "
                        + "Automatic deliberately uses reduced resolution, with a larger pixel budget on iPad than iPhone. Native · 100% requests the full display resolution. Fullscreen Target estimates the next landscape launch on this display; windowed sizes can differ, and changes require Husk to be fully restarted. This is a starting point, not a measured optimum or an FPS guarantee. Percentages scale both dimensions. Open a folding device to the desired display before restarting Husk; live folding is not supported. "
                        + "When iOS reports serious heat, the cap drops to 30 FPS, or 20 at critical heat, and recovers after cooling. "
