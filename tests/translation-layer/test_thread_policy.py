@@ -39,6 +39,8 @@ int pthread_set_qos_class_self_np(qos_class_t, int);
 #include <stdarg.h>
 #include <string.h>
 #include "husk-tl-thread-policy.c"
+static int test_pcores;
+int husk_test_performance_cores(void) { return test_pcores; }
 static _Thread_local unsigned fake_qos;
 static _Thread_local int fake_relative, next_failure, query_failure_at, queries;
 static atomic_int writes, lines;
@@ -53,8 +55,8 @@ int pthread_set_qos_class_self_np(qos_class_t qos, int relative) {
  fake_qos = qos; fake_relative = relative; return 0;
 }
 void tl_log_line(const char *fmt, ...) { (void)fmt; atomic_fetch_add(&lines, 1); }
-void reset_fake(unsigned qos, int relative, int mode, const char *project) {
- memset(&state, 0, sizeof(state)); fake_qos = qos; fake_relative = relative; next_failure = 0; query_failure_at = 0; queries = 0;
+void reset_fake(unsigned qos, int relative, int mode, const char *project, int pcores) {
+ memset(&state, 0, sizeof(state)); test_pcores = pcores; fake_qos = qos; fake_relative = relative; next_failure = 0; query_failure_at = 0; queries = 0;
  atomic_store(&writes, 0); atomic_store(&lines, 0);
  husk_ue4_set_thread_policy(mode); tl_thread_policy_activate(project);
 }
@@ -107,15 +109,15 @@ void exercise_naming(int path, const char *name, int failure) {
                         '-shared', '-fPIC', '-pthread', '-I'+str(root),
                         '-I'+str(ROOT/'src/translation-layer-next'), str(path), '-o', str(library)], check=True)
         cls.lib = ctypes.CDLL(str(library))
-        cls.lib.reset_fake.argtypes = [ctypes.c_uint, ctypes.c_int, ctypes.c_int, ctypes.c_char_p]
+        cls.lib.reset_fake.argtypes = [ctypes.c_uint, ctypes.c_int, ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
         cls.lib.tl_thread_policy_named.argtypes = [ctypes.c_char_p]
         cls.lib.tl_thread_policy_role.argtypes = [ctypes.c_char_p]
         cls.lib.current_qos.restype = ctypes.c_uint
         cls.lib.external_qos.argtypes = [ctypes.c_uint, ctypes.c_int]
         cls.lib.exercise_naming.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
 
-    def reset(self, qos=HIGH, relative=-2, mode=2, project=b'Dungeons'):
-        self.lib.reset_fake(qos, relative, mode, project)
+    def reset(self, qos=HIGH, relative=-2, mode=2, project=b'Dungeons', pcores=0):
+        self.lib.reset_fake(qos, relative, mode, project, pcores)
     def name(self, value): self.lib.tl_thread_policy_named(value)
 
     def test_exact_worker_names_and_android_shortened_forms(self):
@@ -199,6 +201,49 @@ void exercise_naming(int path, const char *name, int failure) {
         self.assertEqual(self.lib.exercise_other_thread(), 0)
         self.assertEqual(self.lib.current_qos(), NORMAL)
         self.name(b'GameThread')
+        self.assertEqual((self.lib.current_qos(), self.lib.current_relative()), (HIGH, -2))
+
+    def test_device_aware_iphone_duo_a20_pro_two_performance_cores(self):
+        self.reset(mode=3, pcores=2)
+        self.name(b'TaskGraphNP 0')
+        self.assertEqual((self.lib.current_qos(), self.lib.write_count()), (HIGH, 0))
+        self.name(b'TaskGraphNP 1')
+        self.assertEqual(self.lib.current_qos(), NORMAL)
+        self.name(b'TaskGraphBP 0')
+        self.assertEqual(self.lib.current_qos(), UTILITY)
+        self.name(b'RenderThread')
+        self.assertEqual((self.lib.current_qos(), self.lib.current_relative()), (HIGH, -2))
+
+    def test_device_aware_ipad_m4_one_tb_four_performance_cores(self):
+        self.reset(mode=3, pcores=4)
+        for index in (0, 1):
+            self.name(f'TaskGraphNP {index}'.encode())
+            self.assertEqual(self.lib.current_qos(), HIGH)
+        self.name(b'TaskGraphNP 2')
+        self.assertEqual(self.lib.current_qos(), NORMAL)
+        self.name(b'TaskGraphThreadBP 2')
+        self.assertEqual(self.lib.current_qos(), UTILITY)
+        self.name(b'GameThread')
+        self.assertEqual((self.lib.current_qos(), self.lib.current_relative()), (HIGH, -2))
+
+    def test_device_aware_unknown_topology_falls_back_to_one_reserved_worker(self):
+        self.reset(mode=3, pcores=0)
+        self.name(b'TaskGraphNP 0')
+        self.assertEqual(self.lib.current_qos(), HIGH)
+        self.name(b'TaskGraphNP 1')
+        self.assertEqual(self.lib.current_qos(), NORMAL)
+
+    def test_device_aware_does_not_touch_other_unreal_projects(self):
+        self.reset(mode=3, pcores=4, project=b'OtherGame')
+        self.name(b'TaskGraphNP 3')
+        self.assertEqual((self.lib.current_qos(), self.lib.write_count()), (HIGH, 0))
+
+    def test_device_aware_does_not_reserve_ambiguous_worker_names(self):
+        self.reset(mode=3, pcores=4)
+        for name in (b'TaskGraphNP', b'TaskGraphNP 22', b'TaskGraphNP 1x'):
+            self.name(name)
+            self.assertEqual(self.lib.current_qos(), NORMAL if name != b'TaskGraphNP 1x' else HIGH)
+        self.name(b'AudioThread')
         self.assertEqual((self.lib.current_qos(), self.lib.current_relative()), (HIGH, -2))
 
     def test_diagnostics_are_bounded(self):
