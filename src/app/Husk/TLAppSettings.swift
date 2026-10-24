@@ -105,13 +105,14 @@ struct TLAppSettings: Codable, Equatable {
     }
 
     enum WorkerScheduling: Int, Codable, CaseIterable, Identifiable {
-        case gameDefault = 0, observe = 1, balanced = 2
+        case gameDefault = 0, observe = 1, balanced = 2, deviceAware = 3
         var id: Int { rawValue }
         var title: String {
             switch self {
             case .gameDefault: return "Game Default"
             case .observe: return "Observe Only"
             case .balanced: return "Balanced (Experimental)"
+            case .deviceAware: return "Device Aware (Experimental)"
             }
         }
     }
@@ -302,9 +303,9 @@ struct TLAppSettingsView: View {
                        + "Automatic resolution uses a larger pixel budget on iPad than iPhone and never exceeds native size. This is a starting point, not a measured optimum or an FPS guarantee. Percentages scale both dimensions. Open a folding device to the desired display before restarting Husk; live folding is not supported. "
                        + "When iOS reports serious heat, the cap drops to 30 FPS, or 20 at critical heat, and recovers after cooling. "
                        + "Sharp / High Quality keeps the previous maximum-quality preset. Game Default removes the overrides. "
-                       + "For Dungeons only, Balanced caps named normal workers at Default QoS and background workers at Utility. "
+                       + "For Dungeons only, Balanced caps named normal workers at Default QoS and background workers at Utility. Device Aware retains one named normal worker at its original QoS on two-performance-core chips such as A20 Pro, or two on four-performance-core M4, with the remaining normal workers at Default and background workers at Utility. "
                        + "Other thread roles are preserved. Observe Only logs requested QoS without changing it. "
-                       + "This does not pin CPU cores and may affect frame times. Close Husk completely and reopen after changes.")
+                       + "This does not pin CPU cores; iOS chooses the physical cores. It is experimental, may affect frame times, and other games are unchanged. Close Husk completely and reopen after changes.")
                 }
             }
 
