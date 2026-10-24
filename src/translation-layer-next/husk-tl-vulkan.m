@@ -24,6 +24,7 @@
 #include "husk-tl-ld.h"
 #include "husk-tl-ue4-graphics.h"
 #include "husk-tl-pipeline-store.h"
+#include "husk-tl-thread-policy.h"
 
 void *tl_nwindow_native(void *window);
 int tl_nwindow_width(void *window);
@@ -531,6 +532,7 @@ static void pace_efficient_frame(void)
         low_power = process.lowPowerModeEnabled ? 1 : 0;
 #endif
         if (observed != last_observed || low_power != last_low_power) {
+            if (last_observed >= 0 && (observed > 0 || low_power != last_low_power)) tl_thread_policy_suspend();
             tl_log_line("ue4 power: low-power mode %d, reported thermal %d (0 nominal, 1 fair, 2 serious, 3 critical); settings and pacing unchanged by observation", low_power, observed);
             last_observed = observed; last_low_power = low_power;
         }
@@ -559,6 +561,7 @@ static void pace_efficient_frame(void)
     /* Present-to-present wall-clock cadence including pacing, not GPU time.
      * Discard background/loading gaps instead of reporting them as gameplay. */
     if (previous && now - previous < 1000000000LL) {
+        tl_thread_policy_frame(now, now - previous);
         double ms = (double)(now - previous) / 1e6;
         intervals[count++] = ms;
         if (ms > 1000.0 / (cap ? cap : 60) * 1.2) late++;
@@ -584,6 +587,9 @@ static void pace_efficient_frame(void)
             avg[i] = samples[i] ? (double)(ns - last_ns[i]) / samples[i] / 1e6 : 0;
             last_ns[i] = ns; last_calls[i] = calls;
         }
+        tl_thread_policy_sample(now, (int64_t)(sum * 1e6), count * 1000.0 / sum,
+                                intervals[p95], last_observed, last_low_power > 0,
+                                samples[TIMING_GRAPHICS_PIPELINES] || samples[TIMING_COMPUTE_PIPELINES]);
         tl_log_line("ue4 timing: cadence %.1f FPS, p95 %.2f ms, max %.2f ms, %u/%u intervals >120%% of %d FPS reference; thermal %d, engine cap %d, host cap %d; host call averages acquire %.3f ms (%llu), submit %.3f ms (%llu), present %.3f ms (%llu), sleep %.3f ms (%llu); calls may overlap; not GPU execution or displayed-frame timing",
                     count * 1000.0 / sum, intervals[p95], intervals[count - 1], late, count, cap ? cap : 60, thermal, cap, host_cap,
                     avg[0], (unsigned long long)samples[0], avg[1], (unsigned long long)samples[1],

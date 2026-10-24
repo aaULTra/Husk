@@ -105,13 +105,14 @@ struct TLAppSettings: Codable, Equatable {
     }
 
     enum WorkerScheduling: Int, Codable, CaseIterable, Identifiable {
-        case gameDefault = 0, observe = 1, balanced = 2
+        case gameDefault = 0, observe = 1, balanced = 2, adaptive = 3
         var id: Int { rawValue }
         var title: String {
             switch self {
             case .gameDefault: return "Game Default"
             case .observe: return "Observe Only"
             case .balanced: return "Balanced (Experimental)"
+            case .adaptive: return "Adaptive Trial (Experimental)"
             }
         }
     }
@@ -131,10 +132,11 @@ struct TLAppSettings: Codable, Equatable {
     var efficientFrameRate: EfficientFrameRate = .smooth
 
     enum EfficientResolution: Int, Codable, CaseIterable, Identifiable {
-        case automatic = 0, native = 100, ultra = 95, verySharp = 90, sharp = 85, quality = 80, balanced = 75, economical = 70, performance = 65
+        case custom = -1, automatic = 0, native = 100, ultra = 95, verySharp = 90, sharp = 85, quality = 80, balanced = 75, economical = 70, performance = 65
         var id: Int { rawValue }
         var title: String {
             switch self {
+            case .custom: return "Custom · 1% Steps"
             case .automatic: return "Automatic · Device Display"
             case .native: return "Native · 100%"
             case .ultra: return "95% · Compare with Native"
@@ -148,6 +150,7 @@ struct TLAppSettings: Codable, Equatable {
         }
     }
     var efficientResolution: EfficientResolution = .automatic
+    var customResolutionPercent = 80
 
     func usesEfficientGraphics(for app: TLApp) -> Bool {
         usesSharpGraphics(for: app) && (unrealGraphics == .automatic || unrealGraphics == .efficientHigh)
@@ -160,7 +163,7 @@ struct TLAppSettings: Codable, Equatable {
         let fraction = tl_ue4_resolution_fraction(
             Int32((screen.bounds.width * screen.scale).rounded()),
             Int32((screen.bounds.height * screen.scale).rounded()),
-            UIDevice.current.userInterfaceIdiom == .pad, Int32(efficientResolution.rawValue))
+            UIDevice.current.userInterfaceIdiom == .pad, Int32(efficientResolution == .custom ? customResolutionPercent : efficientResolution.rawValue))
         return screen.scale * CGFloat(fraction)
     }
 
@@ -186,6 +189,7 @@ struct TLAppSettings: Codable, Equatable {
     // Settings written by an older Husk lack the keys a newer one added; each falls back to its default.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        customResolutionPercent = min(100, max(65, try c.decodeIfPresent(Int.self, forKey: .customResolutionPercent) ?? 80))
         efficientResolution = try c.decodeIfPresent(EfficientResolution.self, forKey: .efficientResolution) ?? .automatic
         vulkanSubmission = try c.decodeIfPresent(VulkanSubmission.self, forKey: .vulkanSubmission) ?? .driverDefault
         workerScheduling = try c.decodeIfPresent(WorkerScheduling.self, forKey: .workerScheduling) ?? .balanced
@@ -304,6 +308,10 @@ struct TLAppSettingsView: View {
                         Picker("Rendering Resolution", selection: $settings.efficientResolution) {
                             ForEach(TLAppSettings.EfficientResolution.allCases) { Text($0.title).tag($0) }
                         }
+                        if settings.efficientResolution == .custom {
+                            LabeledContent("Render Scale", value: "\(settings.customResolutionPercent)%")
+                            Slider(value: Binding(get: { Double(settings.customResolutionPercent) }, set: { settings.customResolutionPercent = Int($0.rounded()) }), in: 65...100, step: 1)
+                        }
                         Picker("Frame Limit", selection: $settings.efficientFrameRate) {
                             ForEach(TLAppSettings.EfficientFrameRate.allCases) { Text($0.title).tag($0) }
                         }
@@ -319,6 +327,7 @@ struct TLAppSettingsView: View {
                        + "Sharp / High Quality keeps the previous maximum-quality preset. Game Default removes the overrides. "
                        + "For Dungeons only, Balanced caps named normal workers at Default QoS and background workers at Utility. "
                        + "Other thread roles are preserved. Observe Only logs requested QoS without changing it. "
+                       + "Adaptive Trial uses a CPU-capacity hint, preserves critical roles, waits for healthy 60 FPS cadence, and requests rollback when cadence worsens. Changes apply on worker self checkpoints, not immediately to busy threads. It does not know individual job deadlines or measure energy savings. "
                        + "This does not pin CPU cores and may affect frame times. Close Husk completely and reopen after changes.")
                 }
             }

@@ -56,7 +56,7 @@ void tl_log_line(const char *fmt, ...) { (void)fmt; atomic_fetch_add(&lines, 1);
 void reset_fake(unsigned qos, int relative, int mode, const char *project) {
  memset(&state, 0, sizeof(state)); fake_qos = qos; fake_relative = relative; next_failure = 0; query_failure_at = 0; queries = 0;
  atomic_store(&writes, 0); atomic_store(&lines, 0);
- husk_ue4_set_thread_policy(mode); tl_thread_policy_activate(project);
+ husk_ue4_set_worker_capacity(6); husk_ue4_set_thread_policy(mode); tl_thread_policy_activate(project);
 }
 unsigned current_qos(void) { return fake_qos; }
 int current_relative(void) { return fake_relative; }
@@ -111,12 +111,68 @@ void exercise_naming(int path, const char *name, int failure) {
         cls.lib.tl_thread_policy_named.argtypes = [ctypes.c_char_p]
         cls.lib.tl_thread_policy_role.argtypes = [ctypes.c_char_p]
         cls.lib.current_qos.restype = ctypes.c_uint
+        cls.lib.tl_thread_policy_sample.argtypes = [ctypes.c_int64, ctypes.c_int64, ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_bool, ctypes.c_bool]
+        cls.lib.tl_thread_policy_frame.argtypes = [ctypes.c_int64, ctypes.c_int64]
         cls.lib.external_qos.argtypes = [ctypes.c_uint, ctypes.c_int]
         cls.lib.exercise_naming.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
 
     def reset(self, qos=HIGH, relative=-2, mode=2, project=b'Dungeons'):
         self.lib.reset_fake(qos, relative, mode, project)
     def name(self, value): self.lib.tl_thread_policy_named(value)
+
+    def sample(self, seconds, fps=60, p95=18, thermal=0, low=False, pipelines=False, span=10):
+        self.lib.tl_thread_policy_sample(int(seconds*1e9), int(span*1e9), fps, p95, thermal, low, pipelines)
+
+    def admit(self):
+        self.sample(10); self.sample(20)
+        self.assertTrue(self.lib.tl_thread_policy_trial_active())
+
+    def test_adaptive_capacity_hint_and_guarded_admission(self):
+        for cpu_count, name, expected in ((10,b'TaskGraphNP 1',NORMAL),(6,b'TaskGraphNP 1',UTILITY),(10,b'TaskGraphNP 2',UTILITY)):
+            self.reset(mode=3); self.lib.husk_ue4_set_worker_capacity(cpu_count)
+            self.name(name); self.assertEqual(self.lib.current_qos(),NORMAL)
+            self.sample(10); self.assertFalse(self.lib.tl_thread_policy_trial_active())
+            self.sample(20); self.lib.tl_thread_policy_checkpoint()
+            self.assertEqual(self.lib.current_qos(),expected)
+
+    def test_adaptive_rollback_restores_baseline_at_self_checkpoint(self):
+        self.reset(mode=3); self.name(b'TaskGraphNP 2'); self.admit()
+        self.lib.tl_thread_policy_checkpoint(); self.assertEqual(self.lib.current_qos(),UTILITY)
+        self.sample(30,fps=50,p95=24)
+        self.assertFalse(self.lib.tl_thread_policy_trial_active())
+        self.lib.tl_thread_policy_checkpoint(); self.assertEqual(self.lib.current_qos(),NORMAL)
+        for t in range(40,90,10): self.sample(t)
+        self.assertFalse(self.lib.tl_thread_policy_trial_active())
+        self.sample(90); self.sample(100)
+        self.assertTrue(self.lib.tl_thread_policy_trial_active())
+
+    def test_pipeline_work_heat_power_transition_and_loading_do_not_admit_trial(self):
+        for kwargs in ({'pipelines':True},{'thermal':1},{'span':1},{'fps':58},{'p95':21}):
+            self.reset(mode=3); self.sample(10,**kwargs); self.sample(20,**kwargs)
+            self.assertFalse(self.lib.tl_thread_policy_trial_active())
+        self.reset(mode=3); self.admit(); self.sample(30,low=True)
+        self.assertFalse(self.lib.tl_thread_policy_trial_active())
+
+    def test_critical_and_ambiguous_roles_preserved_and_pause_releases_trial(self):
+        for name in (b'TaskGraphHP 4',b'RenderThread',b'AudioThread',b'TaskGraphNP'):
+            self.reset(mode=3); self.name(name); self.admit(); self.lib.tl_thread_policy_checkpoint()
+            self.assertEqual(self.lib.current_qos(), NORMAL if name==b'TaskGraphNP' else HIGH)
+        self.reset(mode=3); self.name(b'TaskGraphNP 2'); self.admit(); self.lib.tl_thread_policy_checkpoint()
+        self.lib.tl_thread_policy_suspend(); self.lib.tl_thread_policy_checkpoint()
+        self.assertEqual(self.lib.current_qos(),NORMAL)
+
+    def test_fast_guard_releases_after_six_misses_or_one_large_stall(self):
+        for interval, count in ((23000000,6),(60000000,1)):
+            self.reset(mode=3); self.admit()
+            for i in range(count): self.lib.tl_thread_policy_frame(21000000000+i*interval,interval)
+            self.assertFalse(self.lib.tl_thread_policy_trial_active())
+
+    def test_adaptive_failure_retries_are_rate_limited(self):
+        self.reset(mode=3); self.name(b'TaskGraphNP 2'); self.admit()
+        self.lib.fail_next(22); self.lib.tl_thread_policy_checkpoint()
+        writes=self.lib.write_count()
+        for _ in range(100): self.lib.tl_thread_policy_checkpoint()
+        self.assertEqual(self.lib.write_count(),writes)
 
     def test_exact_worker_names_and_android_shortened_forms(self):
         for name in (b'TaskGraphThreadNP', b'TaskGraphThreadNP 0', b'TaskGraphNP 12'):
@@ -144,7 +200,7 @@ void exercise_naming(int path, const char *name, int failure) {
             self.assertEqual((self.lib.current_qos(), self.lib.write_count()), (qos, 0))
 
     def test_default_and_observe_modes_do_not_change_qos(self):
-        for mode in (0, 1, -1, 3):
+        for mode in (0, 1, -1, 4):
             self.reset(mode=mode); self.name(b'TaskGraphBP 0')
             self.assertEqual((self.lib.current_qos(), self.lib.write_count()), (HIGH, 0))
         self.reset(mode=1); self.name(b'TaskGraphNP 0')

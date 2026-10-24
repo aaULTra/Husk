@@ -170,7 +170,9 @@ static int b_cond_signal(void *g)    { return rc(pthread_cond_signal(obj_host(g,
 static int b_cond_broadcast(void *g) { return rc(pthread_cond_broadcast(obj_host(g, make_cond))); }
 static int b_cond_wait(void *g, void *m)
 {
-    return rc(pthread_cond_wait(obj_host(g, make_cond), obj_host(m, make_mutex)));
+    int r = pthread_cond_wait(obj_host(g, make_cond), obj_host(m, make_mutex));
+    tl_thread_policy_checkpoint();
+    return rc(r);
 }
 
 static int b_cond_timedwait(void *g, void *m, const struct timespec *abs)
@@ -184,7 +186,9 @@ static int b_cond_timedwait(void *g, void *m, const struct timespec *abs)
     rel.tv_nsec = abs->tv_nsec - now.tv_nsec;
     if (rel.tv_nsec < 0) { rel.tv_sec--; rel.tv_nsec += 1000000000L; }
     if (rel.tv_sec < 0) { rel.tv_sec = 0; rel.tv_nsec = 0; }
-    return rc(pthread_cond_timedwait_relative_np(o->host, obj_host(m, make_mutex), &rel));
+    int r = pthread_cond_timedwait_relative_np(o->host, obj_host(m, make_mutex), &rel);
+    tl_thread_policy_checkpoint();
+    return rc(r);
 }
 
 /* Bionic's clock ids: 0 is CLOCK_REALTIME, 1 CLOCK_MONOTONIC. */
@@ -198,7 +202,9 @@ static int cond_wait_until(void *g, void *m, clockid_t clk, const struct timespe
     rel.tv_nsec = abs->tv_nsec - now.tv_nsec;
     if (rel.tv_nsec < 0) { rel.tv_sec--; rel.tv_nsec += 1000000000L; }
     if (rel.tv_sec < 0) { rel.tv_sec = 0; rel.tv_nsec = 0; }
-    return rc(pthread_cond_timedwait_relative_np(o->host, obj_host(m, make_mutex), &rel));
+    int r = pthread_cond_timedwait_relative_np(o->host, obj_host(m, make_mutex), &rel);
+    tl_thread_policy_checkpoint();
+    return rc(r);
 }
 
 static int b_cond_clockwait(void *g, void *m, int clock, const struct timespec *abs)
@@ -295,6 +301,7 @@ static int b_sem_wait(void *g)
     while (s->count <= 0) pthread_cond_wait(&s->c, &s->m);
     s->count--;
     pthread_mutex_unlock(&s->m);
+    tl_thread_policy_checkpoint();
     return 0;
 }
 static int b_sem_trywait(void *g)
@@ -304,6 +311,7 @@ static int b_sem_trywait(void *g)
     pthread_mutex_lock(&s->m);
     if (s->count > 0) { s->count--; ok = 1; }
     pthread_mutex_unlock(&s->m);
+    tl_thread_policy_checkpoint();
     if (!ok) { tl_set_guest_errno(11); return -1; }
     return 0;
 }
@@ -318,6 +326,7 @@ static int b_sem_timedwait(void *g, const struct timespec *abs)
     while (s->count <= 0 && r == 0) r = pthread_cond_timedwait(&s->c, &s->m, abs);
     if (r == 0) s->count--;
     pthread_mutex_unlock(&s->m);
+    tl_thread_policy_checkpoint();
     if (r) { tl_set_guest_errno(tl_errno_to_guest(r)); return -1; }
     return 0;
 }

@@ -502,6 +502,7 @@ void tl_na_set_paused(bool paused)
     if (atomic_exchange(&is_paused, paused) == paused) return;
     tl_log_line("ue4: %s", paused ? "pausing" : "resuming");
     if (paused) {
+        tl_thread_policy_suspend();
         tl_pc_checkpoint_async();
         if (N.callbacks.onWindowFocusChanged) N.callbacks.onWindowFocusChanged(&N.na, 0);
         if (N.callbacks.onPause) N.callbacks.onPause(&N.na);

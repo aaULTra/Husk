@@ -32,6 +32,7 @@ class SourceEfficiencyTests(unittest.TestCase):
 #include <time.h>
 #include <errno.h>
 #include <unistd.h>
+static void tl_thread_policy_checkpoint(void) {}
 static bool allocation_fails;
 static void *snapshot_malloc(size_t n) { return allocation_fails ? NULL : malloc(n); }
 static char *snapshot_strdup(const char *s) { return allocation_fails ? NULL : strdup(s); }

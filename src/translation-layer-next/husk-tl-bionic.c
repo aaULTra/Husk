@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include <pthread.h>
+#include <sched.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdatomic.h>
@@ -572,6 +573,7 @@ static int bionic_gettid(void)
 }
 
 static int bionic_getpriority(int which, int who) { (void)which; (void)who; return 0; }
+static int bionic_sched_yield(void) { int r = sched_yield(); tl_thread_policy_checkpoint(); return r; }
 static int bionic_setpriority(int which, int who, int prio) { (void)which; (void)who; (void)prio; return 0; }
 
 static int bionic_sched_getaffinity(int pid, size_t size, void *mask)
@@ -823,7 +825,7 @@ const tl_bionic_entry tl_tab_core[] = {
     TL_WRAP("sched_setaffinity", bionic_sched_setaffinity),
     TL_WRAP("sched_getparam", bionic_sched_getparam),
     TL_WRAP("sched_getscheduler", bionic_sched_getscheduler),
-    TL_DIRECT(sched_yield),
+    TL_WRAP("sched_yield", bionic_sched_yield),
     TL_WRAP("prctl", bionic_prctl),
     TL_WRAP("syscall", bionic_syscall),
     TL_WRAP("fork", bionic_fork),

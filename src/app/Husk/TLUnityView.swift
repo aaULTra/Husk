@@ -327,6 +327,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
             // Unreal draws with Vulkan, which on this device is MoltenVK, a framework of the app's own.
             husk_ue4_set_sharp_graphics(sharpGraphics)
             husk_ue4_set_efficiency(efficientGraphics, Int32(efficientFrameLimit))
+            husk_ue4_set_worker_capacity(Int32(ProcessInfo.processInfo.processorCount))
             husk_ue4_set_thread_policy(Int32(threadPolicy))
             husk_ue4_set_submission_mode(Int32(submissionMode))
             HuskLog.log("tl", "ue4: requested graphics preset: \(efficientGraphics ? "Sharp / Efficient" : (sharpGraphics ? "Sharp / High Quality" : "Game Default")), surface \(width)x\(height)")

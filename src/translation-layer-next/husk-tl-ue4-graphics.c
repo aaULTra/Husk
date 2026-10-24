@@ -16,7 +16,7 @@ static int frame_limit = 60;
 double tl_ue4_resolution_fraction(int width, int height, bool tablet, int percent)
 {
     if (width <= 0 || height <= 0) return 1.0;
-    if (percent >= 65 && percent <= 100 && percent % 5 == 0)
+    if (percent >= 65 && percent <= 100)
         return percent / 100.0;
     /* Larger tablets retain more spatial detail. Phones use a smaller pixel
      * budget even when their native display is very dense. Current dimensions

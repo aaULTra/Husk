@@ -74,7 +74,7 @@ class GraphicsTests(unittest.TestCase):
 
     def test_manual_resolution_allows_repeatable_native_comparisons(self):
         f = self.lib.tl_ue4_resolution_fraction
-        for percent in range(65, 101, 5):
+        for percent in range(65, 101):
             self.assertEqual(f(2752, 2064, True, percent), percent / 100)
             self.assertEqual(f(2400, 1800, False, percent), percent / 100)
 
