@@ -42,22 +42,28 @@ int pthread_set_qos_class_self_np(qos_class_t, int);
 static _Thread_local unsigned fake_qos;
 static _Thread_local int fake_relative, next_failure, query_failure_at, queries;
 static atomic_int writes, lines;
+static _Thread_local int flip_generation;
 int pthread_get_qos_class_np(pthread_t t, qos_class_t *qos, int *relative) {
  (void)t;
  if (++queries == query_failure_at) return 22;
  *qos = fake_qos; *relative = fake_relative; return 0;
 }
 int pthread_set_qos_class_self_np(qos_class_t qos, int relative) {
+ errno = 5;
  atomic_fetch_add(&writes, 1);
  if (next_failure) { int r = next_failure; next_failure = 0; return r; }
- fake_qos = qos; fake_relative = relative; return 0;
+ fake_qos = qos; fake_relative = relative;
+ if (flip_generation && qos == QOS_CLASS_UTILITY) { flip_generation=0; tl_thread_policy_suspend(); }
+ return 0;
 }
 void tl_log_line(const char *fmt, ...) { (void)fmt; atomic_fetch_add(&lines, 1); }
 void reset_fake(unsigned qos, int relative, int mode, const char *project) {
- memset(&state, 0, sizeof(state)); fake_qos = qos; fake_relative = relative; next_failure = 0; query_failure_at = 0; queries = 0;
+ memset(&state, 0, sizeof(state)); flip_generation=0; fake_qos = qos; fake_relative = relative; next_failure = 0; query_failure_at = 0; queries = 0;
  atomic_store(&writes, 0); atomic_store(&lines, 0);
  husk_ue4_set_worker_capacity(6); husk_ue4_set_thread_policy(mode); tl_thread_policy_activate(project);
 }
+int checkpoint_errno(void) { errno=11; tl_thread_policy_checkpoint(); return errno; }
+void flip_during_cap(void) { flip_generation=1; }
 unsigned current_qos(void) { return fake_qos; }
 int current_relative(void) { return fake_relative; }
 int write_count(void) { return atomic_load(&writes); }
@@ -173,6 +179,17 @@ void exercise_naming(int path, const char *name, int failure) {
         writes=self.lib.write_count()
         for _ in range(100): self.lib.tl_thread_policy_checkpoint()
         self.assertEqual(self.lib.write_count(),writes)
+
+    def test_self_checkpoint_preserves_wait_errno(self):
+        self.reset(mode=3); self.name(b'TaskGraphNP 2'); self.admit()
+        self.assertEqual(self.lib.checkpoint_errno(),11)
+
+    def test_generation_change_during_setter_is_not_mistaken_for_applied_revision(self):
+        self.reset(mode=3); self.name(b'TaskGraphNP 2'); self.admit()
+        self.lib.flip_during_cap(); self.lib.tl_thread_policy_checkpoint()
+        self.assertFalse(self.lib.tl_thread_policy_trial_active())
+        self.lib.tl_thread_policy_checkpoint()
+        self.assertEqual(self.lib.current_qos(),NORMAL)
 
     def test_exact_worker_names_and_android_shortened_forms(self):
         for name in (b'TaskGraphThreadNP', b'TaskGraphThreadNP 0', b'TaskGraphNP 12'):

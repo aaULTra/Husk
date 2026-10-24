@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
+#include <errno.h>
 
 #if defined(__APPLE__) || defined(HUSK_THREAD_POLICY_TEST)
 #include <pthread.h>
@@ -142,8 +143,10 @@ static int normal_index(const char *name)
 void tl_thread_policy_checkpoint(void)
 {
     if (atomic_load(&active_mode) != 3 || !state.name[0] || state.seen_revision == atomic_load(&revision)) return;
-    if (state.retry_after && policy_now() < state.retry_after) return;
+    int saved_errno = errno;
+    if (state.retry_after && policy_now() < state.retry_after) { errno = saved_errno; return; }
     tl_thread_policy_named(state.name);
+    errno = saved_errno;
 }
 
 void tl_thread_policy_named(const char *name)
