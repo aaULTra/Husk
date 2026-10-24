@@ -20,6 +20,7 @@ jobs:
           python3 tests/translation-layer/test_source_efficiency.py -v
           python3 tests/translation-layer/test_thread_policy.py -v
           python3 tests/translation-layer/test_vk_frame_timing.py -v
+          python3 tests/translation-layer/test_pipeline_store.py -v
       - name: Install XcodeGen
         run: brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
       - name: Download pinned official libraries and resources

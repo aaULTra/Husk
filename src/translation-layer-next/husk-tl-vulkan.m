@@ -23,6 +23,7 @@
 #include "husk-tl-bionic.h"
 #include "husk-tl-ld.h"
 #include "husk-tl-ue4-graphics.h"
+#include "husk-tl-pipeline-store.h"
 
 void *tl_nwindow_native(void *window);
 int tl_nwindow_width(void *window);
@@ -68,6 +69,8 @@ void tl_vk_configure(const char *path, const char *frame_dir, int frame_every)
     if (frame_dir) { snprintf(V.frame_dir, sizeof(V.frame_dir), "%s", frame_dir); V.frame_every = frame_every > 0 ? frame_every : 60; }
 }
 
+static int submission_mode;
+void husk_ue4_set_submission_mode(int mode) { submission_mode = mode == 1 ? 1 : 0; }
 static void vk_load(void)
 {
     V.trace = getenv("TL_VK_TRACE") ? 1 : 0;
@@ -78,8 +81,25 @@ static void vk_load(void)
      * blank image; normal gameplay never calls vkQueueWaitIdle for logging. */
     const char *probe = getenv("TL_VK_PROBE_FRAMES");
     V.probe_frames = probe && !strcmp(probe, "1");
+    if (submission_mode == 1) setenv("MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", "0", 1);
     V.lib = V.have_path ? dlopen(V.path, RTLD_NOW | RTLD_LOCAL) : RTLD_DEFAULT;
+    tl_pc_set_api((tl_pc_api){
+        .create = V.lib ? (void *)dlsym(V.lib, "vkCreatePipelineCache") : NULL,
+        .data = V.lib ? (void *)dlsym(V.lib, "vkGetPipelineCacheData") : NULL,
+        .merge = V.lib ? (void *)dlsym(V.lib, "vkMergePipelineCaches") : NULL,
+        .destroy = V.lib ? (void *)dlsym(V.lib, "vkDestroyPipelineCache") : NULL
+    });
     V.gipa = V.lib ? (pfn_gipa)dlsym(V.lib, "vkGetInstanceProcAddr") : NULL;
+    /* Stable first five fields of the versioned public MoltenVK configuration
+     * ABI (verified against bundled 1.4.2). Short reads return VK_INCOMPLETE. */
+    typedef int (*config_fn)(void *, void *, size_t *);
+    config_fn config = V.lib ? (config_fn)dlsym(V.lib, "vkGetMoltenVKConfigurationMVK") : NULL;
+    uint32_t prefix[5] = {0}; size_t bytes = sizeof(prefix);
+    int cr = config ? config(NULL, prefix, &bytes) : -1;
+    if ((cr == 0 || cr == 5) && bytes >= sizeof(prefix))
+        tl_log_line("ue4 submission: mode %s; MoltenVK synchronous=%u, prefill=%u, active-command-buffer-limit=%u; asynchronous may move work rather than reduce it",
+                    submission_mode ? "Async (experimental)" : "Driver Default", prefix[2], prefix[3], prefix[4]);
+    else tl_log_line("ue4 submission: configuration unavailable rc=%d; no runtime layout assumptions used beyond size-checked prefix", cr);
     tl_log_line("vulkan: %s", V.gipa ? (V.have_path ? V.path : "MoltenVK linked into the process") : "MoltenVK not found");
 }
 static bool vk_ready(void) { pthread_once(&V.once, vk_load); return V.gipa != NULL; }
@@ -375,7 +395,21 @@ static int w_vkCreatePipelineCache(void *device, const void *ci, const void *all
         real = (pfn_cache_create)dlsym(V.lib, "vkCreatePipelineCache");
         atomic_store_explicit(&cached, real, memory_order_release);
     }
-    int result = real ? real(device, ci, alloc, out) : -3;
+    bool locked = tl_pc_enter();
+    const tl_pc_create_info *original = ci;
+    tl_pc_create_info seeded;
+    size_t stored_size = 0;
+    void *stored = original && !original->next && !original->flags && !original->size ? tl_pc_load(device, &stored_size) : NULL;
+    if (stored) { seeded = *original; seeded.size = stored_size; seeded.data = stored; }
+    int result = real ? real(device, stored ? &seeded : ci, alloc, out) : -3;
+    if (stored && result == -3) {
+        tl_log_line("ue4 cache store: driver rejected seed (%d); retrying original empty cache", result);
+        tl_pc_discard(device);
+        result = real ? real(device, ci, alloc, out) : -3;
+    }
+    if (result == VK_SUCCESS && out) tl_pc_track(device, *out);
+    free(stored);
+    tl_pc_leave(locked);
     if (tl_ue4_sharp_graphics_enabled()) {
         size_t bytes = 0;
         if (ci) memcpy(&bytes, (const uint8_t *)ci + 24, sizeof(bytes));
@@ -397,7 +431,9 @@ static int w_vkGetPipelineCacheData(void *device, uint64_t cache, size_t *size, 
         real = (pfn_cache_data)dlsym(V.lib, "vkGetPipelineCacheData");
         atomic_store_explicit(&cached, real, memory_order_release);
     }
+    bool locked = tl_pc_enter();
     int result = real ? real(device, cache, size, data) : -3;
+    tl_pc_leave(locked);
     if (tl_ue4_sharp_graphics_enabled()) {
         if (data && result >= 0) atomic_fetch_add_explicit(&cache_readbacks, 1, memory_order_relaxed);
         if (atomic_fetch_add_explicit(&cache_log_events, 1, memory_order_relaxed) < 24)
@@ -410,7 +446,9 @@ static int measure_pipeline_create(pfn_create_pipelines real, unsigned stage, vo
 {
     bool measure = tl_ue4_sharp_graphics_enabled();
     int64_t start = measure ? monotonic_ns() : 0;
+    bool locked = tl_pc_enter();
     int result = real ? real(device, cache, count, ci, alloc, out) : -3;
+    tl_pc_leave(locked);
     if (measure) {
         record_host_timing(stage, start);
         atomic_fetch_add_explicit(cache ? &cached_pipeline_calls : &uncached_pipeline_calls, 1, memory_order_relaxed);
@@ -436,6 +474,30 @@ static int w_vkCreateComputePipelines(void *device, uint64_t cache, uint32_t cou
         atomic_store_explicit(&cached, real, memory_order_release);
     }
     return measure_pipeline_create(real, TIMING_COMPUTE_PIPELINES, device, cache, count, ci, alloc, out);
+}
+
+static int w_vkMergePipelineCaches(void *device, uint64_t dst, uint32_t count, const uint64_t *src)
+{
+    typedef int (*fn)(void *, uint64_t, uint32_t, const uint64_t *);
+    fn real = V.lib ? (fn)dlsym(V.lib, "vkMergePipelineCaches") : NULL;
+    bool locked = tl_pc_enter();
+    int result = real ? real(device, dst, count, src) : -3;
+    tl_pc_leave(locked); return result;
+}
+static void w_vkDestroyPipelineCache(void *device, uint64_t cache, const void *alloc)
+{
+    typedef void (*fn)(void *, uint64_t, const void *);
+    fn real = V.lib ? (fn)dlsym(V.lib, "vkDestroyPipelineCache") : NULL;
+    bool locked = tl_pc_enter();
+    tl_pc_untrack(device, cache);
+    if (real) real(device, cache, alloc);
+    tl_pc_leave(locked);
+}
+static void w_vkDestroyDevice(void *device, const void *alloc)
+{
+    typedef void (*fn)(void *, const void *);
+    fn real = V.lib ? (fn)dlsym(V.lib, "vkDestroyDevice") : NULL;
+    tl_pc_forget_device(device, real, alloc);
 }
 
 static int64_t monotonic_ns(void)
@@ -859,7 +921,21 @@ static pfn_create_device g_real_create_device;
 static int w_vkCreateDevice(void *pd, const vk_device_ci *ci, const void *alloc, void **out)
 {
     if (!g_real_create_device) return -3;
-    if (!dxvk_game()) return g_real_create_device(pd, ci, alloc, out);
+    if (!dxvk_game()) {
+        int result = g_real_create_device(pd, ci, alloc, out);
+        if (result == VK_SUCCESS && out && *out) {
+            typedef void (*properties_fn)(void *, void *);
+            properties_fn properties = V.lib ? (properties_fn)dlsym(V.lib, "vkGetPhysicalDeviceProperties") : NULL;
+            if (properties) {
+                union { max_align_t align; uint8_t bytes[4096]; } props = {0};
+                properties(pd, props.bytes);
+                uint32_t vendor, id;
+                memcpy(&vendor, props.bytes + 8, 4); memcpy(&id, props.bytes + 12, 4);
+                tl_pc_device(*out, vendor, id, props.bytes + 276);
+            }
+        }
+        return result;
+    }
     uint32_t base[N_FEATURES], saved1[8], saved2[8];
     vk_device_ci copy = *ci;
     if (ci->features) { memcpy(base, ci->features, sizeof(base)); unclaim(pd, base, saved1); copy.features = base; }
@@ -929,6 +1005,9 @@ static const struct { const char *name; void *fn; } k_over[] = {
     { "vkQueueSubmit", w_vkQueueSubmit },
     { "vkCreatePipelineCache", w_vkCreatePipelineCache },
     { "vkGetPipelineCacheData", w_vkGetPipelineCacheData },
+    { "vkMergePipelineCaches", w_vkMergePipelineCaches },
+    { "vkDestroyPipelineCache", w_vkDestroyPipelineCache },
+    { "vkDestroyDevice", w_vkDestroyDevice },
     { "vkCreateGraphicsPipelines", w_vkCreateGraphicsPipelines },
     { "vkCreateComputePipelines", w_vkCreateComputePipelines },
     { "vkCreateSwapchainKHR", w_vkCreateSwapchainKHR },

@@ -7,6 +7,8 @@
 
 /* Set before starting the engine; one engine is loaded for the process's lifetime. */
 void husk_ue4_set_sharp_graphics(bool enabled);
+/* Select before MoltenVK loads. 0 driver default, 1 asynchronous (experimental). */
+void husk_ue4_set_submission_mode(int mode);
 /* Launch-time quality budget. percent=0 selects a conservative display-class
  * budget; explicit 65/75/85/100 percentages remain available for comparisons.
  * No device model claims, runtime calibration, or guaranteed FPS. */

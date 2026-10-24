@@ -388,3 +388,64 @@ execution and the existing limiter's lack of extra waits on over-budget frames.
 These supplement the 45 existing checks (49 total). They do not benchmark the
 real game or prove cooling/FPS benefits. An ordinary sustained gameplay log now
 provides power-state context, host waits and cache adoption in one collection.
+
+
+## Persistent cache and targeted submission comparison
+
+The supplied 366-line M4 log contains both pipeline-creation hitches and slow
+38–39 FPS windows with no new pipeline creation. Cache persistence targets the
+former, not a guaranteed cure for sustained load. The log's slow submit calls
+are host durations, not GPU execution times.
+
+For project Dungeons in Sharp modes, a host-managed store now exports the native
+cache on pause, using a background Utility worker. It merges into a temporary
+cache, without changing the guest caches. Normal pipeline/cache calls hold a
+shared rwlock, preserving parallel pipeline creation; checkpoint copying takes
+exclusive access, and file I/O runs after that lock is released. A quick resume
+can still wait for a snapshot in progress. This cost needs device measurement.
+Device/cache teardown and merge calls participate in the access protocol.
+
+One cache file per physical-device compatibility header lives under the game's
+own internal directory. Vendor/device IDs and pipeline-cache UUID are checked
+against Vulkan properties, a checksum catches accidental body corruption, files
+are size-limited to 32 MiB plus checksum, symlinks are rejected and writes use
+atomic rename. Only originally empty, unextended, unflagged cache creations can
+be seeded. Game-supplied data is preserved. If MoltenVK rejects a host seed with
+initialization failure, Husk discards it and retries the original empty create;
+other failures (including OOM/device lost) pass through. Unsupported export or
+no useful cache data simply leaves the previous file alone. Files are scoped
+per game; Vulkan's shader/config keys and driver UUID govern compatibility.
+No shaders are precompiled blindly; first-encounter hitches remain possible.
+
+The shipped binary identifies as MoltenVK 1.4.2 and contains the synchronous
+submit environment option. Its v1.4.2 documentation specifies default=1;
+async=0 dispatches work to a GCD queue. A per-game Async (Experimental) setting is
+available, with Driver Default retained as default. The stable, size-checked
+first five fields of MoltenVK's configuration API are queried for diagnostics.
+A shorter async vkQueueSubmit call may only move work; cadence, visual
+correctness, thermal state and sustained behaviour must still be compared.
+
+Sharp UE4 launch dimensions are aligned to eight before Android-window and
+Metal drawable setup, matching the engine hooks. This removes the 2133-versus-
+2128 width discrepancy in the supplied log. Intentionally reduced drawable
+size may still be reported SUBOPTIMAL by MoltenVK; no Vulkan status is masked
+or converted to success.
+
+Resolution choices now include every five percent from 65 through 100, plus
+the existing Automatic budget. No perceptually identical minimum is assumed:
+texture/AA settings stay intact, but subpixel detail can differ as resolution
+falls. Find a personal threshold at normal viewing distance with comparable
+scene/camera conditions. No dynamic in-mission resolution switching is claimed.
+
+Validation adds a fake-driver test of actual store code: roundtrip/merge,
+corrupt/truncated/oversized data rejection, different-device isolation,
+unsupported serialization preserving prior data, untracked-handle removal,
+and parallel readers. Existing wrapper tests cover passthrough merge/destruction
+as well as create/get-data/pipeline calls. All six suites run before IPA build.
+
+Version-matched primary docs:
+https://github.com/KhronosGroup/MoltenVK/blob/v1.4.2/Docs/MoltenVK_Configuration_Parameters.md
+https://github.com/KhronosGroup/MoltenVK/blob/v1.4.2/MoltenVK/MoltenVK/API/mvk_private_api.h
+
+The integrated suite now passes 55 portable checks locally, including seed-
+rejection retry and preserving device-lost/OOM failures without retry.

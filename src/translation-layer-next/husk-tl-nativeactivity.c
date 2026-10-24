@@ -1,3 +1,4 @@
+#include "husk-tl-pipeline-store.h"
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #define _DARWIN_C_SOURCE
 #include "husk-tl-nativeactivity.h"
@@ -354,6 +355,11 @@ bool tl_na_start(const tl_ga_config *cfg)
                 tl_ue4_efficiency_enabled() ? "Sharp / Efficient" : (tl_ue4_sharp_graphics_enabled() ? "Sharp / High Quality" : "Game Default"), cfg->width, cfg->height);
     const char *project = tl_ue4_meta("com.epicgames.ue4.GameActivity.ProjectName");
     tl_thread_policy_activate(project);
+    if (project && !strcmp(project, "Dungeons") && tl_ue4_sharp_graphics_enabled()) {
+        char cache_dir[768];
+        snprintf(cache_dir, sizeof(cache_dir), "%s/husk-pipeline-cache-v1", N.internal_dir);
+        tl_pc_configure(cache_dir);
+    }
     if (!tl_ue4_graphics_prepare(N.internal_dir, N.ext_dir, project))
         tl_log_line("ue4: graphics config could not be prepared completely; launch arguments will still be supplied");
     else
@@ -496,6 +502,7 @@ void tl_na_set_paused(bool paused)
     if (atomic_exchange(&is_paused, paused) == paused) return;
     tl_log_line("ue4: %s", paused ? "pausing" : "resuming");
     if (paused) {
+        tl_pc_checkpoint_async();
         if (N.callbacks.onWindowFocusChanged) N.callbacks.onWindowFocusChanged(&N.na, 0);
         if (N.callbacks.onPause) N.callbacks.onPause(&N.na);
     } else {

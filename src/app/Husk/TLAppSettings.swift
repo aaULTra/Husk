@@ -115,6 +115,12 @@ struct TLAppSettings: Codable, Equatable {
             }
         }
     }
+    enum VulkanSubmission: Int, Codable, CaseIterable, Identifiable {
+        case driverDefault = 0, asynchronous = 1
+        var id: Int { rawValue }
+        var title: String { self == .driverDefault ? "Driver Default" : "Async (Experimental)" }
+    }
+    var vulkanSubmission: VulkanSubmission = .driverDefault
     var workerScheduling: WorkerScheduling = .balanced
 
     enum EfficientFrameRate: Int, Codable, CaseIterable, Identifiable {
@@ -125,12 +131,16 @@ struct TLAppSettings: Codable, Equatable {
     var efficientFrameRate: EfficientFrameRate = .smooth
 
     enum EfficientResolution: Int, Codable, CaseIterable, Identifiable {
-        case automatic = 0, native = 100, sharp = 85, balanced = 75, performance = 65
+        case automatic = 0, native = 100, ultra = 95, verySharp = 90, sharp = 85, quality = 80, balanced = 75, economical = 70, performance = 65
         var id: Int { rawValue }
         var title: String {
             switch self {
             case .automatic: return "Automatic · Device Display"
             case .native: return "Native · 100%"
+            case .ultra: return "95% · Compare with Native"
+            case .verySharp: return "90%"
+            case .quality: return "80%"
+            case .economical: return "70%"
             case .sharp: return "Sharp · 85%"
             case .balanced: return "Balanced · 75%"
             case .performance: return "Performance · 65%"
@@ -177,6 +187,7 @@ struct TLAppSettings: Codable, Equatable {
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         efficientResolution = try c.decodeIfPresent(EfficientResolution.self, forKey: .efficientResolution) ?? .automatic
+        vulkanSubmission = try c.decodeIfPresent(VulkanSubmission.self, forKey: .vulkanSubmission) ?? .driverDefault
         workerScheduling = try c.decodeIfPresent(WorkerScheduling.self, forKey: .workerScheduling) ?? .balanced
         efficientFrameRate = try c.decodeIfPresent(EfficientFrameRate.self, forKey: .efficientFrameRate) ?? .smooth
         unrealGraphics = try c.decodeIfPresent(UnrealGraphics.self, forKey: .unrealGraphics) ?? .automatic
@@ -282,6 +293,9 @@ struct TLAppSettingsView: View {
                     Picker("Graphics", selection: $settings.unrealGraphics) {
                         ForEach(TLAppSettings.UnrealGraphics.allCases) { Text($0.title).tag($0) }
                     }
+                    Picker("Vulkan Submission", selection: $settings.vulkanSubmission) {
+                        ForEach(TLAppSettings.VulkanSubmission.allCases) { Text($0.title).tag($0) }
+                    }
                     Picker("Worker Scheduling", selection: $settings.workerScheduling) {
                         ForEach(TLAppSettings.WorkerScheduling.allCases) { Text($0.title).tag($0) }
                     }
@@ -297,8 +311,9 @@ struct TLAppSettingsView: View {
                 } header: {
                     Text("Game Graphics")
                 } footer: {
-                    Text("Automatic uses Sharp / Efficient for Minecraft Dungeons: a display-based resolution budget, high texture detail, 8× filtering, "
-                       + "lighter shadows and effects. The default target is 60 FPS; 30 FPS is an optional lower-power mode. "
+                    Text("Automatic uses Sharp / Efficient for Minecraft Dungeons: a display-based resolution budget, high texture detail, 8× filtering and lighter shadows/effects. "
+                       + "Async submission is experimental; keep Driver Default if it causes instability. Compare resolution steps from Native downward at your usual viewing distance and keep the lowest that still looks equally sharp to you. "
+                       + "The default target is 60 FPS; 30 FPS is an optional lower-power mode. "
                        + "Automatic resolution uses a larger pixel budget on iPad than iPhone and never exceeds native size. This is a starting point, not a measured optimum or an FPS guarantee. Percentages scale both dimensions. Open a folding device to the desired display before restarting Husk; live folding is not supported. "
                        + "When iOS reports serious heat, the cap drops to 30 FPS, or 20 at critical heat, and recovers after cooling. "
                        + "Sharp / High Quality keeps the previous maximum-quality preset. Game Default removes the overrides. "
