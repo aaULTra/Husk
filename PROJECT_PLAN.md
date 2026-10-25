@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: M1 candidate implemented and Apple build validated; device correctness/overhead validation pending.
+Updated: 2026-10-25. Status: M1 built; first on-device report and accompanying log reviewed; JSON correctness/coverage and overhead validation pending.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -35,7 +35,7 @@ Inspection basis: branch head 3c2d52c, PR metadata, graphics/settings, Vulkan wr
 | WORK-02 | Adaptive Trial | Implemented revised cheap-pipeline admission and self-applied caps/rollback | Real-device admission/application fix not independently verified here | NOT COMPLETE: energy A/B versus Balanced pending |
 | SUBMIT-01 | Async submission option | Implemented, experimental; Driver Default retained | No controlled benefit evidence | Pending independent A/B |
 | PROF-01 | Detailed MoltenVK profiling | Implemented; strict 1.4.2/private API 43, 1152-byte guard, optional/off | Earlier report contains driver activity data | Adds overhead; no genuine GPU/power measurement |
-| MEAS-01 | Efficiency Test sessions/export | Implementation candidate: bounded aggregation, exclusions, process/API sampling, Markdown/JSON export | 92 checks and final iOS build/package pass; real-device correctness/overhead validation pending | M1 remains open; monitoring overhead and energy unmeasured |
+| MEAS-01 | Efficiency Test sessions/export | Implementation candidate: bounded aggregation, exclusions, process/API sampling, Markdown/JSON export | 92 checks and final iOS build/package pass; first user-device summary E-M4-003; JSON correctness/coverage and overhead validation pending | M1 remains open; monitoring overhead and energy unmeasured |
 | GPU-01 | Genuine GPU execution timing | Research; current callback latency is not GPU time | Measurement gap | Instruments or safe completed-buffer access |
 | UPSCALE-01 | MetalFX spatial upscaling | Research, not wired into Vulkan presenter | None | Separate prototype only after GPU evidence |
 | RES-01 | Manual resolution controls | Implemented 65–100%, with heuristics | Two different presentation runs reported | Dynamic GPU-driven resolution remains unimplemented |
@@ -116,3 +116,13 @@ Packaged identity is `1a68f40a377be7a8d0feac1bf05b6170d87659b9-dirty`: the exist
 Sequence: M0 complete -> M1 coding/build validation achieved, device correctness and monitoring-overhead gate OPEN -> M2 stable pipeline identity/cache-reuse diagnostics -> M3 actual GPU, power and external temperature baseline -> independently justified optimisation trials. M1 does not establish an energy benefit. Adaptive Trial admission/application/energy validation, BUG-01/02/03, MetalFX and every later investigation remain unresolved.
 
 Immediate user-device action: follow docs/performance/10-lightweight-monitoring.md at reference settings; export report.md + diagnostics.json and the raw attempt log. Immediate next engineering action: M2 audit/implementation, reusing the M1 foundation without introducing prewarming or changing rendering defaults.
+
+### M1 / E-M4-003 — first user-device report, unplugged
+
+[Evidence record](docs/performance/runs/E-M4-003.md): user confirms Balanced/2128 and unplugged. Build 1a68f40-dirty on iPad16,5 / OS 27.2 exported 405.467942 s, 55.421611 FPS host cadence, p50/p95/p99 16.7/20.9/21.1 ms, maximum 587.229 ms, 69 slow pipeline calls (worst 312.790 ms), 6 collector / 0 export drops and 0.0 estimated battery pp/hour. Configuration is launch metadata; actual swapchain/internal resolution and applied worker QoS need supporting data. CPU/memory/thermal samples and included duration are not present in the pasted report.
+
+Sequence: M0 -> **M1 data audit now** -> M2 pipeline identity/cache reuse -> M3 true GPU/power/temperature -> targeted optimisation. M1 has a user-device-generated summary, but collection coverage, zero-drain interpretation, lifecycle/exclusion correctness and monitoring overhead are not verified. Native drops are not categorised; cadence gaps may be reset after contention. Do not attribute the worst interval to the worst pipeline call without timestamps, infer zero power from a zero battery estimate, or compare these aggregates directly with older logs whose sampling/gap policies differ.
+
+Immediate next action: obtain diagnostics.json and full attempt log from this exact test. Inspect windows/exclusions/interval count and duration, sizes, CPU/memory/thermal, pipeline/event correlation and battery states/levels/valid observed seconds. If a measurement defect is demonstrated, fix it within M1 before a new baseline. Then perform matched monitoring-off/on checks. M2 remains the next engineering investigation; do not change resolution, scheduling, submission or prewarm pipelines on this summary alone. All later work including Adaptive energy validation stays open.
+
+E-M4-003 accompanying-log update: actual 2128 × 1600 swapchain/drawable survives resume; Balanced QoS application is logged; Driver Default reads synchronous=1/prefill=0/limit=64. Cache acceptance 11,580,626 bytes and later save 12,266,295 bytes are confirmed mechanisms, not cache-hit evidence. Shown thermal classifications remain nominal. The 245.04 ms interval and 243.308 ms pipeline call strengthen BUG-01/M2; the 587.23 ms interval with only 0.317 ms of pipeline creation and the repeated approximately 20.9 ms p95 cheap/no-pipeline windows strengthen BUG-02 and M3/M4. Retain both investigations; no single shader-stall explanation covers this run. A legacy 636.38 ms interval is lifecycle-adjacent and needs exclusion context. JSON remains the immediate M1 dependency, including native battery and drop interpretation. No runtime changes in this evidence task.
