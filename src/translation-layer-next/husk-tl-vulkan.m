@@ -281,6 +281,10 @@ static void log_layer_state(void *layerp, const char *when)
         id d = l.delegate;
         if ([d isKindOfClass:[UIView class]]) {
             UIView *v = d;
+            CGAffineTransform transform = v.transform;
+            tl_log_line("vulkan: sizing M6/BUG-03 (%s): drawable %.0fx%.0f pixels; view-bounds %.2fx%.2f points; affine %.5f %.5f %.5f %.5f %.2f %.2f; fixed swapchain size is not changed by this observation",
+                        when, ds.width, ds.height, v.bounds.size.width, v.bounds.size.height,
+                        transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
             tl_log_line("vulkan: view (%s): window %p hidden %d alpha %.2f frame %.0f,%.0f %.0fx%.0f superview %p appState %ld", when, (__bridge void *)v.window, v.hidden, v.alpha,
                         v.frame.origin.x, v.frame.origin.y, v.frame.size.width, v.frame.size.height, (__bridge void *)v.superview, (long)[UIApplication sharedApplication].applicationState);
         } else tl_log_line("vulkan: layer (%s) delegate is not a view: %s", when, d ? object_getClassName(d) : "(none)");

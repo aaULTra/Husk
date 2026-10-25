@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: M1 refinements implemented locally; build/device validation pending.
+Updated: 2026-10-25. Status: M1 refinements, partial M2 diagnostics and M4 comparison implemented; M3/M6/M9 investigation advanced; Apple build/device checks pending.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -30,14 +30,14 @@ Inspection basis: branch head 3c2d52c, PR metadata, graphics/settings, Vulkan wr
 | BASE-01 | V4 resolution interception | Implemented; guarded portable-hook tests exist | User reports retained selected presentation through resumes | Unmeasured; protect and separately verify internal scene resolution |
 | BASE-02 | Sharp / Efficient and 60 FPS | Implemented; engine request plus host limiter | Sustained smooth approximately 60 FPS reported on M4 | Unmeasured; preserve quality/reference |
 | CACHE-01 | Compatible persistent pipeline cache | Implemented; checksum/header guards, fallback, checkpoints and generation tracking | Restored/saved bytes reported; first-use stalls persist | Actual reuse/hitch and energy benefit unverified |
-| PIPE-01 | Bounded slow-call diagnostics | Implemented; worst call/window, totals, batch, cache presence, result, lock wait | Expensive calls closely coincide with some stalls | Extend with stable variant identity/feedback; not a cache-hit counter |
+| PIPE-01 | Pipeline identification | Partial implementation: opt-in shader/state group signatures, bounded occurrences/slow events and passive valid feedback; existing timing retained | Device first/repeat/restart comparison pending; complete state identity absent | No prewarming key or verified energy benefit; see docs/performance/11-pipeline-identification.md |
 | WORK-01 | Balanced policy | Implemented, default; critical roles preserved | Active in supplied runs | Energy benefit unmeasured; baseline comparator |
 | WORK-02 | Adaptive Trial | Implemented revised cheap-pipeline admission and self-applied caps/rollback | Real-device admission/application fix not independently verified here | NOT COMPLETE: energy A/B versus Balanced pending |
 | SUBMIT-01 | Async submission option | Implemented, experimental; Driver Default retained | No controlled benefit evidence | Pending independent A/B |
 | PROF-01 | Detailed MoltenVK profiling | Implemented; strict 1.4.2/private API 43, 1152-byte guard, optional/off | Earlier report contains driver activity data | Adds overhead; no genuine GPU/power measurement |
-| MEAS-01 | Efficiency Test sessions/export | Implementation candidate: bounded aggregation, exclusions, process/API sampling, Markdown/JSON export | 92 checks and final iOS build/package pass; E-M4-003 JSON arithmetic/export reconciled; cadence-loss policy, battery freshness and overhead gates open | M1 remains open; monitoring overhead and energy unmeasured |
-| GPU-01 | Genuine GPU execution timing | Research; current callback latency is not GPU time | Measurement gap | Instruments or safe completed-buffer access |
-| UPSCALE-01 | MetalFX spatial upscaling | Research, not wired into Vulkan presenter | None | Separate prototype only after GPU evidence |
+| MEAS-01 | Efficiency Test sessions/export | Implementation candidate: bounded aggregation, exclusions, process/API sampling, Markdown/JSON export | Previous build passed 92 checks; schema-v2 ring/loss/reporting/plan tags now implemented with portable tests; new Apple build and device checks pending | M1 remains open; monitoring overhead and energy unmeasured |
+| GPU-01 | Genuine GPU execution timing | Source investigation: callback latency is not GPU time; completed buffers not exposed by current interface | Measurement gap | Instruments or safe completed-buffer access |
+| UPSCALE-01 | MetalFX spatial upscaling | Capability query added to session metadata; upscaling itself is research, not wired into presenter | None | Separate prototype only after GPU evidence |
 | RES-01 | Manual resolution controls | Implemented 65–100%, with heuristics | Two different presentation runs reported | Dynamic GPU-driven resolution remains unimplemented |
 
 Historical PR validation reports 82 passing portable checks and successful iOS compilation/IPA packaging at the reference SHA: [workflow](https://github.com/aaULTra/Husk/actions/runs/40143757823). These results were not rerun during the documentation handover and do not verify energy efficiency.
@@ -79,8 +79,8 @@ CPU time/activity is process-scoped with explicit normalisation. Track footprint
 | GAP-02 | No controlled baseline/candidate energy comparison | M1/M3 before efficiency claims |
 | GAP-03 | Internal render resolution/CVar acceptance unknown | Capture/engine evidence without weakening V4 |
 | GAP-04 | E-M4-003 JSON archived and audited; pasted attempt log available; earlier run raw logs still unavailable | Use current JSON audit; preserve provenance and earlier gaps |
-| MON-01 | Any contended native observation sets a cadence-gap flag; six mixed-category drops can omit frame intervals | M1: separate loss categories and preserve valid cadence across unrelated diagnostic contention; contention/long-stall tests |
-| MON-02 | All 15 battery readings stay at 70% unplugged; zero is an unresolved coarse observation | M1: expose unchanged-level uncertainty/sample span, validate native reading freshness; no zero-energy claim |
+| MON-01 | Schema-v1 loss defect confirmed; schema-v2 bounded independent frame ring and loss categories implemented/tested | M1: Apple build then real-device coverage/overhead acceptance remains open |
+| MON-02 | Schema-v2 null/unresolved flat-battery reporting implemented with sample count/span/change; API freshness still unknown | M1: verify against system battery indicator; no watts or efficiency claim |
 | COMPAT-01 | isnan/JNI/optional OBB/ANGLE warnings not demonstrated performance causes | Investigate only with malfunction or traceable cost |
 
 ## 6. Next actions and task handover
@@ -162,3 +162,9 @@ M4: added default-off engine-only 60 FPS host-limiter comparison, saved/backward
 M3/M9: inspected MoltenVK 1.4.2 queue/statistics sources; existing callback metric is confirmed host commit-to-callback latency, not GPU execution. Current prebuilt driver interface does not expose its completed Metal command buffers. Documented Instruments/driver-instrumentation alternatives and lifetime/overhead requirements. Efficiency Test metadata now queries actual Metal device and supported MetalFX spatial capability without adding rendering work or claiming integration. See docs/performance/12-gpu-metalfx-and-limiter.md.
 
 MetalFX spatial implementation remains M9 research. It may proceed after a trustworthy M3 GPU baseline and safe interop design, without waiting for every later research item. No upscaler, dynamic resolution, driver upgrade, worker-policy change or prewarming is part of this candidate. M4/M6/M7 still require independent A/B tests; user authorisation to progress broadly does not establish measured benefit.
+
+M6 observation follow-up: existing swapchain-boundary main-thread sizing logs now include view bounds in points, drawable dimensions in pixels and affine transform components, tagged M6/BUG-03. No size, transform, compositing, buffering or presentation settings are changed. This extends the existing instrumentation; overhead/cost of suboptimal presentation remains unmeasured.
+
+Current validation sequence: 102 required portable checks pass locally; the single Swift calculation/export executable check is skipped on Linux and is required in macOS CI (103 checks total there). Three logical implementation commits isolate M1, M2 and M4/M3/M9, with M6 observational follow-up. New options default off and cached launch settings remain compatible. Run the complete Apple build/package before calling this a device candidate.
+
+Next device sequence after build: corrected M1 baseline with identification/limiter experiments off -> separate short M2 identification session -> separate M4 dual/engine-only comparison -> M3 execution/power trace -> M6 async and M7 Adaptive A/B when repeatable. Keep brightness and environment matched; no lowering resolution/quality to manufacture gains. Outstanding bugs, GPU/energy gaps, full variant identity and all untested experiments remain open.

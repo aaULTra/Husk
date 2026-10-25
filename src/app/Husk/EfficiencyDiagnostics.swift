@@ -209,7 +209,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                          "battery_estimate_observed_seconds": battery.seconds, "dropped_export_records": dropped,
                          "metric_labels": ["host_cadence_cpu_memory_battery_thermal": "MEASURED (process/API scope)",
                                            "histogram_percentiles_battery_drain": "ESTIMATED",
-                                           "gpu_execution_displayed_frames_peak_footprint_cache_hits": "UNAVAILABLE",
+                                           "gpu_execution_displayed_frames_peak_footprint_aggregate_cache_hit_rate": "UNAVAILABLE",
                                            "electrical_power_chip_temperature_surface_temperature": "EXTERNAL"],
                          "limitations": ["0.1 ms upper-bin nearest-rank percentiles; >=1 s overflow uses exact worst as conservative bound",
                                           "Host API stages: acquire, submit, present, sleep, graphics creation, compute creation; durations overlap",
@@ -262,7 +262,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 Frame distribution complete: \(summary["frame_distribution_complete"] ?? false)
                 Dropped frame/host/event records: \(summary["dropped_frame_intervals_cumulative"] ?? 0) / \(summary["dropped_host_records_cumulative"] ?? 0) / \(summary["dropped_events_cumulative"] ?? 0)
                 CPU/memory/battery/thermal samples, timestamped runtime events, phase markers and exclusions: diagnostics.json.
-                UNAVAILABLE: actual displayed frames, GPU execution, peak footprint and verified pipeline cache hits.
+                UNAVAILABLE: actual displayed frames, GPU execution, peak footprint and aggregate cache-hit rate. Per-request driver feedback is exported only where available.
                 EXTERNAL: electrical power and numerical physical temperature. Thermal state is a classification.
                 No measured energy improvement. Monitoring overhead and device correctness need validation.
                 """
