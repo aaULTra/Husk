@@ -33,3 +33,7 @@ Capacity: 1,440 exported windows, 7,200 samples, 2,048 events/exclusions and a 2
 7. Attach raw attempt log for first/repeated/restarted pipeline events. Stable variant identity and creation feedback remain M2, not implemented here.
 
 No real-device correctness, energy saving or heat reduction has been verified by portable tests or an IPA build. M1 stays open until this checklist and monitoring-overhead experiment have evidence.
+
+## Built candidate
+
+Source: `1a68f40a377be7a8d0feac1bf05b6170d87659b9`. [Successful build](https://github.com/aaULTra/Husk/actions/runs/40163119357), [IPA artifact](https://github.com/aaULTra/Husk/actions/runs/40163119357/artifacts/12586749378). All 92 checks passed. The packaged SHA includes `-dirty` from the existing release-resource staging/project regeneration; retain that exact identity in device evidence. Follow-up documentation-only commits do not change this binary. This is a testing candidate; M1's device gate is still open.

@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: M1 implementation candidate in progress; device validation pending.
+Updated: 2026-10-25. Status: M1 candidate implemented and Apple build validated; device correctness/overhead validation pending.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -35,7 +35,7 @@ Inspection basis: branch head 3c2d52c, PR metadata, graphics/settings, Vulkan wr
 | WORK-02 | Adaptive Trial | Implemented revised cheap-pipeline admission and self-applied caps/rollback | Real-device admission/application fix not independently verified here | NOT COMPLETE: energy A/B versus Balanced pending |
 | SUBMIT-01 | Async submission option | Implemented, experimental; Driver Default retained | No controlled benefit evidence | Pending independent A/B |
 | PROF-01 | Detailed MoltenVK profiling | Implemented; strict 1.4.2/private API 43, 1152-byte guard, optional/off | Earlier report contains driver activity data | Adds overhead; no genuine GPU/power measurement |
-| MEAS-01 | Efficiency Test sessions/export | Implementation candidate: bounded aggregation, exclusions, process/API sampling, Markdown/JSON export | Portable core and first Swift/iOS CI pass; final follow-up build and real-device validation pending | M1 remains open; monitoring overhead and energy unmeasured |
+| MEAS-01 | Efficiency Test sessions/export | Implementation candidate: bounded aggregation, exclusions, process/API sampling, Markdown/JSON export | 92 checks and final iOS build/package pass; real-device correctness/overhead validation pending | M1 remains open; monitoring overhead and energy unmeasured |
 | GPU-01 | Genuine GPU execution timing | Research; current callback latency is not GPU time | Measurement gap | Instruments or safe completed-buffer access |
 | UPSCALE-01 | MetalFX spatial upscaling | Research, not wired into Vulkan presenter | None | Separate prototype only after GPU evidence |
 | RES-01 | Manual resolution controls | Implemented 65–100%, with heuristics | Two different presentation runs reported | Dynamic GPU-driven resolution remains unimplemented |
@@ -83,7 +83,7 @@ CPU time/activity is process-scoped with explicit normalisation. Track footprint
 
 ## 6. Next actions and task handover
 
-Current engineering task: M1 measurement foundation. Source/lifecycle/UI audit completed; observer and export candidate implemented without optimisation toggles. Complete Apple build/package validation and physical-device checks before M1 acceptance. M2 then extends existing slow-call support instead of duplicating it. Obtain M4 baseline evidence with monitoring overhead separated, then prioritise measured costs.
+Current engineering task: M1 measurement foundation. Source/lifecycle/UI audit completed; observer and export candidate implemented without optimisation toggles. Apple build/package validation passed; complete physical-device correctness and overhead checks before M1 acceptance. M2 then extends existing slow-call support instead of duplicating it. Obtain M4 baseline evidence with monitoring overhead separated, then prioritise measured costs.
 
 Physical iPad tasks: export raw first/repeat/restart logs; validate lightweight reports; run matched monitoring-off/on baseline; gather unplugged power if tooling supports it and surface/ambient temperatures; later perform limiter, submission and Adaptive A/B separately.
 
@@ -106,3 +106,13 @@ Limitations: session is in memory until exported; retained windows/samples/event
 Next: validate CI then use the device checklist in docs/performance/10-lightweight-monitoring.md. Keep M1 open until correctness and overhead A/B are established. Adaptive Trial energy validation and M2–M10 remain pending.
 
 M1 CI update: [run 40162915034](https://github.com/aaULTra/Husk/actions/runs/40162915034) passed regression checks, Swift CPU/battery/JSON checks, iOS compilation and IPA packaging at 2f01d6de94d3bdf14adf3df2c30b4bdd31eea451. Final review adds an actual-wrapper monitoring-on forwarding/no-extra-sleep check, disables export before a stopped report exists, and preserves the packaging script executable mode. The follow-up candidate must pass its own build. These are M1 validation refinements; M2/M3 remain next, with physical overhead/energy checks pending.
+
+### M1 final build evidence and next gate
+
+[Run 40163119357](https://github.com/aaULTra/Husk/actions/runs/40163119357) passed **92 checks**, iOS compilation and validated IPA packaging at source commit `1a68f40a377be7a8d0feac1bf05b6170d87659b9`. [Installable artifact](https://github.com/aaULTra/Husk/actions/runs/40163119357/artifacts/12586749378) is named Husk-LiveContainer-IPA; archive digest `sha256:9026ce4fce4bd70758d986d760fef0081367a13b090c1b5e49e75df8a294018d`. Artifacts expire; retain the build/source identity with any downloaded copy.
+
+Packaged identity is `1a68f40a377be7a8d0feac1bf05b6170d87659b9-dirty`: the existing staging recipe rewrites project.yml to use checksum-pinned release libraries/resources and XcodeGen regenerates the project. The suffix is retained honestly, not silently removed. No on-device result is inferred from successful packaging.
+
+Sequence: M0 complete -> M1 coding/build validation achieved, device correctness and monitoring-overhead gate OPEN -> M2 stable pipeline identity/cache-reuse diagnostics -> M3 actual GPU, power and external temperature baseline -> independently justified optimisation trials. M1 does not establish an energy benefit. Adaptive Trial admission/application/energy validation, BUG-01/02/03, MetalFX and every later investigation remain unresolved.
+
+Immediate user-device action: follow docs/performance/10-lightweight-monitoring.md at reference settings; export report.md + diagnostics.json and the raw attempt log. Immediate next engineering action: M2 audit/implementation, reusing the M1 foundation without introducing prewarming or changing rendering defaults.

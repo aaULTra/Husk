@@ -76,3 +76,11 @@ An earlier attempt reported a roughly 590 ms hitch, restored approximately 4.96 
 ## New record template
 
 ID/date/device; roadmap ID/objective; source/binary SHA; OS/driver; all graphics/limiter/worker/cache/profiler settings; scene/duration/environment; charging/brightness/starting temperature; collector and metric labels; raw artifact path/checksum; exclusions; distributions and repeat variability; correctness; energy result; interpretation limits; decision; next action.
+
+## E-CI-M1-001: implementation/build validation, not device efficiency
+
+2026-10-25, source `1a68f40a377be7a8d0feac1bf05b6170d87659b9`: [macOS run 40163119357](https://github.com/aaULTra/Husk/actions/runs/40163119357) passed 92 checks, iOS compilation and IPA packaging. Check counts by suite: graphics 17, resolution 6, source efficiency 6, thread policy 29, Vulkan timing 7, cache store 9, driver profile 9, observer 8, Swift CPU/battery/JSON 1. Observer tests cover threshold bins, long hitches, exclusions, window draining, disabled mode, bounded events, contention drops, clock discontinuities and size retention. The enabled-observer test exercises actual Vulkan wrappers without added sleeps or forwarding changes.
+
+Artifact: [Husk-LiveContainer-IPA](https://github.com/aaULTra/Husk/actions/runs/40163119357/artifacts/12586749378), archive SHA256 `9026ce4fce4bd70758d986d760fef0081367a13b090c1b5e49e75df8a294018d`. Build metadata retains `-dirty` because staging/project regeneration modifies tracked build inputs; source SHA and workflow identify the recipe. Earlier candidate 2f01d6d also built successfully in run 40162915034; prefer the final candidate.
+
+Evidence scope: coding correctness and build/package validation only. UIKit/Mach readings, panel lifecycle, actual exports on device, monitoring overhead, energy and physical temperature remain unverified. M1 stays open; this evidence enables device checks and M2/M3 work, not a performance/power claim. Existing user-device evidence records remain unchanged.
