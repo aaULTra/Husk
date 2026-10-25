@@ -21,6 +21,14 @@ Each ID below carries separate implementation, correctness, performance and ener
 
 Every experiment record must include ID/device, objective, hypothesis/mechanism, source SHA, configuration, dependencies, baseline/candidate/cache state, procedure, raw evidence references, exclusions, results with variability, correctness, energy status, decision and next action. Unknown fields stay unknown. Failed approaches retain reopening conditions. Do not change old results when adding new evidence.
 
+### IPA handover and completion reporting — standing user requirement
+
+Every newly produced IPA must include a plain-language connection to this plan, checklist-based completion percentages and detailed instructions for the user's required tests. Contract: [IPA_HANDOVER.md](docs/performance/IPA_HANDOVER.md); permanent enforcement: [AGENTS.md](AGENTS.md). This M0 handover rule supports M1 measurement and every later build/test/evidence cycle; it does not change milestone priority or close a device gate.
+
+For each affected task/milestone, define and version concrete gates before scoring. Show implementation/build, device correctness/performance and benefit/energy validation separately as passed/total and percentage. Label these checklist completion figures, not engineering effort, power savings or proximity to an unknown physical optimum. Give the previous score/change when the same checklist exists; explain denominator changes. Unknown energy benefit remains unknown. An overall figure requires an explicit stable scope/denominator and must not silently combine M4 with the future Duo. Broad research is not assigned fabricated precision.
+
+Persist each future IPA handover at docs/performance/builds/<source-sha>.md with its gate checklist, source/package SHA, workflow/artifact links, changes, relevant evidence, progress and the exact requested device procedure. Link it here and in the evidence index. Never count a successful build as physical-device or energy acceptance. Use the smallest focused test that resolves the next uncertainty; tell the user when an IPA needs only a quick UI check or no new performance run.
+
 ## 3. Current implementation and evidence
 
 Inspection basis: branch head 3c2d52c, PR metadata, graphics/settings, Vulkan wrapper, cache store, worker controller, driver profiler, relevant tests and docs. This was a targeted inspection of relevant subsystems, not validation of all repository code or raw device logs.
@@ -238,3 +246,7 @@ Sequence: UI-01 supports M1 usability/M6 sizing; E-M4-004 adds partial M1 on-dev
 User confirms “you fixed the status bar stuff.” Record status-bar correction as user-confirmed for their observed use, without inventing a new screenshot, exact tested build SHA or completion of window/rotation/Control Center/lifecycle coverage. UI-01 supports M1 usability/M6 sizing; broader acceptance remains open and host-owned window controls are not claimed removed.
 
 User approves the latest sequence: M1 -> M3 GPU timing with M9 input/output design alongside M2 identification -> separate M4 limiter experiment -> gated M9 Spatial prototype -> independent M7 energy comparison. MetalFX targets lower internal rendering cost while retaining 2128 × 1600 output and comparable perceived visuals. It is not implemented and no savings are promised. Relevant engineering can start now; the remaining evidence gates govern prototype/adoption claims rather than indefinitely blocking investigation. See current sequence above and decisions D20–D22. This update changes documentation only; existing runtime build/artifact and protected defaults are unchanged.
+
+### 2026-10-25 — permanent IPA delivery instructions
+
+User requires every new IPA to explain its sequential relationship to the permanent plan, give a completion percentage and provide detailed instructions for their part. Added the standing AGENTS rule and reusable handover contract: affected plan IDs -> prerequisite evidence -> changes -> three separate gate-completion scores -> exact on-device steps/files/decision -> next milestone. Completion is checklist-scoped; energy savings are never inferred from coding progress. Preserve all pending M1–M10 gates and separate M4/Duo scopes. Documentation only; no new IPA or user test requested by this update.
