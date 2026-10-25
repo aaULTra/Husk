@@ -1,5 +1,7 @@
 # M1: Lightweight efficiency test candidate
 
+Current schema-v3 GPU/M2 extension: see [GPU batch guide](14-gpu-sampling-and-metalfx-inputs.md) and the latest source-specific build handover linked from PROJECT_PLAN.md. Initial candidate/schema-v1 descriptions and build links below are history; schema-v2 fixed mixed-loss continuity, and schema-v3 adds optional actual sampled GPU-buffer intervals. Device overhead and efficiency benefits remain unverified.
+
 Sequence: M0 permanent plan -> **M1 / MEAS-01 collection and export** -> M2 pipeline identity/reuse -> M3 actual GPU/power/temperature -> evidence-led optimisation. See [master plan](../../PROJECT_PLAN.md). This feature collects observations; it is not a demonstrated optimisation.
 
 ## Use
@@ -51,3 +53,11 @@ Use Phase marker to label Loading, Menu, Gameplay, First-use effect and Repeated
 Source **6c4fef3d20178f8b4a49a157a5863b2de981a616**, [104-check successful build](https://github.com/aaULTra/Husk/actions/runs/40178749888), [IPA](https://github.com/aaULTra/Husk/actions/runs/40178749888/artifacts/12593800140). Use this candidate for the next M1 validation; earlier build links above are historical. Start with Pipeline Identification, Engine-only Limiter and Detailed Driver Profiling all OFF. Mark Loading/Menu/Gameplay/First-use/Repeated effect explicitly, and compare battery samples against the system indicator. Export report and schema-v2 JSON after stopping.
 
 Events carry plan_ids/subsystem/outcome/benefit_validation, with separate recorded_t and available occurred_t. Metrics have metric_plan_ids. M8 guest-yield calls are observations without backoff; M9 MetalFX support is capability metadata, not active upscaling. First validate M1 and monitoring overhead; then test M2 and M4 separately using the dedicated guides.
+
+## Schema v3 / M3-A and M2 group evidence
+
+Optional “Sample game GPU execution (Diagnostic)” is inside the Efficiency Test panel, defaults OFF and applies when starting a session; it requires no extra game restart. It samples known game queues for one second every ten seconds and changes no graphics setting. Keep it OFF for normal energy comparisons. Full supported/unsupported/partial coverage and clocks are documented in the GPU batch guide; valid completed-buffer GPU timestamps are separate from callback delay, host encoding, per-frame attribution and power. Exclusions, stale/late work and losses are explicit. Zero valid records means unavailable, not zero GPU work.
+
+Schema-v3 retains existing fields and adds gpu_sampling, gpu_records, metadata.gpu_clock_alignment and pipeline_groups_since_launch. Raw GPU/sample/completion values use media-clock seconds; host events use the monotonic origin. The bracketed alignment pair supports estimated correlation only. Pipeline groups require identification ON at launch; they aggregate since game launch, rather than the narrower Efficiency Test interval. They remain incomplete groups, not replayable full keys or aggregate cache-hit proof.
+
+The next test can combine these two diagnostic observations while retaining baseline limiter/worker/submission modes. Follow the final build handover for a first/repeat/restart pair, export both sessions before closing, and defer additional energy/limiter/Adaptive runs until those files are analysed. A successful iOS build validates compilation; actual M4 queue/timestamp/lifecycle/overhead acceptance is still required.

@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: M3-A sampled GPU/M2 group candidate implemented, portable checks pass; Apple build/device gates pending; M9-A source audit identifies input/output blockers.
+Updated: 2026-10-25. Status: M3-A sampler/M2 group-export IPA built with 119 passing checks; physical validation pending; M9-A input/output design 2/4 gates complete.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -260,3 +260,11 @@ M3-A candidate records actual completed-buffer GPU timestamps on compatible know
 Local validation: 116 portable checks pass; Swift math/chrome and Objective-C Metal adapter checks require Apple CI (119 total including those three). Full iOS build/package and all M3 physical/overhead gates pending at this entry. No energy/heat benefit claimed. Existing M1 overhead/calibration, M4 pacing, M5 preparation, M6 async/sizing, M7 Adaptive energy, M8 translation/driver, M9 game integration/dynamic resolution and M10 Duo remain open.
 
 M3-A review refinement: retain raw GPU media-clock values and export a bracketed host monotonic/media anchor with read uncertainty for estimated correlation. Valid GPU records remain labelled measured even if device teardown later removes the registered queue. First Apple run passes all 119 checks; a follow-up build is required for these final export refinements.
+
+### GPU-BATCH-1 final build and focused device handover
+
+Source `17688ce3f2f7059bdce865bed6be836deed4903c`, packaged with the documented -dirty suffix. [Run 40184166033](https://github.com/aaULTra/Husk/actions/runs/40184166033) passed **119 checks**, iOS build and IPA packaging. [Artifact](https://github.com/aaULTra/Husk/actions/runs/40184166033/artifacts/12595910369), archive SHA256 ea2a2e279d0260da0f1479ab125ea0418971b26cb140620297a5aa3561f6bcae. Intermediate 4828b338/run 40183894409 also passed, but the final source includes the clock-alignment refinement. This later documentation does not change the binary.
+
+[Filled build handover, versioned gates and exact device steps](docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md). GPU-BATCH-1 scores: M3-A sampler implementation/build 6/6 (100%), device 0/4 (0%), benefit validation 0/2 (0%, energy unknown); M2 group-export increment implementation 3/3 (100%), device 0/3 (0%), downstream benefit 0/2 (0%); M9-A input/output design 2/4 (50%). These scope-specific checklists do not mean M3/M2/M9 or the whole project is complete, nor any percentage of power saved.
+
+Next user action is one installation and two approximately five-minute M3/M2 diagnostic sessions (first/repeated action then same persisted-cache action after complete restart). Pipeline Identification ON at launch, GPU sampling ON at test start; existing 2128 × 1600/Sharp Efficient/60/Balanced/Driver Default retained, engine-only and detailed profiling OFF. Export both report/JSON pairs before closing, retain startup attempt log if accessible. Analyse those before requesting further limiter/Adaptive/energy A/B. No game scaler, prewarming or efficiency benefit has been delivered by this measurement batch. Actual M4 queue/timestamp support, overhead, M9 input/sync and all prior unresolved experiments remain open.
