@@ -27,6 +27,7 @@
 #include "husk-tl-thread-policy.h"
 #include "husk-tl-driver-profile.h"
 #include "husk-tl-efficiency.h"
+#include "husk-tl-pipeline-diagnostics.h"
 
 void *tl_nwindow_native(void *window);
 int tl_nwindow_width(void *window);
@@ -330,6 +331,23 @@ static void probe_frame(void *queue, const void *info, unsigned long n)
                 (unsigned long)tex.usage, tex.framebufferOnly, readable ? px : " (not readable)");
 }
 
+/* M2 observer: original module arguments/results are forwarded unchanged. */
+static int w_vkCreateShaderModule(void *device, const tl_pi_module_ci *ci, const void *alloc, uint64_t *out)
+{
+    typedef int (*fn)(void *, const void *, const void *, uint64_t *);
+    fn real = V.lib ? (fn)dlsym(V.lib, "vkCreateShaderModule") : NULL;
+    int result = real ? real(device, ci, alloc, out) : -3;
+    if (result == VK_SUCCESS && out) tl_pi_shader(device, *out, ci);
+    return result;
+}
+static void w_vkDestroyShaderModule(void *device, uint64_t module, const void *alloc)
+{
+    typedef void (*fn)(void *, uint64_t, const void *);
+    fn real = V.lib ? (fn)dlsym(V.lib, "vkDestroyShaderModule") : NULL;
+    tl_pi_forget_shader(device, module);
+    if (real) real(device, module, alloc);
+}
+
 typedef int (*pfn_create_swapchain)(void *, const void *, const void *, uint64_t *);
 static int64_t monotonic_ns(void);
 enum { TIMING_ACQUIRE, TIMING_SUBMIT, TIMING_PRESENT, TIMING_SLEEP, TIMING_GRAPHICS_PIPELINES, TIMING_COMPUTE_PIPELINES, TIMING_COUNT };
@@ -497,6 +515,7 @@ static int w_vkGetPipelineCacheData(void *device, uint64_t cache, size_t *size, 
 typedef int (*pfn_create_pipelines)(void *, uint64_t, uint32_t, const void *, const void *, uint64_t *);
 static int measure_pipeline_create(pfn_create_pipelines real, unsigned stage, void *device, uint64_t cache, uint32_t count, const void *ci, const void *alloc, uint64_t *out)
 {
+    tl_pi_request identity = tl_pi_identify(stage == TIMING_COMPUTE_PIPELINES, device, count, ci);
     bool measure = tl_ue4_sharp_graphics_enabled();
     int64_t start = measure ? monotonic_ns() : 0;
     if (measure) atomic_fetch_add_explicit(&pipeline_inflight, 1, memory_order_relaxed);
@@ -507,6 +526,7 @@ static int measure_pipeline_create(pfn_create_pipelines real, unsigned stage, vo
     tl_pc_leave(locked);
     if (measure) {
         uint64_t elapsed = record_host_timing(stage, start);
+        tl_pi_completed(identity, stage == TIMING_COMPUTE_PIPELINES, elapsed, start + elapsed, cache != 0, result, ci);
         record_pipeline_event(stage, count, cache != 0, result, start + (int64_t)elapsed, elapsed, (uint64_t)(entered - start));
         tl_thread_policy_pipeline_completed(start + (int64_t)elapsed, (int64_t)elapsed);
         atomic_fetch_sub_explicit(&pipeline_inflight, 1, memory_order_relaxed);
@@ -556,6 +576,7 @@ static void w_vkDestroyPipelineCache(void *device, uint64_t cache, const void *a
 static void w_vkDestroyDevice(void *device, const void *alloc)
 {
     tl_dp_forget(device);
+    tl_pi_forget_device(device);
     typedef void (*fn)(void *, const void *);
     fn real = V.lib ? (fn)dlsym(V.lib, "vkDestroyDevice") : NULL;
     tl_pc_forget_device(device, real, alloc);
@@ -1092,6 +1113,8 @@ static const struct { const char *name; void *fn; } k_over[] = {
     { "vkMergePipelineCaches", w_vkMergePipelineCaches },
     { "vkDestroyPipelineCache", w_vkDestroyPipelineCache },
     { "vkDestroyDevice", w_vkDestroyDevice },
+    { "vkCreateShaderModule", w_vkCreateShaderModule },
+    { "vkDestroyShaderModule", w_vkDestroyShaderModule },
     { "vkCreateGraphicsPipelines", w_vkCreateGraphicsPipelines },
     { "vkCreateComputePipelines", w_vkCreateComputePipelines },
     { "vkCreateSwapchainKHR", w_vkCreateSwapchainKHR },

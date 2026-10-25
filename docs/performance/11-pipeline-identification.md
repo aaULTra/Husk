@@ -1,0 +1,15 @@
+# M2 / PIPE-01: partial pipeline identification
+
+Sequence: M1 corrected collection -> **M2 short identification experiments** -> M3/M4 CPU/GPU/pacing attribution -> selective changes after evidence. This observer does not eliminate compilation or prove energy savings.
+
+Enable Game Graphics > Pipeline Identification (Diagnostic), fully restart Husk and start lightweight collection before launch where practical. Use First-use effect / Repeated effect phase markers for the same menu/effect, repeat in-session, then restart with the same persisted cache. Export report/JSON plus attempt log. Disable identification and restart for ordinary energy/overhead comparisons. Detailed Driver Profiling is separate and need not be enabled.
+
+Signatures are `partial-v1` shader/state GROUPS. Code bytes, stage, entry, specialization values, flags/subpass and selected assembly state are included. Module handles, pointers and padding are excluded. Layout/render-pass compatibility and much fixed state are omitted, so distinct variants can share a signature. Unknown modules/extensions/unsupported sizes or contended metadata are explicitly incomplete/unavailable. A 64-bit hash also has collision risk. Do not call these complete pipeline/cache keys or use them to reconstruct Vulkan objects.
+
+Metadata is bounded (4,096 shader modules, 2,048 signature occurrence slots, 64 queued events; up to eight emitted per reporting call and up to four signatures per batch). Hashing occurs at module creation in diagnostic mode. The diagnostic preserves Vulkan arguments, results, outputs and compilation order. Metadata reads use try-locks; teardown invalidation takes a short mutex to prevent recycled handles inheriting identities. Dropped/unavailable diagnostics are reported. Occurrence refers to requests grouped by first sampled signature in this process, not a cache hit or individual pipeline time.
+
+Host elapsed time is for the original API call/batch. A slow call does not automatically imply a displayed-frame stall; M1 phase/timing context is required. `finished monotonic` is completion; event record time may be later. The JSON adds plan/subsystem/outcome/occurrence-time fields where available. API success is not measured benefit.
+
+Pipeline creation feedback is PASSIVE: only a valid feedback chain already supplied by the guest is read after successful creation. No extension or chain is added and no compile-required flag is requested. The first pipeline's valid application-cache-hit bit may be reported as driver evidence for that request. Otherwise feedback is unavailable; `cache-present` is never a hit. `valid-no-application-hit` does not establish a complete shader miss or expensive compile. Other batch members' feedback is not currently exported. Actual driver/guest feedback availability must be verified on device.
+
+M2 remains partial until state coverage is sufficient for the desired investigation and repeated/restarted device evidence is collected. Selective prewarming (M5) requires complete valid objects/lifetimes and total-session energy checks; these signatures alone cannot enable it.

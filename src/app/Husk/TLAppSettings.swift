@@ -122,6 +122,7 @@ struct TLAppSettings: Codable, Equatable {
         var title: String { self == .driverDefault ? "Driver Default" : "Async (Experimental)" }
     }
     var vulkanSubmission: VulkanSubmission = .driverDefault
+    var pipelineIdentification = false
     var driverPhaseProfiling = false
     var workerScheduling: WorkerScheduling = .balanced
 
@@ -201,6 +202,7 @@ struct TLAppSettings: Codable, Equatable {
         customResolutionPercent = min(100, max(65, try c.decodeIfPresent(Int.self, forKey: .customResolutionPercent) ?? 80))
         efficientResolution = try c.decodeIfPresent(EfficientResolution.self, forKey: .efficientResolution) ?? .automatic
         vulkanSubmission = try c.decodeIfPresent(VulkanSubmission.self, forKey: .vulkanSubmission) ?? .driverDefault
+        pipelineIdentification = try c.decodeIfPresent(Bool.self, forKey: .pipelineIdentification) ?? false
         driverPhaseProfiling = try c.decodeIfPresent(Bool.self, forKey: .driverPhaseProfiling) ?? false
         workerScheduling = try c.decodeIfPresent(WorkerScheduling.self, forKey: .workerScheduling) ?? .balanced
         efficientFrameRate = try c.decodeIfPresent(EfficientFrameRate.self, forKey: .efficientFrameRate) ?? .smooth
@@ -314,6 +316,7 @@ struct TLAppSettingsView: View {
                     Picker("Vulkan Submission", selection: $settings.vulkanSubmission) {
                         ForEach(TLAppSettings.VulkanSubmission.allCases) { Text($0.title).tag($0) }
                     }
+                    Toggle("Pipeline Identification (Diagnostic)", isOn: $settings.pipelineIdentification)
                     Toggle("Driver Phase Profiling", isOn: $settings.driverPhaseProfiling)
                     Button("Performance & Efficiency Diagnostics") { efficiencySheet = true }
                         .sheet(isPresented: $efficiencySheet) { EfficiencyDiagnosticsView() }

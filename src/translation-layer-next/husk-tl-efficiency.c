@@ -142,7 +142,7 @@ void tl_em_host(unsigned stage, uint64_t ns) {
 void tl_em_log(const char *line) {
     if (!atomic_load(&enabled) || !line) return;
     if (strncmp(line, "thread-policy", 13) && strncmp(line, "ue4 cache store:", 16) &&
-        strncmp(line, "ue4 cache:", 10) && strncmp(line, "ue4 pipeline stall:", 19) &&
+        strncmp(line, "ue4 cache:", 10) && strncmp(line, "ue4 pipeline", 12) &&
         strncmp(line, "ue4 submission:", 15) && strncmp(line, "vulkan: vkCreateSwapchain", 25)) return;
     if (!enter(&dropped_events)) return;
     if (length == EVENTS) atomic_fetch_add(&dropped_events, 1);

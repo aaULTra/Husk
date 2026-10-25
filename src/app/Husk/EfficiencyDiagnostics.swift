@@ -133,6 +133,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     }
     private func sample(forceBattery: Bool = false) {
         guard running else { return }
+        tl_pi_report()
         let t = now, memory = t - lastMemoryAt >= 10
         var p = tl_em_process(); tl_em_process_sample(memory, &p)
         var row: [String: Any] = ["t": t - origin, "excluded": !excludedReason.isEmpty,

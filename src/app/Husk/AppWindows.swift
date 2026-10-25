@@ -178,7 +178,7 @@ private struct AppWindow: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let apk = app.apks.first {
             TLWindowScreen(apk: apk, extraApks: Array(app.apks.dropFirst()), dataDir: app.nativeDataDir,
-                           engine: app.screenEngine, portrait: portrait, scale: settings.renderScale(for: app), sharpGraphics: settings.usesSharpGraphics(for: app), efficientGraphics: settings.usesEfficientGraphics(for: app), efficientFrameLimit: settings.efficientFrameRate.rawValue, threadPolicy: settings.workerScheduling.rawValue, submissionMode: settings.vulkanSubmission.rawValue, driverProfiling: settings.driverPhaseProfiling)
+                           engine: app.screenEngine, portrait: portrait, scale: settings.renderScale(for: app), sharpGraphics: settings.usesSharpGraphics(for: app), efficientGraphics: settings.usesEfficientGraphics(for: app), efficientFrameLimit: settings.efficientFrameRate.rawValue, threadPolicy: settings.workerScheduling.rawValue, submissionMode: settings.vulkanSubmission.rawValue, driverProfiling: settings.driverPhaseProfiling, pipelineIdentification: settings.pipelineIdentification)
                 .overlay {
                     if model.frames == 0 {
                         VStack(spacing: 10) {
@@ -331,11 +331,12 @@ struct TLWindowScreen: UIViewRepresentable {
     var efficientFrameLimit: Int = 60
     var threadPolicy: Int = 0
     var submissionMode: Int = 0
+    var pipelineIdentification: Bool = false
     var driverProfiling: Bool = false
 
     func makeUIView(context: Context) -> TLWindowHost {
         TLWindowHost(game: TLUnityScreen.view(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine,
-                                              portrait: portrait, scale: scale, sharpGraphics: sharpGraphics, efficientGraphics: efficientGraphics, efficientFrameLimit: efficientFrameLimit, threadPolicy: threadPolicy, submissionMode: submissionMode, driverProfiling: driverProfiling))
+                                              portrait: portrait, scale: scale, sharpGraphics: sharpGraphics, efficientGraphics: efficientGraphics, efficientFrameLimit: efficientFrameLimit, threadPolicy: threadPolicy, submissionMode: submissionMode, driverProfiling: driverProfiling, pipelineIdentification: pipelineIdentification))
     }
     func updateUIView(_ view: TLWindowHost, context: Context) { view.setNeedsLayout() }
 }
