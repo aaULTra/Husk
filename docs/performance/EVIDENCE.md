@@ -116,3 +116,9 @@ MetalFX spatial capability is true; no upscaling is active. Weighted process CPU
 ## E-CI-UI-001 — UI-01 correction build
 
 [Run 40181321395](https://github.com/aaULTra/Husk/actions/runs/40181321395) at 02c89cb8da7d9b3966f0da7260bad677ff3e6da2 passed 105 checks, iOS build and IPA packaging. [Artifact](https://github.com/aaULTra/Husk/actions/runs/40181321395/artifacts/12593913066); archive SHA256 a8f44504c57d04d945d7d2ef39e1be46acd7ae3449b32ba8ec3db40b61dfe99a. An initial standalone geometry test failed for missing CoreGraphics import and was corrected; the final build includes the later hosted window-control clearance. No physical screenshot acceptance or performance/energy benefit is inferred. E-M4-004 remains evidence from the earlier 6c4fef3-dirty build; the host window button itself remains host-owned.
+
+## E-UI-002 — user confirmation of status-bar correction
+
+2026-10-25: user states “you fixed the status bar stuff.” This is user-reported status-bar acceptance, not a new captured diagnostic session. Exact tested build SHA, new screenshot and window/rotation/gesture/lifecycle matrix are not supplied. The correction candidate was build-validated at 02c89cb (E-CI-UI-001); do not assign that SHA as a newly verified test fact. UI-01 remains partial for broader coverage; no host-button removal or performance/energy benefit is claimed. Sequence: UI-01 -> M1 usability/M6 sizing, while M3/M9 preparation and M2/M4 proceed under the current master plan.
+
+E-M4-004 interpretation reaffirmed: pipeline and independent non-pipeline faults are observed, dominant electrical cost remains unknown. Its 27.5 pp/hour is a coarse single battery step, not a verified sustained rate. CyPort-style QoS energy benefit and MetalFX quality/net cost remain unverified.

@@ -39,3 +39,9 @@ Prototype acceptance: compare total GPU time and measured power including scaler
 ## Additional M3 route found in CyPort source
 
 A subsequent [direct CyPort source review](13-cyport-source-review.md) found its commit interception/completion-handler GPU timestamp sampler. This demonstrates a concrete technique worth assessing, not a safe drop-in Husk implementation. Safe scope, method chaining, command-buffer lifetime, bounded nonblocking recording, clipped/merged interval semantics and LiveContainer attribution must be designed and reviewed separately. The current Vulkan API observation limitation remains; actual GPU execution is still unavailable in this candidate.
+
+## Approved M9 goal and execution order — 2026-10-25
+
+Render at a lower internal resolution and use MetalFX Spatial to produce the protected 2128 × 1600 M4 output, aiming for comparable perceived visuals and lower total GPU/energy cost. A baseline-sized output alone does not prove equal detail. The scene input dimensions must be verified; final-image scaling may soften HUD/text, so evaluate scene-only upscale/native UI if accessible. Temporal remains separate until required motion/depth/jitter/history data is available.
+
+Start M9-A input/output/ownership/synchronisation design alongside M3-A GPU timing and M2-A pipeline work. Publish design findings before major rendering edits. M9-B default-off prototype follows useful GPU evidence and safe interop; it need not wait for all M6–M8 research. Prototype acceptance includes the scaler's GPU/energy cost, p95/p99, image/motion/HUD/colour, latency and lifecycle, plus matched energy/temperature tests before adoption. Current support=true is capability evidence only; no scaler is integrated. See the master plan's current approved sequence for concrete gates and continuing M1/M4/M7 responsibilities.
