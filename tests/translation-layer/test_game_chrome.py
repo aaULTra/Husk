@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the actual Foundation-only chrome-clearance policy in macOS build CI."""
+"""Run the actual Foundation/CoreGraphics chrome-clearance policy in macOS build CI."""
 from pathlib import Path
 import shutil
 import subprocess
@@ -13,6 +13,7 @@ class GameChromeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             path=Path(d)/'main.swift'
             path.write_text('''import Foundation
+import CoreGraphics
 func check(_ value: Bool) { precondition(value) }
 let full = CGRect(x: 0, y: 0, width: 1376, height: 1032)
 let safe = CGRect(x: 0, y: 24, width: 1376, height: 1008)

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import Foundation
+import CoreGraphics
 
 /// UI-01 / M1 / M6. Compute *additional* clearance in the overlay's coordinates,
 /// so a hosting view that already respects safe areas is not inset a second time.
