@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: M1 JSON audit reconciled arithmetic/export; cadence-loss and battery-reporting refinements precede the next baseline; overhead validation open.
+Updated: 2026-10-25. Status: M1 refinements implemented locally; build/device validation pending.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -138,3 +138,11 @@ Battery: 15 unplugged readings all approximately 70%; valid estimator span 309.8
 Source audit confirms MON-01: a contended host/event observation can reset the next frame anchor. The six mixed-category drops mean retained maxima/cadence cannot establish complete coverage. Long pipeline calls in windows with short retained frame maxima may be off-critical-path or incompletely observed. JSON supplies the 312.790 ms call and 69 total slow calls absent from the legacy per-window detail. The 587.229 ms event remains separate from long compilation: its JSON window maximum pipeline call is 11.567 ms (legacy windows differ).
 
 Updated sequence: M0 -> **M1 targeted cadence-loss/battery-reporting refinements and tests now** -> M1 device coverage/overhead acceptance -> M2 stable variant/cache feedback -> M3 true GPU/power and M4 independent limiter comparison -> measured optimisation trials. Do not request another broad run before addressing known collection limits; no new user files are currently required for this audit. Retain existing graphics, Balanced and Driver Default. Adaptive energy validation and all later research remain open. This commit is evidence/documentation plus the original data only, with no app code/settings changes.
+
+### M1 / MON-01 / MON-02 refinement candidate
+
+Sequence: E-M4-003 audit -> M1 observation integrity/reporting patch -> M2 pipeline identity -> M3/M4 execution/pacing experiments. Frame observations now enqueue into an 8,192-slot bounded ring independently of host/event reporting locks; aggregation moves off the present path. Host/event contention no longer clears cadence anchors. Actual frame enqueue loss is counted separately with lost interval duration/maximum, and distribution completeness is explicit. No claim of complete coverage follows when frame drops occur.
+
+Schema v2 retains old fields and adds separate loss categories, battery status/count/span/observed level change, CPU/footprint/thermal context in Markdown, phase markers and tagged event plan IDs/subsystem/outcome. Unchanged battery samples yield an unresolved status and null drain rate, not zero energy. Event record time and available occurrence time are separate; API success never marks benefit validation complete. Stop drains final buffered events.
+
+Portable tests cover long hitches despite host/event contention, true frame loss, overflow, stale-session rejection, exclusions and reconciliation. Swift tests add unchanged/increasing battery status and plan/event-time classification. Apple build and real-device overhead/coverage acceptance remain pending. Defaults, V4, Balanced, cache and limiter behaviour are unchanged.

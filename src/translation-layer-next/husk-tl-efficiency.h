@@ -11,6 +11,7 @@ typedef struct {
     double interval_seconds, p50_ms, p95_ms, p99_ms, worst_ms;
     uint64_t host_calls[TL_EM_STAGES], host_ns[TL_EM_STAGES];
     uint64_t slow_pipeline_calls, worst_pipeline_ns, dropped;
+    uint64_t dropped_frames, dropped_host, dropped_events, lost_frame_ns, lost_frame_max_ns;
     uint32_t width, height;
 } tl_em_stats;
 typedef struct { double monotonic_seconds; char text[512]; } tl_em_event;

@@ -14,7 +14,7 @@ class Stats(C.Structure):
     _fields_ = [(x, C.c_uint64) for x in ['intervals','above20','above33','above50','discontinuities']] + [
         (x,C.c_double) for x in ['interval_seconds','p50_ms','p95_ms','p99_ms','worst_ms']] + [
         ('host_calls',C.c_uint64*6),('host_ns',C.c_uint64*6),('slow_pipeline_calls',C.c_uint64),
-        ('worst_pipeline_ns',C.c_uint64),('dropped',C.c_uint64),('width',C.c_uint32),('height',C.c_uint32)]
+        ('worst_pipeline_ns',C.c_uint64),('dropped',C.c_uint64), *[(x,C.c_uint64) for x in ['dropped_frames','dropped_host','dropped_events','lost_frame_ns','lost_frame_max_ns']],('width',C.c_uint32),('height',C.c_uint32)]
 class Event(C.Structure):
     _fields_ = [('monotonic_seconds',C.c_double),('text',C.c_char*512)]
 
@@ -23,7 +23,7 @@ class EfficiencyTests(unittest.TestCase):
     def setUpClass(cls):
         cls.temp = tempfile.TemporaryDirectory(); cls.addClassCleanup(cls.temp.cleanup)
         path=Path(cls.temp.name)/'observer.c'
-        path.write_text('#include "husk-tl-efficiency.c"\nvoid hold(int v) { if(v) pthread_mutex_lock(&mu); else pthread_mutex_unlock(&mu); }\n')
+        path.write_text('#include "husk-tl-efficiency.c"\nvoid hold(int v) { if(v) pthread_mutex_lock(&mu); else pthread_mutex_unlock(&mu); }\nvoid hold_writer(int v) { if(v) atomic_flag_test_and_set(&frame_writer); else atomic_flag_clear(&frame_writer); }\n')
         lib=path.with_suffix('.so')
         subprocess.run([os.environ.get('CC','cc'),'-std=c11','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(TL),str(path),'-o',str(lib)],check=True)
         cls.lib=C.CDLL(str(lib))
@@ -71,7 +71,26 @@ class EfficiencyTests(unittest.TestCase):
         self.lib.tl_em_frame(1);self.lib.hold(1)
         self.lib.tl_em_frame(20000001);self.lib.tl_em_host(2,7000);self.lib.hold(0)
         self.lib.tl_em_frame(40000001);self.lib.tl_em_frame(60000001)
-        s=self.snapshot();self.assertEqual(s.dropped,2);self.assertEqual(s.intervals,1)
+        s=self.snapshot();self.assertEqual(s.dropped,1);self.assertEqual(s.dropped_host,1);self.assertEqual(s.intervals,3)
+    def test_host_and_event_contention_cannot_hide_a_long_frame(self):
+        self.lib.tl_em_frame(1);self.lib.hold(1)
+        self.lib.tl_em_host(1,1000);self.lib.tl_em_log(b'ue4 cache: observed')
+        self.lib.tl_em_frame(600000001);self.lib.hold(0)
+        s=self.snapshot();self.assertEqual(s.worst_ms,600);self.assertEqual(s.intervals,1)
+        self.assertEqual((s.dropped_host,s.dropped_events,s.dropped_frames),(1,1,0))
+    def test_frame_writer_loss_is_categorised_without_resetting_next_anchor(self):
+        self.lib.tl_em_frame(1);self.lib.hold_writer(1)
+        self.lib.tl_em_frame(600000001);self.lib.hold_writer(0)
+        self.lib.tl_em_frame(620000001)
+        s=self.snapshot();self.assertEqual(s.intervals,1);self.assertEqual(s.dropped_frames,1)
+        self.assertEqual(s.lost_frame_max_ns,600000000);self.assertEqual(s.lost_frame_ns,600000000)
+        self.assertEqual(s.worst_ms,20)
+    def test_ring_overflow_is_bounded_and_old_session_records_are_rejected(self):
+        for t in range(8200):self.lib.tl_em_frame(t*20000000+1)
+        s=self.snapshot();self.assertEqual(s.intervals,8192);self.assertEqual(s.dropped_frames,7)
+        self.lib.tl_em_frame(200000000000);self.lib.tl_em_start();self.lib.tl_em_exclude(False)
+        self.lib.tl_em_frame(300000000000);self.lib.tl_em_frame(300020000000)
+        s=self.snapshot();self.assertEqual(s.intervals,1);self.assertEqual(s.worst_ms,20)
     def test_backward_clock_and_pipeline_batch_call_attribution(self):
         self.lib.tl_em_frame(100);self.lib.tl_em_frame(50)
         self.lib.tl_em_host(4,17000000);self.lib.tl_em_host(5,90000000)

@@ -37,6 +37,8 @@ Compare matched scenes, build/configuration, brightness, charging state, ambient
 
 For every task and substantive progress update, name its milestone/item ID, explain how it depends on prior work and which next milestone it enables. Include this sequence in the final handover and update the master plan. Do not report an isolated improvement without its place in the permanent roadmap.
 
+Structured diagnostics must include applicable plan IDs, subsystem, user-marked phase/context, observation time and outcome. Preserve unknown cause/phase explicitly. API success is a mechanism result, never automatic performance or energy acceptance. Separate observation/report timestamps from occurrence timestamps.
+
 ## Coding, testing and handover
 
 Use the existing architecture and tests. Preserve API arguments, results, object lifetimes and threading guarantees. Pipeline identification must not hash raw pointers/padding as stable identity or pretend incomplete state is complete. Unsupported feedback must remain unavailable. Never fabricate pipeline objects or precompile indiscriminately.

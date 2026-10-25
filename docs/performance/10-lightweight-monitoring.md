@@ -37,3 +37,11 @@ No real-device correctness, energy saving or heat reduction has been verified by
 ## Built candidate
 
 Source: `1a68f40a377be7a8d0feac1bf05b6170d87659b9`. [Successful build](https://github.com/aaULTra/Husk/actions/runs/40163119357), [IPA artifact](https://github.com/aaULTra/Husk/actions/runs/40163119357/artifacts/12586749378). All 92 checks passed. The packaged SHA includes `-dirty` from the existing release-resource staging/project regeneration; retain that exact identity in device evidence. Follow-up documentation-only commits do not change this binary. This is a testing candidate; M1's device gate is still open.
+
+## Schema v2 refinement candidate
+
+M1/MON-01: 8,192-slot bounded frame ring removes reporting-mutex contention from frame collection. Host/event losses do not reset cadence. True frame enqueue losses have separate counts and lost-duration/max fields; frame_distribution_complete is false when any are recorded. Histograms contain retained intervals, and the lost maximum remains separately visible. Multiple producer threads have separate interval anchors; host cadence is not display timing.
+
+M1/MON-02: unchanged valid battery levels export null rate with UNRESOLVED status, observed level change, sample count and valid duration. Increasing unplugged readings are inconclusive. Human reports include observed CPU maximum, sampled footprint maximum and thermal classifications.
+
+Use Phase marker to label Loading, Menu, Gameplay, First-use effect and Repeated effect. Phase changes are events, not automatic engine-state detection; samples carry the latest marker. Event plan_ids/subsystem/outcome and benefit_validation make roadmap association explicit. recorded_t is capture time, occurred_t is supplied only when an existing diagnostic includes an actual completion timestamp. Phase at an occurrence can be reconstructed from phase events; it must not be guessed from report time.
