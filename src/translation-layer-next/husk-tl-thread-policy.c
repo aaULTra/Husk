@@ -30,6 +30,59 @@ static int previous_power = -1;
 static const char *last_reason;
 static int64_t reason_at;
 
+#define WORKER_RECORDS 64
+static pthread_mutex_t observation_mu = PTHREAD_MUTEX_INITIALIZER;
+static tl_worker_observation worker_records[WORKER_RECORDS];
+static atomic_uint_fast64_t admissions, rollbacks, caps, restores, query_failures, set_failures, observation_drops;
+#if defined(__APPLE__) || defined(HUSK_THREAD_POLICY_TEST)
+static atomic_uint_fast64_t next_identity;
+#endif
+#if defined(__APPLE__) || defined(HUSK_THREAD_POLICY_TEST)
+static _Thread_local uint64_t observation_identity;
+#endif
+#if defined(__APPLE__) || defined(HUSK_THREAD_POLICY_TEST)
+static void observe_worker(const char *name, unsigned role, unsigned mode, unsigned rev,
+                           unsigned before, unsigned after, int query_result, int set_result, bool changed) {
+    if (!observation_identity) observation_identity = atomic_fetch_add(&next_identity, 1) + 1;
+    if (pthread_mutex_trylock(&observation_mu)) { atomic_fetch_add(&observation_drops,1); return; }
+    unsigned slot=WORKER_RECORDS;
+    for(unsigned i=0;i<WORKER_RECORDS;i++) {
+        if(worker_records[i].identity==observation_identity){slot=i;break;}
+        if(!worker_records[i].identity&&slot==WORKER_RECORDS)slot=i;
+    }
+    if(slot<WORKER_RECORDS){
+        struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);
+        tl_worker_observation *v=&worker_records[slot];
+        *v=(tl_worker_observation){.identity=observation_identity,.observed_monotonic=t.tv_sec+t.tv_nsec/1e9,
+             .role=role,.mode=mode,.revision=rev,.before_qos=before,.after_qos=after,
+             .query_result=query_result,.set_result=set_result,.changed=changed};
+        snprintf(v->name,sizeof(v->name),"%s",name);
+    }else atomic_fetch_add(&observation_drops,1);
+    pthread_mutex_unlock(&observation_mu);
+}
+#endif
+uint32_t tl_thread_policy_observations(tl_worker_observation *out,uint32_t capacity) {
+    if(!out||!capacity)return 0;
+    pthread_mutex_lock(&observation_mu);uint32_t n=0;
+    for(unsigned i=0;i<WORKER_RECORDS&&n<capacity;i++)if(worker_records[i].identity)out[n++]=worker_records[i];
+    pthread_mutex_unlock(&observation_mu);return n;
+}
+void tl_thread_policy_summary(tl_worker_summary *out) {
+    memset(out,0,sizeof(*out));pthread_mutex_lock(&controller_mu);
+    out->requested_mode=atomic_load(&requested_mode);out->active_mode=atomic_load(&active_mode);
+    out->revision=atomic_load(&revision);out->capacity_hint=atomic_load(&capacity_cpus);
+    out->fast_worker_budget=atomic_load(&fast_workers);out->trial_requested=atomic_load(&trial_active);
+    out->admissions=atomic_load(&admissions);out->rollback_requests=atomic_load(&rollbacks);
+    out->caps_applied=atomic_load(&caps);out->restores_applied=atomic_load(&restores);
+    out->query_failures=atomic_load(&query_failures);out->set_failures=atomic_load(&set_failures);
+    out->dropped_observations=atomic_load(&observation_drops);out->stable_seconds=stable_ns/1e9;
+    struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);double now=t.tv_sec+t.tv_nsec/1e9;
+    out->cooldown_remaining_seconds=cooldown_until/1e9>now?cooldown_until/1e9-now:0;
+    const char *reason=out->active_mode!=3?"Adaptive not selected":out->trial_requested?"trial requested; check worker observations":last_reason?last_reason:"waiting for cadence sample";
+    snprintf(out->waiting_reason,sizeof(out->waiting_reason),"%s",reason);
+    pthread_mutex_unlock(&controller_mu);
+}
+
 void husk_ue4_set_worker_capacity(int cpu_count)
 {
     /* Total CPU capacity hint, not a P/E core detector or placement request. */
@@ -42,6 +95,7 @@ static void set_trial(bool enabled, const char *reason)
 {
     if (atomic_exchange(&trial_active, enabled) != enabled) {
         atomic_fetch_add(&revision, 1);
+        atomic_fetch_add(enabled ? &admissions : &rollbacks, 1);
         tl_log_line("thread-policy adaptive: requested %s, reason %s, normal worker budget %d; applied at worker self checkpoints; no core affinity or energy measurement",
                     enabled ? "extra Utility caps" : "Balanced baseline", reason, atomic_load(&fast_workers));
     }
@@ -110,7 +164,11 @@ void husk_ue4_set_thread_policy(int mode)
 void tl_thread_policy_activate(const char *project)
 {
     int mode = project && !strcmp(project, "Dungeons") ? atomic_load(&requested_mode) : 0;
+    pthread_mutex_lock(&controller_mu);
     atomic_store(&active_mode, mode);
+    atomic_store(&admissions,0);atomic_store(&rollbacks,0);atomic_store(&caps,0);atomic_store(&restores,0);
+    atomic_store(&query_failures,0);atomic_store(&set_failures,0);atomic_store(&observation_drops,0);
+    pthread_mutex_lock(&observation_mu);memset(worker_records,0,sizeof(worker_records));pthread_mutex_unlock(&observation_mu);
     atomic_store(&log_events, 0);
     atomic_store(&trial_active, false); atomic_fetch_add(&revision, 1);
     stable_ns = cooldown_until = last_sample = 0; previous_power = -1;
@@ -118,6 +176,7 @@ void tl_thread_policy_activate(const char *project)
     if (mode == 3) tl_log_line("thread-policy adaptive: runtime CPU count %d, reserved normal-worker budget %d; total-capacity heuristic, not detected P/E topology", atomic_load(&capacity_cpus), atomic_load(&fast_workers));
     if (mode) tl_log_line("thread-policy: %s for Dungeons; normal Default and background Utility baseline; extra caps only in admitted Adaptive trials; no core affinity",
                          mode == 3 ? "Adaptive Trial (experimental)" : mode == 2 ? "Balanced (experimental)" : "Observe Only");
+    pthread_mutex_unlock(&controller_mu);
 }
 
 static bool pool_name(const char *name, const char *prefix)
@@ -185,6 +244,8 @@ void tl_thread_policy_named(const char *name)
     qos_class_t before = QOS_CLASS_UNSPECIFIED;
     int query_result = pthread_get_qos_class_np(pthread_self(), &before, &before_relative);
     if (query_result) {
+        atomic_fetch_add(&query_failures,1);
+        observe_worker(name,tl_thread_policy_role(name),mode,target_revision,0,0,query_result,0,state.changed);
         state.retry_after = policy_now() + 1000000000LL;
         if (atomic_fetch_add(&log_events, 1) < 128)
             tl_log_line("thread-policy: name='%s' mode=%d initial QoS query failed rc=%d; policy unchanged",
@@ -198,7 +259,8 @@ void tl_thread_policy_named(const char *name)
     int result = 0;
     if (state.changed) {
         result = pthread_set_qos_class_self_np(state.original, state.relative);
-        if (!result) state.changed = false;
+        if (!result) { state.changed = false; atomic_fetch_add(&restores,1); }
+        else atomic_fetch_add(&set_failures,1);
     }
     int role = tl_thread_policy_role(name);
     qos_class_t cap = role == 1 ? QOS_CLASS_DEFAULT : QOS_CLASS_UTILITY;
@@ -210,11 +272,14 @@ void tl_thread_policy_named(const char *name)
      * and stop if restoration failed, retaining that fact for a later retry. */
     if (!result && (mode == 2 || mode == 3) && role && state.original != QOS_CLASS_UNSPECIFIED && state.original > cap) {
         result = pthread_set_qos_class_self_np(cap, state.relative);
-        if (!result) state.changed = true;
+        if (!result) { state.changed = true; atomic_fetch_add(&caps,1); }
+        else atomic_fetch_add(&set_failures,1);
     }
     int after_relative = 0;
     qos_class_t after = QOS_CLASS_UNSPECIFIED;
     query_result = pthread_get_qos_class_np(pthread_self(), &after, &after_relative);
+    if (query_result) atomic_fetch_add(&query_failures,1);
+    observe_worker(name,role,mode,target_revision,before,after,query_result,result,state.changed);
     if (!result && !query_result) { state.seen_revision = target_revision; state.retry_after = 0; }
     else state.retry_after = policy_now() + 1000000000LL;
     if (atomic_fetch_add(&log_events, 1) < 128)

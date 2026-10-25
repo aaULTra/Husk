@@ -29,6 +29,7 @@
 #include "husk-tl-efficiency.h"
 #include "husk-tl-pipeline-diagnostics.h"
 #include "husk-tl-gpu-timing.h"
+#include "husk-tl-render-inventory.h"
 
 void *tl_nwindow_native(void *window);
 int tl_nwindow_width(void *window);
@@ -374,6 +375,24 @@ static void w_vkGetDeviceQueue2(void *device,const void *info,void **out)
     typedef void (*fn)(void *,const void *,void **);
     fn real=V.lib?(fn)dlsym(V.lib,"vkGetDeviceQueue2"):NULL;
     if(real){real(device,info,out);if(out&&*out)observe_game_queue(device,*out);}
+}
+
+/* M9 observation only; do not change extents, texture use or command order. */
+static int w_vkCreateImage(void *device,const void *ci,const void *alloc,uint64_t *out)
+{
+    typedef int (*fn)(void *,const void *,const void *,uint64_t *);
+    fn real=V.lib?(fn)dlsym(V.lib,"vkCreateImage"):NULL;
+    int result=real?real(device,ci,alloc,out):-3;
+    if(result==VK_SUCCESS&&out&&*out)tl_ri_image(ci);
+    return result;
+}
+static void w_vkCmdBeginRenderPass(void *command,const void *info,uint32_t contents)
+{
+    typedef void (*fn)(void *,const void *,uint32_t);
+    static _Atomic(fn) cached;
+    fn real=atomic_load_explicit(&cached,memory_order_acquire);
+    if(!real&&V.lib){real=(fn)dlsym(V.lib,"vkCmdBeginRenderPass");atomic_store_explicit(&cached,real,memory_order_release);}
+    if(real){real(command,info,contents);tl_ri_render_area(info);}
 }
 
 typedef int (*pfn_create_swapchain)(void *, const void *, const void *, uint64_t *);
@@ -1137,6 +1156,8 @@ static const struct { const char *name; void *fn; } k_over[] = {
     { "vkCreateAndroidSurfaceKHR", w_vkCreateAndroidSurfaceKHR },
     { "vkQueuePresentKHR", w_vkQueuePresentKHR },
     { "vkQueueSubmit", w_vkQueueSubmit },
+    { "vkCreateImage", w_vkCreateImage },
+    { "vkCmdBeginRenderPass", w_vkCmdBeginRenderPass },
     { "vkGetDeviceQueue", w_vkGetDeviceQueue },
     { "vkGetDeviceQueue2", w_vkGetDeviceQueue2 },
     { "vkCreatePipelineCache", w_vkCreatePipelineCache },
@@ -1165,6 +1186,8 @@ static const struct { const char *name; void *fn; } k_over[] = {
 
 static void *overridden(const char *name)
 {
+    /* Default-off inventory does not interpose per-render-pass calls at all. */
+    if ((!strcmp(name,"vkCreateImage") || !strcmp(name,"vkCmdBeginRenderPass")) && !tl_ri_active()) return NULL;
     for (size_t i = 0; i < sizeof(k_over) / sizeof(k_over[0]); i++) if (!strcmp(k_over[i].name, name)) return k_over[i].fn;
     return NULL;
 }

@@ -22,3 +22,6 @@ third_party/gpu/
 .build/
 *.ipa
 .freebuff/
+
+# Python audit/test bytecode
+__pycache__/

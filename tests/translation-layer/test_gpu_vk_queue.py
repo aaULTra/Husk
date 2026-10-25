@@ -8,7 +8,7 @@ class QueueDiscoveryTests(unittest.TestCase):
  def setUpClass(cls):
   cls.tmp=tempfile.TemporaryDirectory();cls.addClassCleanup(cls.tmp.cleanup);p=Path(cls.tmp.name)
   source=(ROOT/'src/translation-layer-next/husk-tl-vulkan.m').read_text()
-  wrappers=source[source.index('static void observe_game_queue('):source.index('typedef int (*pfn_create_swapchain)')]
+  wrappers=source[source.index('static void observe_game_queue('):source.index('/* M9 observation only')]
   harness=r'''
 #include <stdint.h>
 #include <stdbool.h>

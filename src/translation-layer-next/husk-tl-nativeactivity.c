@@ -19,6 +19,7 @@
 #include "husk-tl-vulkan.h"
 #include "husk-tl-ue4-graphics.h"
 #include "husk-tl-thread-policy.h"
+#include "husk-tl-render-inventory.h"
 #include "husk-tl-jni.h"
 #include "husk-tl-internal.h"
 #include "husk-tl-ld.h"
@@ -355,6 +356,7 @@ bool tl_na_start(const tl_ga_config *cfg)
                 tl_ue4_efficiency_enabled() ? "Sharp / Efficient" : (tl_ue4_sharp_graphics_enabled() ? "Sharp / High Quality" : "Game Default"), cfg->width, cfg->height);
     const char *project = tl_ue4_meta("com.epicgames.ue4.GameActivity.ProjectName");
     tl_thread_policy_activate(project);
+    tl_ri_activate(project);
     if (project && !strcmp(project, "Dungeons") && tl_ue4_sharp_graphics_enabled()) {
         char cache_dir[768];
         snprintf(cache_dir, sizeof(cache_dir), "%s/husk-pipeline-cache-v1", N.internal_dir);

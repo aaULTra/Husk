@@ -83,6 +83,20 @@ int exercise_other_thread(void) {
  if (pthread_create(&t, NULL, other_thread, NULL)) return 2;
  pthread_join(t, &result); return (int)(uintptr_t)result;
 }
+int observation_scenario(int scenario) {
+ reset_fake(QOS_CLASS_USER_INITIATED,-2,3,"Dungeons");husk_ue4_set_worker_capacity(10);
+ tl_thread_policy_named("TaskGraphNP 2");tl_worker_summary s;tl_worker_observation records[64];
+ if(scenario==1){fail_query_after(1);tl_thread_policy_named("TaskGraphNP 2");tl_thread_policy_summary(&s);return s.query_failures==1&&tl_thread_policy_observations(records,64)==1&&records[0].query_result==22?0:1;}
+ tl_thread_policy_sample(10000000000LL,10000000000LL,60,18,20,0,false,0,0,0);
+ tl_thread_policy_sample(20000000000LL,10000000000LL,60,18,20,0,false,0,0,0);
+ tl_thread_policy_summary(&s);if(!s.trial_requested||s.admissions!=1||s.fast_worker_budget!=2||s.caps_applied!=1)return 2;
+ tl_thread_policy_checkpoint();if(tl_thread_policy_observations(records,64)!=1||records[0].after_qos!=QOS_CLASS_UTILITY||records[0].revision!=s.revision)return 3;
+ tl_thread_policy_suspend();tl_thread_policy_summary(&s);if(s.trial_requested||s.rollback_requests!=1)return 4;
+ /* Stored observation is deliberately last checkpoint, not instant rollback. */
+ tl_thread_policy_observations(records,64);if(records[0].after_qos!=QOS_CLASS_UTILITY)return 5;
+ tl_thread_policy_checkpoint();tl_thread_policy_summary(&s);tl_thread_policy_observations(records,64);
+ return records[0].after_qos==QOS_CLASS_DEFAULT&&s.restores_applied==2&&s.caps_applied==3?0:6;
+}
 '''.replace('#include <stdarg.h>', '#include <stdarg.h>\n#include <stdint.h>')
         pthreads = (ROOT / 'src/translation-layer-next/husk-tl-bionic-pthread.c').read_text()
         shim = (ROOT / 'src/translation-layer-next/husk-tl-bionic.c').read_text()
@@ -302,6 +316,12 @@ void exercise_naming(int path, const char *name, int failure) {
         self.reset(); self.name(b'unknown')
         self.lib.external_qos(UTILITY, -1); self.name(b'TaskGraphNP 0')
         self.assertEqual((self.lib.current_qos(), self.lib.current_relative(), self.lib.write_count()), (UTILITY, -1, 0))
+
+    def test_controller_request_and_actual_last_observed_caps_are_distinct(self):
+        self.assertEqual(self.lib.observation_scenario(0), 0)
+
+    def test_failed_qos_query_is_explicitly_unknown(self):
+        self.assertEqual(self.lib.observation_scenario(1), 0)
 
     def test_policy_state_is_per_thread(self):
         self.reset(); self.name(b'TaskGraphNP 0')

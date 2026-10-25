@@ -113,6 +113,7 @@ void husk_balloon_set_bytes(int64_t target_bytes);
 #include "../../translation-layer-next/husk-tl-ue4-graphics.h"
 #include "../../translation-layer-next/husk-tl-efficiency.h"
 #include "../../translation-layer-next/husk-tl-gpu-timing.h"
+#include "../../translation-layer-next/husk-tl-render-inventory.h"
 #include "../../translation-layer-next/husk-tl-pipeline-diagnostics.h"
 #include "../../translation-layer-next/husk-tl-thread-policy.h"
 #include "../../translation-layer-next/husk-console-host.h"

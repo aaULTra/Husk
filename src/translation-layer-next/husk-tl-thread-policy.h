@@ -24,4 +24,20 @@ int tl_thread_policy_fast_worker_budget(void);
 bool tl_thread_policy_trial_active(void);
 /* Portable classifier: 0=preserve, 1=normal worker, 2=background worker. */
 int tl_thread_policy_role(const char *name);
+/* Bounded last-observed records, not live threads, core residency or CPU energy. */
+typedef struct {
+ uint64_t identity; double observed_monotonic;
+ uint32_t role, mode, revision, before_qos, after_qos;
+ int query_result, set_result; bool changed;
+ char name[64];
+} tl_worker_observation;
+typedef struct {
+ uint32_t requested_mode, active_mode, revision, capacity_hint, fast_worker_budget;
+ bool trial_requested;
+ uint64_t admissions, rollback_requests, caps_applied, restores_applied, query_failures, set_failures, dropped_observations;
+ double stable_seconds, cooldown_remaining_seconds;
+ char waiting_reason[96];
+} tl_worker_summary;
+void tl_thread_policy_summary(tl_worker_summary *out);
+uint32_t tl_thread_policy_observations(tl_worker_observation *out, uint32_t capacity);
 #endif

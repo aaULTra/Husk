@@ -190,6 +190,33 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "clock": "Metal GPU timestamps and sample bounds use media clock; report event t uses a separate monotonic origin",
                 "overhead_validation": "pending", "plan_ids": ["M3", "GPU-01"]]
     }
+    private func workerReport(includeObservations: Bool = true) -> [String: Any] {
+        var s = tl_worker_summary(); tl_thread_policy_summary(&s)
+        let reason = withUnsafePointer(to: &s.waiting_reason) { $0.withMemoryRebound(to: CChar.self, capacity: 96) { String(cString: $0) } }
+        var observations: [[String: Any]] = []
+        if includeObservations {
+            var records = Array(repeating: tl_worker_observation(), count: 64)
+            let count = records.withUnsafeMutableBufferPointer { tl_thread_policy_observations($0.baseAddress, UInt32($0.count)) }
+            observations = records.prefix(Int(count)).map { value in
+                var v = value
+                let name = withUnsafePointer(to: &v.name) { $0.withMemoryRebound(to: CChar.self, capacity: 64) { String(cString: $0) } }
+                return ["observer_thread_id": v.identity, "name": name, "role": v.role, "mode": v.mode,
+                        "revision": v.revision, "observed_t": v.observed_monotonic - origin,
+                        "before_qos": v.before_qos, "after_qos": v.query_result == 0 ? v.after_qos as Any : NSNull(),
+                        "query_result": v.query_result, "set_result": v.set_result, "policy_changed": v.changed]
+            }
+        }
+        return ["requested_mode": s.requested_mode, "active_mode": s.active_mode,
+                "revision": s.revision, "capacity_hint": s.capacity_hint, "reserved_normal_worker_budget": s.fast_worker_budget,
+                "trial_requested": s.trial_requested, "admissions_since_launch": s.admissions,
+                "rollback_requests_since_launch": s.rollback_requests, "caps_applied_since_launch": s.caps_applied,
+                "restores_applied_since_launch": s.restores_applied, "query_failures_since_launch": s.query_failures,
+                "set_failures_since_launch": s.set_failures, "dropped_observations_since_launch": s.dropped_observations,
+                "stable_seconds": s.stable_seconds, "cooldown_remaining_seconds": s.cooldown_remaining_seconds,
+                "waiting_reason": reason, "last_observed_workers": observations,
+                "scope": "Last self-checkpoint observations since activation; not live threads, core residency, effective QoS overrides or per-worker energy",
+                "plan_ids": ["M7", "WORK-01", "WORK-02"], "benefit_validation": "unverified"]
+    }
     private func sample(forceBattery: Bool = false) {
         guard running else { return }
         tl_pi_report(); collectGPU()
@@ -220,6 +247,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                                   "orientation": d.orientation.rawValue]
         if !NSDictionary(dictionary: env).isEqual(to: environment) { event("environment", String(describing: env)); environment = env }
         row["environment"] = env
+        row["worker_controller"] = workerReport(includeObservations: false).filter { $0.key != "last_observed_workers" }
         append(row, to: &samples, limit: 7200)
         drainEvents()
         if t - windowAt >= 10 { collectWindow() }
@@ -232,6 +260,20 @@ final class EfficiencyDiagnostics: ObservableObject {
             }
             append(EfficiencyMath.eventFields(type: "runtime", detail: text, recorded: e.monotonic_seconds, origin: origin), to: &events, limit: 2048)
         }
+    }
+    private func renderInventory() -> [String: Any] {
+        var groups = Array(repeating: tl_ri_group(), count: 256), s = tl_ri_stats()
+        let count = groups.withUnsafeMutableBufferPointer { tl_ri_snapshot($0.baseAddress, UInt32($0.count), &s) }
+        let rows: [[String: Any]] = groups.prefix(Int(count)).map { g in
+            ["kind": g.kind == 0 ? "successful_image_creation_requested_base_fields" : "legacy_renderpass_requested_area",
+             "width": g.width, "height": g.height, "depth": g.depth, "vulkan_format": g.format,
+             "vulkan_usage": g.usage, "samples": g.samples, "count_since_launch": g.count]
+        }
+        return ["requested": s.requested, "active": s.active, "observed_image_creations": s.observed_images,
+                "observed_legacy_render_areas": s.observed_render_areas, "dropped_observations": s.dropped,
+                "groups_since_launch": rows, "plan_ids": ["M9", "GAP-03"],
+                "scope": "Requested base fields/legacy render areas since launch; not actual scene/HUD pixels, executed GPU passes, texture identity or replay state; swapchain images and newer renderpass paths may be absent",
+                "metalfx_integration": "not implemented", "benefit_validation": "unverified"]
     }
     private func pipelineGroups() -> [[String: Any]] {
         var groups = Array(repeating: tl_pi_group(), count: 2048)
@@ -252,8 +294,8 @@ final class EfficiencyDiagnostics: ObservableObject {
         observers.forEach { NotificationCenter.default.removeObserver($0) }; observers = []
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
-        stoppedReport = ["schema_version": 3, "metadata": metadata, "duration_seconds": now - origin,
-                         "summary": stats(total), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
+        stoppedReport = ["schema_version": 4, "metadata": metadata, "duration_seconds": now - origin,
+                         "summary": stats(total), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
                          "battery_included_sample_count": battery.sampleCount,
@@ -297,6 +339,8 @@ final class EfficiencyDiagnostics: ObservableObject {
                 let cpu = rows.compactMap { $0["process_cpu_percent_one_core"] as? Double }
                 let footprints = rows.compactMap { $0["footprint_bytes"] as? Int64 }
                 let thermal = Set(rows.compactMap { ($0["environment"] as? [String: Any])?["thermal_classification"] as? Int }).sorted()
+                let inventory = report["render_inventory"] as? [String: Any] ?? [:]
+                let worker = report["worker_policy"] as? [String: Any] ?? [:]
                 let gpu = report["gpu_sampling"] as? [String: Any] ?? [:]
                 let text = """
                 # Husk efficiency test
@@ -323,6 +367,12 @@ final class EfficiencyDiagnostics: ObservableObject {
                 Frame distribution complete: \(summary["frame_distribution_complete"] ?? false)
                 Dropped frame/host/event records: \(summary["dropped_frame_intervals_cumulative"] ?? 0) / \(summary["dropped_host_records_cumulative"] ?? 0) / \(summary["dropped_events_cumulative"] ?? 0)
                 CPU/memory/battery/thermal samples, timestamped runtime events, phase markers and exclusions: diagnostics.json.
+                M9 render inventory active/images/legacy areas: \(inventory["active"] ?? false) / \(inventory["observed_image_creations"] ?? 0) / \(inventory["observed_legacy_render_areas"] ?? 0)
+                Render inventory is partial requested state; actual scene resolution and MetalFX integration remain unverified.
+                M7 worker policy requested/active: \(worker["requested_mode"] ?? 0) / \(worker["active_mode"] ?? 0)
+                Adaptive requested / reason: \(worker["trial_requested"] ?? false) / \(worker["waiting_reason"] ?? "UNAVAILABLE")
+                Admissions/rollbacks/caps/restores since launch: \(worker["admissions_since_launch"] ?? 0) / \(worker["rollback_requests_since_launch"] ?? 0) / \(worker["caps_applied_since_launch"] ?? 0) / \(worker["restores_applied_since_launch"] ?? 0)
+                Core residency and scheduling energy benefit: UNAVAILABLE / unverified
                 M3 sampled GPU timing: \(gpu["status"] ?? "UNAVAILABLE")
                 GPU valid records / unresolved handlers: \(gpu["valid_records"] ?? 0) / \(gpu["unresolved_handlers_at_snapshot"] ?? 0)
                 Observed sample-clipped GPU interval union: \(gpu["observed_interval_union_seconds"] ?? 0) seconds (partial coverage; not utilisation)
