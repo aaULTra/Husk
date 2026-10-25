@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import SwiftUI
 import UIKit
+import Metal
+#if canImport(MetalFX)
+import MetalFX
+#endif
 
 /// Process-scoped diagnostics, including LiveContainer host work. No GPU/power inference.
 @MainActor
@@ -61,13 +65,25 @@ final class EfficiencyDiagnostics: ObservableObject {
         let model = withUnsafePointer(to: &system.machine) {
             $0.withMemoryRebound(to: CChar.self, capacity: machineSize) { String(cString: $0) }
         }
+        var metalCapabilities: [String: Any] = ["gpu_execution_measurement": "UNAVAILABLE: bundled Vulkan interface exposes no completed Metal command buffers",
+                                                 "metalfx_integration": "M9 research; no upscaling implemented"]
+        if let metalDevice = MTLCreateSystemDefaultDevice() {
+            metalCapabilities["device_name"] = metalDevice.name
+            #if canImport(MetalFX)
+            if #available(iOS 16.0, *) {
+                metalCapabilities["metalfx_spatial_supported"] = MTLFXSpatialScalerDescriptor.supportsDevice(metalDevice)
+            } else { metalCapabilities["metalfx_spatial_status"] = "UNAVAILABLE: iOS 16 required" }
+            #else
+            metalCapabilities["metalfx_spatial_status"] = "UNAVAILABLE: SDK has no MetalFX"
+            #endif
+        }
         metadata = ["session_id": UUID().uuidString, "started_utc": ISO8601DateFormatter().string(from: Date()),
                     "monotonic_origin_seconds": origin, "device_identifier": model,
                     "os": device.systemVersion, "processor_count": ProcessInfo.processInfo.processorCount,
                     "physical_memory_bytes": ProcessInfo.processInfo.physicalMemory,
                     "build_sha": Bundle.main.object(forInfoDictionaryKey: "HuskBuildCommit") as? String ?? "UNAVAILABLE",
                     "build_date": Bundle.main.object(forInfoDictionaryKey: "HuskBuildDate") as? String ?? "UNAVAILABLE",
-                    "launch_configuration": attached,
+                    "launch_configuration": attached, "metal_capabilities": metalCapabilities,
                     "process_scope": "Husk/LiveContainer host process; not isolated guest-game utilisation"]
         tl_em_start(); running = true; refreshExclusion(); event("phase", phase); sample()
         timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in

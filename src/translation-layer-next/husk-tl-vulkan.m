@@ -625,7 +625,7 @@ static void pace_efficient_frame(void)
         sampled_at = now;
     }
     int wanted = tl_ue4_effective_frame_limit(thermal);
-    int host_cap = wanted;
+    int host_cap = tl_ue4_host_frame_limit(thermal);
     if (wanted != cap) {
         cap = wanted; deadline = 0;
         count = late = 0; previous = 0; report_at = now;

@@ -201,6 +201,15 @@ int exercise(int enabled, int efficient, int fps, int status) {
     if (sleep_calls) return 5;
     return 0;
 }
+int exercise_fast_limiter(int engine_only) {
+    husk_ue4_set_sharp_graphics(true);husk_ue4_set_efficiency(true,60);
+    husk_ue4_set_engine_only_limiter(engine_only);native_status=0;sleep_calls=0;
+    fake_clock += 10000000000LL;
+    uint8_t info[64]={0};
+    for(unsigned i=0;i<8;i++){fake_clock+=1000000;w_vkQueuePresentKHR((void *)7,info);}
+    int sleeps=(int)sleep_calls;
+    husk_ue4_set_engine_only_limiter(false);return sleeps;
+}
 int exercise_efficiency_observer(void) {
     tl_em_start(); tl_em_exclude(false);
     int result = exercise(1, 1, 60, 0);
@@ -222,6 +231,10 @@ int exercise_efficiency_observer(void) {
         cls.lib.exercise.argtypes = [ctypes.c_int] * 4
         cls.lib.restored_seed_count.restype=ctypes.c_uint64
         cls.lib.restored_seed_bytes.restype=ctypes.c_uint64
+
+    def test_engine_only_comparison_bypasses_host_sleep_on_actual_present_wrapper(self):
+        self.assertGreater(self.lib.exercise_fast_limiter(0),0)
+        self.assertEqual(self.lib.exercise_fast_limiter(1),0)
 
     def test_enabled_efficiency_observer_collects_without_changing_forwarding_or_sleep(self):
         self.assertEqual(self.lib.exercise_efficiency_observer(), 0)

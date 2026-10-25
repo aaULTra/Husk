@@ -13,6 +13,7 @@
 static bool sharp;
 static bool efficient;
 static int frame_limit = 60;
+static bool engine_only_limiter;
 double tl_ue4_resolution_fraction(int width, int height, bool tablet, int percent)
 {
     if (width <= 0 || height <= 0) return 1.0;
@@ -84,6 +85,14 @@ int tl_ue4_effective_frame_limit(int thermal_state)
     if (thermal_state >= 3) return 20;
     if (thermal_state >= 2) return 30;
     return frame_limit;
+}
+/* M4 diagnostic: only bypass the extra 60 FPS host sleep. Preserve the engine
+ * request, 30 FPS selection and serious/critical thermal fallback. */
+void husk_ue4_set_engine_only_limiter(bool enabled) { engine_only_limiter = enabled; }
+int tl_ue4_host_frame_limit(int thermal_state)
+{
+    if (engine_only_limiter && tl_ue4_efficiency_enabled() && frame_limit == 60 && thermal_state < 2) return 0;
+    return tl_ue4_effective_frame_limit(thermal_state);
 }
 /* Pure monotonic scheduling: no busy wait or catch-up burst after slow frames
  * or a resume. Call once per present, on that present thread. */

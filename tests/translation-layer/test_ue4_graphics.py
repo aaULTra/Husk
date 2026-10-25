@@ -47,11 +47,25 @@ class GraphicsTests(unittest.TestCase):
         self.roots = [Path(self.tmp.name) / name for name in ("files", "external")]
         self.paths = [root / "UE4Game/Dungeons/Dungeons/Saved/Config" / platform / "Engine.ini"
                       for root in self.roots for platform in ("Android", "Android_Vulkan")]
+        self.lib.husk_ue4_set_engine_only_limiter(False)
         self.lib.husk_ue4_set_sharp_graphics(False)
         self.lib.husk_ue4_set_efficiency(False, 60)
 
     def prepare(self, project=b"Dungeons"):
         return self.lib.tl_ue4_graphics_prepare(*(os.fsencode(p) for p in self.roots), project)
+
+    def test_engine_only_limiter_preserves_engine_request_thermal_and_30_fps_caps(self):
+        self.lib.husk_ue4_set_sharp_graphics(True);self.lib.husk_ue4_set_efficiency(True,60)
+        self.assertEqual(self.lib.tl_ue4_host_frame_limit(0),60)
+        self.lib.husk_ue4_set_engine_only_limiter(True)
+        self.assertEqual(self.lib.tl_ue4_host_frame_limit(0),0)
+        self.assertEqual(self.lib.tl_ue4_effective_frame_limit(0),60)
+        self.assertEqual(self.lib.tl_ue4_host_frame_limit(2),30)
+        self.assertEqual(self.lib.tl_ue4_host_frame_limit(3),20)
+        self.lib.husk_ue4_set_efficiency(True,30)
+        self.assertEqual(self.lib.tl_ue4_host_frame_limit(0),30)
+        self.lib.husk_ue4_set_sharp_graphics(False)
+        self.assertEqual(self.lib.tl_ue4_host_frame_limit(0),0)
 
     def test_resolution_budget_preserves_aspect_and_is_orientation_independent(self):
         f = self.lib.tl_ue4_resolution_fraction
@@ -120,6 +134,7 @@ class GraphicsTests(unittest.TestCase):
         p = self.paths[0]
         with p.open("ab") as f:
             f.write(b"[AddedByGame]\nVolume=5\n")
+        self.lib.husk_ue4_set_engine_only_limiter(False)
         self.lib.husk_ue4_set_sharp_graphics(False)
         self.assertTrue(self.prepare())
         self.assertEqual(p.read_bytes(), b"[AddedByGame]\nVolume=5\n")
@@ -171,6 +186,7 @@ class GraphicsTests(unittest.TestCase):
         first = [p.read_bytes() for p in self.paths]
         self.assertTrue(self.prepare())
         self.assertEqual(first, [p.read_bytes() for p in self.paths])
+        self.lib.husk_ue4_set_engine_only_limiter(False)
         self.lib.husk_ue4_set_sharp_graphics(False)
         self.assertTrue(self.prepare())
         self.assertEqual([p.read_bytes() for p in self.paths], [original] * 4)

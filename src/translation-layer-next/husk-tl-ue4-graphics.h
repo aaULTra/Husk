@@ -20,6 +20,8 @@ bool tl_ue4_sharp_graphics_enabled(void);
 void husk_ue4_set_efficiency(bool enabled, int fps);
 bool tl_ue4_efficiency_enabled(void);
 int tl_ue4_effective_frame_limit(int thermal_state);
+void husk_ue4_set_engine_only_limiter(bool enabled);
+int tl_ue4_host_frame_limit(int thermal_state);
 int64_t tl_ue4_frame_delay_ns(int64_t now, int fps, int64_t *deadline);
 /* Caller frees the result. Preserves the developer's TL_UE4_CMDLINE arguments. */
 char *tl_ue4_graphics_command_line(const char *base);
