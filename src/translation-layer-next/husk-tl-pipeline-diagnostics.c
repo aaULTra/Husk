@@ -11,7 +11,7 @@ _Static_assert(sizeof(tl_pi_stage) == 48 && sizeof(tl_pi_graphics) == 144 && siz
 static atomic_bool enabled;
 static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
 static struct { void *device; uint64_t module, hash; } modules[MODULES];
-static struct { uint64_t id, calls; } signatures[SIGNATURES];
+static tl_pi_group signatures[SIGNATURES];
 static struct event { tl_pi_request request; bool compute, cache; int result; uint64_t ns, finished, occurrence; int feedback; } events[EVENTS];
 static unsigned head, length;
 static atomic_uint_fast64_t drops;
@@ -113,13 +113,21 @@ void tl_pi_completed(tl_pi_request r, bool compute, uint64_t elapsed, uint64_t f
     if (pthread_mutex_trylock(&mu)) { atomic_fetch_add(&drops, 1); return; }
     uint64_t occurrence = 0;
     /* Count batch-level requests by first sampled signature; not per-pipeline duration. */
-    unsigned slot = (unsigned)(r.id[0] % SIGNATURES);
-    if (!signatures[slot].id || signatures[slot].id == r.id[0]) { signatures[slot].id = r.id[0]; occurrence = ++signatures[slot].calls; }
+    unsigned slot = (unsigned)(r.id[0] % SIGNATURES), checked = 0;
+    while (checked < SIGNATURES && signatures[slot].signature && signatures[slot].signature != r.id[0]) {
+        slot = (slot + 1) % SIGNATURES; checked++;
+    }
+    const void *chain = compute ? ((const tl_pi_compute *)ci)->next : ((const tl_pi_graphics *)ci)->next;
+    int hit = result == 0 ? feedback(chain) : -1;
+    if (checked < SIGNATURES) {
+        tl_pi_group *g = &signatures[slot]; g->signature = r.id[0]; occurrence = ++g->calls;
+        g->slow_calls += elapsed >= 16666667; g->total_ns += elapsed;
+        if (elapsed > g->worst_ns) g->worst_ns = elapsed;
+        g->valid_feedback += hit >= 0; g->application_hits += hit == 1;
+    } else atomic_fetch_add(&drops, 1);
     if (elapsed >= 16666667 || occurrence == 1 || occurrence == 2) {
         if (length == EVENTS) atomic_fetch_add(&drops, 1);
         else {
-            const void *chain = compute ? ((const tl_pi_compute *)ci)->next : ((const tl_pi_graphics *)ci)->next;
-            int hit = result == 0 ? feedback(chain) : -1;
             events[(head+length++)%EVENTS] = (struct event){r,compute,cache,result,elapsed,finished,occurrence,hit};
         }
     }
@@ -139,4 +147,11 @@ void tl_pi_report(void) {
     }
     uint64_t lost = atomic_exchange(&drops,0);
     if (lost) tl_log_line("ue4 pipeline identity: M2/PIPE-01 diagnostic records unavailable/dropped %llu; bounded registry/events",(unsigned long long)lost);
+}
+
+uint32_t tl_pi_copy_groups(tl_pi_group *out, uint32_t capacity) {
+    if (!atomic_load(&enabled) || !out || !capacity) return 0;
+    pthread_mutex_lock(&mu);uint32_t n=0;
+    for(unsigned i=0;i<SIGNATURES&&n<capacity;i++)if(signatures[i].signature)out[n++]=signatures[i];
+    pthread_mutex_unlock(&mu);return n;
 }

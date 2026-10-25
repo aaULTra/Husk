@@ -51,6 +51,25 @@ enum EfficiencyMath {
            let time = Double(token), time.isFinite { row["occurred_t"] = time - origin }
         return row
     }
+    /// Union of sampled/clip-bounded GPU intervals, across queues. A lower-bound
+    /// observation with partial buffer coverage, never device-wide utilisation.
+    static func gpuIntervalUnion(_ rows: [[String: Any]]) -> Double {
+        let intervals: [(Double, Double)] = rows.compactMap { row in
+            guard let start = row["gpu_start_media_seconds"] as? Double,
+                  let end = row["gpu_end_media_seconds"] as? Double,
+                  let lower = row["sample_start_media_seconds"] as? Double,
+                  let upper = row["sample_end_media_seconds"] as? Double,
+                  start.isFinite, end.isFinite, lower.isFinite, upper.isFinite else { return nil }
+            let a = max(start, lower), b = min(end, upper)
+            return b > a ? (a, b) : nil
+        }.sorted { $0.0 < $1.0 }
+        var total = 0.0, lastStart = 0.0, lastEnd = 0.0
+        for (a, b) in intervals {
+            if a > lastEnd { total += lastEnd - lastStart; lastStart = a; lastEnd = b }
+            else { lastEnd = max(lastEnd, b) }
+        }
+        return total + lastEnd - lastStart
+    }
     static func json(_ report: [String: Any]) throws -> Data {
         try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys])
     }

@@ -53,6 +53,9 @@ jobs:
           python3 tests/translation-layer/test_efficiency_math.py -v
           python3 tests/translation-layer/test_pipeline_diagnostics.py -v
           python3 tests/translation-layer/test_game_chrome.py -v
+          python3 tests/translation-layer/test_gpu_timing.py -v
+          python3 tests/translation-layer/test_gpu_metal.py -v
+          python3 tests/translation-layer/test_gpu_vk_queue.py -v
           {
             echo "## Husk IPA source"
             echo "Commit: $(git rev-parse HEAD)"

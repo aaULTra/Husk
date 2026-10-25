@@ -48,6 +48,12 @@ check((event["occurred_t"] as? Double) == 5.25)
 check((event["recorded_t"] as? Double) == 10)
 check((event["outcome"] as? String) == "api_success")
 check((event["benefit_validation"] as? String) == "unverified")
+func gpu(_ a: Double, _ b: Double, _ lo: Double, _ hi: Double) -> [String: Any] {
+    ["gpu_start_media_seconds": a, "gpu_end_media_seconds": b, "sample_start_media_seconds": lo, "sample_end_media_seconds": hi]
+}
+check(EfficiencyMath.gpuIntervalUnion([]) == 0)
+check(abs(EfficiencyMath.gpuIntervalUnion([gpu(99, 100.5, 100, 101), gpu(100.3, 102, 100, 101), gpu(110.2, 110.4, 110, 111)]) - 1.2) < 0.00001)
+check(EfficiencyMath.gpuIntervalUnion([gpu(0, .nan, 0, 1), gpu(2, 3, 0, 1)]) == 0)
 let data = try EfficiencyMath.json(["schema_version": 1, "unavailable": NSNull(), "events": [["detail": "quote \\\" / newline\\n"]]])
 let decoded = try JSONSerialization.jsonObject(with: data) as! [String: Any]
 check(decoded["unavailable"] is NSNull)

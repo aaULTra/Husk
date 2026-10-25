@@ -47,6 +47,15 @@ const char *emit(int feedback_flags,int slow) {
  tl_pi_request r=tl_pi_identify(false,(void *)1,1,&p);
  tl_pi_completed(r,false,slow?20000000:1000000,123456789000ULL,true,0,&p);tl_pi_report();return output;
 }
+int group_collisions(void) {
+ tl_pi_request a={.id={1},.known={1},.sampled=1,.count=1},b=a;b.id[0]=2049;
+ tl_pi_completed(a,false,20000000,1,true,0,&ci);tl_pi_completed(b,false,30000000,2,true,0,&ci);tl_pi_completed(a,false,1000000,3,true,0,&ci);
+ tl_pi_group groups[4];unsigned n=tl_pi_copy_groups(groups,4);if(n!=2)return 1;
+ for(unsigned i=0;i<n;i++){
+  if(groups[i].signature==1&&(groups[i].calls!=2||groups[i].slow_calls!=1||groups[i].total_ns!=21000000||groups[i].worst_ns!=20000000||groups[i].valid_feedback))return 2;
+  if(groups[i].signature==2049&&groups[i].calls!=1)return 3;
+ }return 0;
+}
 unsigned bounded(void) {for(unsigned i=0;i<100;i++){tl_pi_request r=tl_pi_identify(false,(void *)1,1,&ci);tl_pi_completed(r,false,20000000,1,true,0,&ci);}return length;}
 ''')
   lib=root/'identity.so';subprocess.run([os.environ.get('CC','cc'),'-std=c11','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(ROOT/'src/translation-layer-next'),str(src),'-o',str(lib)],check=True)
@@ -62,5 +71,6 @@ unsigned bounded(void) {for(unsigned i=0;i<100;i++){tl_pi_request r=tl_pi_identi
  def test_cache_presence_is_not_hit_and_only_valid_feedback_is_reported(self):
   self.assertIn(b'feedback-first unavailable',self.lib.emit(-1,1));self.assertIn(b'feedback-first unavailable',self.lib.emit(2,1))
   self.assertIn(b'valid-no-application-hit',self.lib.emit(1,1));self.assertIn(b'application-cache-hit',self.lib.emit(3,1))
+ def test_collision_groups_keep_separate_counts_and_host_costs(self):self.assertEqual(self.lib.group_collisions(),0)
  def test_bounded_slow_events(self):self.assertEqual(self.lib.bounded(),64)
 if __name__=='__main__':unittest.main()

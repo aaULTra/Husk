@@ -28,6 +28,7 @@
 #include "husk-tl-driver-profile.h"
 #include "husk-tl-efficiency.h"
 #include "husk-tl-pipeline-diagnostics.h"
+#include "husk-tl-gpu-timing.h"
 
 void *tl_nwindow_native(void *window);
 int tl_nwindow_width(void *window);
@@ -352,6 +353,29 @@ static void w_vkDestroyShaderModule(void *device, uint64_t module, const void *a
     if (real) real(device, module, alloc);
 }
 
+/* Direct MoltenVK handles only, no Vulkan loader/layers. The deprecated
+ * export is optional: absent exports leave GPU timing unavailable. */
+static void observe_game_queue(void *device,void *queue)
+{
+    if(!tl_ue4_sharp_graphics_enabled()||!queue)return;
+    typedef void (*get_queue_fn)(void *,void **);
+    get_queue_fn get=V.lib?(get_queue_fn)dlsym(V.lib,"vkGetMTLCommandQueueMVK"):NULL;
+    void *metal=NULL;if(get)get(queue,&metal);
+    if(metal)tl_gput_native_register(device,metal);
+}
+static void w_vkGetDeviceQueue(void *device,uint32_t family,uint32_t index,void **out)
+{
+    typedef void (*fn)(void *,uint32_t,uint32_t,void **);
+    fn real=V.lib?(fn)dlsym(V.lib,"vkGetDeviceQueue"):NULL;
+    if(real){real(device,family,index,out);if(out&&*out)observe_game_queue(device,*out);}
+}
+static void w_vkGetDeviceQueue2(void *device,const void *info,void **out)
+{
+    typedef void (*fn)(void *,const void *,void **);
+    fn real=V.lib?(fn)dlsym(V.lib,"vkGetDeviceQueue2"):NULL;
+    if(real){real(device,info,out);if(out&&*out)observe_game_queue(device,*out);}
+}
+
 typedef int (*pfn_create_swapchain)(void *, const void *, const void *, uint64_t *);
 static int64_t monotonic_ns(void);
 enum { TIMING_ACQUIRE, TIMING_SUBMIT, TIMING_PRESENT, TIMING_SLEEP, TIMING_GRAPHICS_PIPELINES, TIMING_COMPUTE_PIPELINES, TIMING_COUNT };
@@ -581,6 +605,7 @@ static void w_vkDestroyDevice(void *device, const void *alloc)
 {
     tl_dp_forget(device);
     tl_pi_forget_device(device);
+    tl_gput_native_forget(device);
     typedef void (*fn)(void *, const void *);
     fn real = V.lib ? (fn)dlsym(V.lib, "vkDestroyDevice") : NULL;
     tl_pc_forget_device(device, real, alloc);
@@ -1112,6 +1137,8 @@ static const struct { const char *name; void *fn; } k_over[] = {
     { "vkCreateAndroidSurfaceKHR", w_vkCreateAndroidSurfaceKHR },
     { "vkQueuePresentKHR", w_vkQueuePresentKHR },
     { "vkQueueSubmit", w_vkQueueSubmit },
+    { "vkGetDeviceQueue", w_vkGetDeviceQueue },
+    { "vkGetDeviceQueue2", w_vkGetDeviceQueue2 },
     { "vkCreatePipelineCache", w_vkCreatePipelineCache },
     { "vkGetPipelineCacheData", w_vkGetPipelineCacheData },
     { "vkMergePipelineCaches", w_vkMergePipelineCaches },

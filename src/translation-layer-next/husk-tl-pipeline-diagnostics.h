@@ -25,4 +25,9 @@ void tl_pi_forget_device(void *device);
 tl_pi_request tl_pi_identify(bool compute, void *device, uint32_t count, const void *ci);
 void tl_pi_completed(tl_pi_request request, bool compute, uint64_t elapsed_ns, uint64_t finished_ns, bool cache, int result, const void *ci);
 void tl_pi_report(void);
+/* Lifetime since game launch; one group per batch's first sampled partial key.
+ * Durations may overlap. This cannot reconstruct pipelines or prove cache hits. */
+typedef struct { uint64_t signature, calls, slow_calls, total_ns, worst_ns, valid_feedback, application_hits; } tl_pi_group;
+uint32_t tl_pi_copy_groups(tl_pi_group *out, uint32_t capacity);
+
 #endif

@@ -61,6 +61,7 @@ static int test_nanosleep(const struct timespec *delay, struct timespec *remaini
 #define nanosleep test_nanosleep
 static double CACurrentMediaTime(void) { return 1; }
 void tl_log_line(const char *fmt, ...) { (void)fmt; }
+void tl_gput_native_forget(void *d) { (void)d; }
 static void probe_frame(void *q, const void *i, unsigned long n) { (void)q; (void)i; (void)n; }
 static void log_layer_state(void *l, const char *s) { (void)l; (void)s; }
 static int host_acquire(void *d, uint64_t s, uint64_t t, uint64_t sem, uint64_t fence, uint32_t *index) {

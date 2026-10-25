@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: user confirms status-bar fix; E-M4-004 audited; next focus M3 GPU timing and M9 integration preparation alongside M2/M4; efficiency gates remain open.
+Updated: 2026-10-25. Status: M3-A sampled GPU/M2 group candidate implemented, portable checks pass; Apple build/device gates pending; M9-A source audit identifies input/output blockers.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -38,13 +38,13 @@ Inspection basis: branch head 3c2d52c, PR metadata, graphics/settings, Vulkan wr
 | BASE-01 | V4 resolution interception | Implemented; guarded portable-hook tests exist | User reports retained selected presentation through resumes | Unmeasured; protect and separately verify internal scene resolution |
 | BASE-02 | Sharp / Efficient and 60 FPS | Implemented; engine request plus host limiter | Historical approximately 60 FPS; latest E-M4-004 retained host mean 57.17 FPS with variable windows | Unmeasured; preserve quality/reference |
 | CACHE-01 | Compatible persistent pipeline cache | Implemented; checksum/header guards, fallback, checkpoints and generation tracking | Restored/saved bytes reported; first-use stalls persist | Actual reuse/hitch and energy benefit unverified |
-| PIPE-01 | Pipeline identification | Partial implementation: opt-in shader/state group signatures, bounded occurrences/slow events and passive valid feedback; existing timing retained | Device first/repeat/restart comparison pending; complete state identity absent | No prewarming key or verified energy benefit; see docs/performance/11-pipeline-identification.md |
+| PIPE-01 | Pipeline identification | Partial implementation: opt-in shader/state group signatures, bounded occurrences/slow events/passive feedback, collision-safe since-launch group counts/cost export | Device first/repeat/restart comparison pending; complete state identity absent | No prewarming key or verified energy benefit; see docs/performance/11-pipeline-identification.md |
 | WORK-01 | Balanced policy | Implemented, default; critical roles preserved | Active in supplied runs | Energy benefit unmeasured; baseline comparator |
 | WORK-02 | Adaptive Trial | Implemented revised cheap-pipeline admission and self-applied caps/rollback | Real-device admission/application fix not independently verified here | NOT COMPLETE: energy A/B versus Balanced pending |
 | SUBMIT-01 | Async submission option | Implemented, experimental; Driver Default retained | No controlled benefit evidence | Pending independent A/B |
 | PROF-01 | Detailed MoltenVK profiling | Implemented; strict 1.4.2/private API 43, 1152-byte guard, optional/off | Earlier report contains driver activity data | Adds overhead; no genuine GPU/power measurement |
 | MEAS-01 | Efficiency Test sessions/export | Implementation candidate: bounded aggregation, exclusions, process/API sampling, Markdown/JSON export | Previous build passed 92 checks; schema-v2 ring/loss/reporting/plan tags now implemented with portable tests; final 104-check Apple build passed; device coverage/overhead checks pending | M1 remains open; monitoring overhead and energy unmeasured |
-| GPU-01 | Genuine GPU execution timing | Source investigation: callback latency is not GPU time; completed buffers not exposed by current interface | Measurement gap | Instruments or safe completed-buffer access |
+| GPU-01 | Genuine GPU execution timing | Opt-in candidate: known MoltenVK queue factory adapter and bounded completed-buffer GPU timestamps, schema-v3 raw records/overlap union | Apple adapter/build and M4 correctness/coverage/overhead pending; no per-frame attribution | M3-A physical gates open; watts remain external |
 | UPSCALE-01 | MetalFX spatial upscaling | M4 spatial support confirmed; lower internal resolution -> protected 2128 × 1600 output is the agreed goal; no scaler integrated | Visual quality and net cost unverified | Prepare interop now alongside M3; separate prototype after GPU evidence and safe design |
 | RES-01 | Manual resolution controls | Implemented 65–100%, with heuristics | Two different presentation runs reported | Dynamic GPU-driven resolution remains unimplemented |
 
@@ -250,3 +250,11 @@ User approves the latest sequence: M1 -> M3 GPU timing with M9 input/output desi
 ### 2026-10-25 — permanent IPA delivery instructions
 
 User requires every new IPA to explain its sequential relationship to the permanent plan, give a completion percentage and provide detailed instructions for their part. Added the standing AGENTS rule and reusable handover contract: affected plan IDs -> prerequisite evidence -> changes -> three separate gate-completion scores -> exact on-device steps/files/decision -> next milestone. Completion is checklist-scoped; energy savings are never inferred from coding progress. Preserve all pending M1–M10 gates and separate M4/Duo scopes. Documentation only; no new IPA or user test requested by this update.
+
+### 2026-10-25 — substantial diagnostic batch, fewer installations
+
+User asks to implement as much feasible work as possible before further testing. [GPU-BATCH-1 design/gates](docs/performance/14-gpu-sampling-and-metalfx-inputs.md) defines the scope before acceptance: M3-A direct queue discovery/scoped opt-in GPU-buffer sampling, M2 structured group costs/reuse evidence, and M9-A source/design audit. One IPA will carry independent options; two short diagnostic sessions can collect GPU and pipeline evidence together without changing limiter/worker/submission behaviour. Unprofiled energy comparisons remain separate.
+
+M3-A candidate records actual completed-buffer GPU timestamps on compatible known queues, with sampled coverage, separate clocks/callback delay, bounded budgets/records, explicit loss/pending/error/exclusion/restart handling and schema-v3 export. It is default off; no rendering/priority/driver/pacing change. M2 exports lifetime first-partial-group-per-batch counts/cost/passive feedback and fixes registry bucket collisions. M9-A maps the direct swapchain/layer path: a lower input and independent baseline output are not currently available, so R3/R4 and the actual scaler remain open; no false game-upscaling toggle is added.
+
+Local validation: 116 portable checks pass; Swift math/chrome and Objective-C Metal adapter checks require Apple CI (119 total including those three). Full iOS build/package and all M3 physical/overhead gates pending at this entry. No energy/heat benefit claimed. Existing M1 overhead/calibration, M4 pacing, M5 preparation, M6 async/sizing, M7 Adaptive energy, M8 translation/driver, M9 game integration/dynamic resolution and M10 Duo remain open.

@@ -26,6 +26,9 @@ final class EfficiencyDiagnostics: ObservableObject {
     private var gameVisible = false
     private var panelVisible = false
     @Published var phase = "Unmarked"
+    @Published var gpuSampling = false
+    private var gpuRows: [[String: Any]] = []
+    private var gpuExportDrops = 0
     private var attached: [String: Any] = [:]
     private var lastBattery: (Double, Int)?
     private var battery = EfficiencyMath.Battery()
@@ -54,6 +57,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     func start() {
         guard !running, !exporting else { return }
         samples = []; windows = []; events = []; exclusions = []; files = []; dropped = 0
+        gpuRows = []; gpuExportDrops = 0
         stoppedReport = nil; canExport = false; origin = now; windowAt = origin; lastCPUAt = origin; lastCPU = -1
         lastMemoryAt = origin - 10; lastBatteryAt = origin - 30; excludedAt = nil; excludedReason = ""
         lastBattery = nil; battery = EfficiencyMath.Battery(); environment = [:]
@@ -65,7 +69,7 @@ final class EfficiencyDiagnostics: ObservableObject {
         let model = withUnsafePointer(to: &system.machine) {
             $0.withMemoryRebound(to: CChar.self, capacity: machineSize) { String(cString: $0) }
         }
-        var metalCapabilities: [String: Any] = ["gpu_execution_measurement": "UNAVAILABLE: bundled Vulkan interface exposes no completed Metal command buffers",
+        var metalCapabilities: [String: Any] = ["gpu_execution_measurement": gpuSampling ? "M3-A opt-in sampled command-buffer GPU timestamps; device validation pending" : "UNAVAILABLE: GPU sampling disabled",
                                                  "metalfx_integration": "M9 research; no upscaling implemented"]
         if let metalDevice = MTLCreateSystemDefaultDevice() {
             metalCapabilities["device_name"] = metalDevice.name
@@ -85,7 +89,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                     "build_date": Bundle.main.object(forInfoDictionaryKey: "HuskBuildDate") as? String ?? "UNAVAILABLE",
                     "launch_configuration": attached, "metal_capabilities": metalCapabilities,
                     "process_scope": "Husk/LiveContainer host process; not isolated guest-game utilisation"]
-        tl_em_start(); running = true; refreshExclusion(); event("phase", phase); sample()
+        tl_em_start(); tl_gput_native_start(gpuSampling); running = true; refreshExclusion(); event("phase", phase); sample()
         timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.sample() }
         }
@@ -119,7 +123,7 @@ final class EfficiencyDiagnostics: ObservableObject {
             append(["start": start - origin, "end": t - origin, "reason": excludedReason], to: &exclusions, limit: 2048)
         }
         excludedReason = reason; excludedAt = reason.isEmpty ? nil : t
-        tl_em_exclude(!reason.isEmpty)
+        tl_em_exclude(!reason.isEmpty); tl_gput_exclude(!reason.isEmpty)
         lastCPU = -1; battery.resetAnchor()
         event("exclusion", reason.isEmpty ? "included gameplay resumed" : reason)
     }
@@ -148,9 +152,38 @@ final class EfficiencyDiagnostics: ObservableObject {
         var row = stats(s); row["start"] = windowAt - origin; row["end"] = now - origin
         append(row, to: &windows, limit: 1440); windowAt = now
     }
+    private func collectGPU() {
+        var record = tl_gput_record()
+        while tl_gput_pop(&record) {
+            if gpuRows.count >= 16384 { gpuExportDrops += 1; continue }
+            gpuRows.append(["gpu_start_media_seconds": record.gpu_start, "gpu_end_media_seconds": record.gpu_end,
+                            "completed_media_seconds": record.completed, "completion_after_gpu_end_seconds": max(0, record.completed - record.gpu_end),
+                            "sample_start_media_seconds": record.sample_start, "sample_end_media_seconds": record.sample_end,
+                            "queue_id": record.queue, "phase_at_collection": phase,
+                            "recorded_t": now - origin, "plan_ids": ["M3", "GPU-01"],
+                            "subsystem": "gpu_execution", "benefit_validation": "unverified"])
+        }
+    }
+    private func gpuReport() -> [String: Any] {
+        var s = tl_gput_stats(); tl_gput_snapshot(&s)
+        let status = !s.requested ? "UNAVAILABLE: disabled" : s.hooked_queues == 0 ?
+            "UNAVAILABLE: no compatible registered game queue" : s.completed == 0 ?
+            "UNAVAILABLE: no valid sampled GPU timestamps" : "MEASURED: sampled command-buffer GPU intervals; partial coverage"
+        return ["status": status, "requested": s.requested, "registered_queues": s.registered_queues,
+                "hooked_queues": s.hooked_queues, "hook_failures": s.hook_failures,
+                "attached_handlers": s.attached, "valid_records": s.completed, "invalid_timestamps": s.invalid,
+                "command_buffer_errors": s.errors, "outside_sample_window": s.outside,
+                "stale_or_excluded_completions": s.stale, "unresolved_handlers_at_snapshot": s.pending,
+                "dropped_records_or_capture_attempts": s.dropped, "dropped_export_records": gpuExportDrops,
+                "media_origin_seconds": s.media_origin, "sample_period_seconds": 10, "sample_width_seconds": 1,
+                "observed_interval_union_seconds": EfficiencyMath.gpuIntervalUnion(gpuRows),
+                "scope": "Known MoltenVK game queues; factory-created buffers only; sample-bound clipped union is partial, not utilisation or per-frame GPU time",
+                "clock": "Metal GPU timestamps and sample bounds use media clock; report event t uses a separate monotonic origin",
+                "overhead_validation": "pending", "plan_ids": ["M3", "GPU-01"]]
+    }
     private func sample(forceBattery: Bool = false) {
         guard running else { return }
-        tl_pi_report()
+        tl_pi_report(); collectGPU()
         let t = now, memory = t - lastMemoryAt >= 10
         var p = tl_em_process(); tl_em_process_sample(memory, &p)
         var row: [String: Any] = ["t": t - origin, "excluded": !excludedReason.isEmpty,
@@ -191,16 +224,27 @@ final class EfficiencyDiagnostics: ObservableObject {
             append(EfficiencyMath.eventFields(type: "runtime", detail: text, recorded: e.monotonic_seconds, origin: origin), to: &events, limit: 2048)
         }
     }
+    private func pipelineGroups() -> [[String: Any]] {
+        var groups = Array(repeating: tl_pi_group(), count: 2048)
+        let count = groups.withUnsafeMutableBufferPointer { tl_pi_copy_groups($0.baseAddress, UInt32($0.count)) }
+        return groups.prefix(Int(count)).map { g in
+            ["partial_signature": String(format: "%016llx", g.signature), "batch_calls": g.calls,
+             "slow_batch_calls": g.slow_calls, "aggregate_host_ns": g.total_ns, "worst_host_ns": g.worst_ns,
+             "first_pipeline_valid_feedback_calls": g.valid_feedback, "first_pipeline_application_hit_calls": g.application_hits,
+             "scope": "since game launch; first partial group per batch; not full variants or replay state",
+             "plan_ids": ["M2", "PIPE-01"]]
+        }.sorted { ($0["worst_host_ns"] as? UInt64 ?? 0) > ($1["worst_host_ns"] as? UInt64 ?? 0) }
+    }
     func stop() {
         guard running else { return }
-        sample(forceBattery: true); tl_em_stop(); drainEvents(); collectWindow()
+        sample(forceBattery: true); tl_em_stop(); tl_gput_end(); collectGPU(); drainEvents(); collectWindow()
         if let start = excludedAt { append(["start": start - origin, "end": now - origin, "reason": excludedReason], to: &exclusions, limit: 2048) }
         timer?.invalidate(); timer = nil
         observers.forEach { NotificationCenter.default.removeObserver($0) }; observers = []
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
-        stoppedReport = ["schema_version": 2, "metadata": metadata, "duration_seconds": now - origin,
-                         "summary": stats(total), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
+        stoppedReport = ["schema_version": 3, "metadata": metadata, "duration_seconds": now - origin,
+                         "summary": stats(total), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
                          "battery_included_sample_count": battery.sampleCount,
@@ -209,16 +253,18 @@ final class EfficiencyDiagnostics: ObservableObject {
                          "battery_last_included_fraction": battery.lastLevel.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_observed_seconds": battery.seconds, "dropped_export_records": dropped,
                          "metric_plan_ids": ["frames": ["M1", "M4"], "pipeline_creation": ["M2"],
-                                             "cpu_memory": ["M3"], "guest_yields": ["M8"],
+                                             "cpu_memory": ["M3"], "gpu_sampling": ["M3"], "guest_yields": ["M8"],
                                              "battery_thermal": ["M1", "M3", "M7"], "metal_capabilities": ["M3", "M9"]],
                          "metric_labels": ["host_cadence_cpu_memory_battery_thermal": "MEASURED (process/API scope)",
                                            "histogram_percentiles_battery_drain": "ESTIMATED",
-                                           "gpu_execution_displayed_frames_peak_footprint_aggregate_cache_hit_rate": "UNAVAILABLE",
+                                           "sampled_command_buffer_gpu_intervals": "MEASURED only when gpu_sampling.status reports valid records",
+                                           "per_frame_gpu_displayed_frames_peak_footprint_aggregate_cache_hit_rate": "UNAVAILABLE",
                                            "electrical_power_chip_temperature_surface_temperature": "EXTERNAL"],
                          "limitations": ["0.1 ms upper-bin nearest-rank percentiles; >=1 s overflow uses exact worst as conservative bound",
                                           "Host API stages: acquire, submit, present, sleep, graphics creation, compute creation; durations overlap",
                                           "Vulkan host cadence is not displayed-frame timing; no frame source for non-Vulkan games",
-                                          "No measured watts, GPU execution, degrees Celsius or energy saving",
+                                          "No measured watts, per-frame GPU attribution, degrees Celsius or energy saving",
+                                          "Optional GPU intervals have partial queue/buffer/sample coverage; do not infer whole-device utilisation",
                                           "CPU includes host/LiveContainer work; 100% = one logical CPU",
                                           "Driver phase counters remain in attempt log if separately enabled",
                                           "Cache feedback may be unavailable; partial pipeline signatures are not cache keys",
@@ -242,6 +288,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 let cpu = rows.compactMap { $0["process_cpu_percent_one_core"] as? Double }
                 let footprints = rows.compactMap { $0["footprint_bytes"] as? Int64 }
                 let thermal = Set(rows.compactMap { ($0["environment"] as? [String: Any])?["thermal_classification"] as? Int }).sorted()
+                let gpu = report["gpu_sampling"] as? [String: Any] ?? [:]
                 let text = """
                 # Husk efficiency test
                 Build: \(meta["build_sha"] ?? "UNAVAILABLE")
@@ -267,7 +314,11 @@ final class EfficiencyDiagnostics: ObservableObject {
                 Frame distribution complete: \(summary["frame_distribution_complete"] ?? false)
                 Dropped frame/host/event records: \(summary["dropped_frame_intervals_cumulative"] ?? 0) / \(summary["dropped_host_records_cumulative"] ?? 0) / \(summary["dropped_events_cumulative"] ?? 0)
                 CPU/memory/battery/thermal samples, timestamped runtime events, phase markers and exclusions: diagnostics.json.
-                UNAVAILABLE: actual displayed frames, GPU execution, peak footprint and aggregate cache-hit rate. Per-request driver feedback is exported only where available.
+                M3 sampled GPU timing: \(gpu["status"] ?? "UNAVAILABLE")
+                GPU valid records / unresolved handlers: \(gpu["valid_records"] ?? 0) / \(gpu["unresolved_handlers_at_snapshot"] ?? 0)
+                Observed sample-clipped GPU interval union: \(gpu["observed_interval_union_seconds"] ?? 0) seconds (partial coverage; not utilisation)
+                GPU invalid/error/dropped/export losses: \(gpu["invalid_timestamps"] ?? 0) / \(gpu["command_buffer_errors"] ?? 0) / \(gpu["dropped_records_or_capture_attempts"] ?? 0) / \(gpu["dropped_export_records"] ?? 0)
+                UNAVAILABLE: actual displayed frames, per-frame GPU attribution, peak footprint and aggregate cache-hit rate. Per-request driver feedback is exported only where available.
                 EXTERNAL: electrical power and numerical physical temperature. Thermal state is a classification.
                 No measured energy improvement. Monitoring overhead and device correctness need validation.
                 """
@@ -289,6 +340,8 @@ struct EfficiencyDiagnosticsView: View {
             Form {
                 Section {
                     Text(monitor.message)
+                    Toggle("Sample game GPU execution (Diagnostic)", isOn: $monitor.gpuSampling).disabled(monitor.running || monitor.exporting)
+                    Text("Optional: samples completed game command buffers for 1 second every 10 seconds. Adds instrumentation; leave OFF for normal energy comparisons. No graphics change.")
                     Button("Start lightweight test") { monitor.start() }.disabled(monitor.running || monitor.exporting)
                     Picker("Phase marker", selection: Binding(get: { monitor.phase }, set: { monitor.markPhase($0) })) {
                         ForEach(["Unmarked", "Loading", "Menu", "Gameplay", "First-use effect", "Repeated effect"], id: \.self) { Text($0).tag($0) }
@@ -302,7 +355,7 @@ struct EfficiencyDiagnosticsView: View {
                 Section {
                     Text("Return to gameplay after starting. This panel, background time and detached game views are excluded. Mark other interruptions explicitly. Tests remain in memory until stopped/exported; export before closing Husk.")
                     Text("Lightweight monitoring changes no graphics settings. Detailed Driver Profiling remains a separate option requiring restart; leave it off for energy comparisons.")
-                    Text("CPU is process-scoped. Thermal state is not temperature. GPU execution and watts require external instrumentation. Monitoring overhead has not yet been measured on device.")
+                    Text("CPU is process-scoped. Thermal state is not temperature. Sampled GPU timing is optional and may be unavailable. Electrical power requires external instrumentation. Monitoring overhead has not yet been measured on device.")
                 }
             }
             .navigationTitle("Efficiency Test")
