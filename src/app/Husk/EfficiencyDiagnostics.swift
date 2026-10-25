@@ -140,7 +140,8 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "dropped_events_cumulative": s.dropped_events,
                 "unhistogrammed_interval_seconds_cumulative": Double(s.lost_frame_ns) / 1e9,
                 "worst_unhistogrammed_interval_ms_cumulative": Double(s.lost_frame_max_ns) / 1e6,
-                "frame_distribution_complete": s.dropped_frames == 0, "swapchain_width": s.width, "swapchain_height": s.height]
+                "frame_distribution_complete": s.dropped_frames == 0,
+                "guest_yield_calls_cumulative": s.guest_yield_calls, "swapchain_width": s.width, "swapchain_height": s.height]
     }
     private func collectWindow() {
         var s = tl_em_stats(); tl_em_snapshot(false, &s)
@@ -207,6 +208,9 @@ final class EfficiencyDiagnostics: ObservableObject {
                          "battery_first_included_fraction": battery.firstLevel.map { $0 as Any } ?? NSNull(),
                          "battery_last_included_fraction": battery.lastLevel.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_observed_seconds": battery.seconds, "dropped_export_records": dropped,
+                         "metric_plan_ids": ["frames": ["M1", "M4"], "pipeline_creation": ["M2"],
+                                             "cpu_memory": ["M3"], "guest_yields": ["M8"],
+                                             "battery_thermal": ["M1", "M3", "M7"], "metal_capabilities": ["M3", "M9"]],
                          "metric_labels": ["host_cadence_cpu_memory_battery_thermal": "MEASURED (process/API scope)",
                                            "histogram_percentiles_battery_drain": "ESTIMATED",
                                            "gpu_execution_displayed_frames_peak_footprint_aggregate_cache_hit_rate": "UNAVAILABLE",
@@ -259,6 +263,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 ESTIMATED unplugged drain: \(report["battery_drain_pp_per_hour_estimated"] ?? "UNAVAILABLE") percentage points/hour (coarse).
                 Dropped collector/export records: \(summary["dropped_collector_records"] ?? 0) / \(report["dropped_export_records"] ?? 0)
 
+                Guest sched_yield observations (M8): \(summary["guest_yield_calls_cumulative"] ?? 0) calls; not proof of waste or energy use
                 Frame distribution complete: \(summary["frame_distribution_complete"] ?? false)
                 Dropped frame/host/event records: \(summary["dropped_frame_intervals_cumulative"] ?? 0) / \(summary["dropped_host_records_cumulative"] ?? 0) / \(summary["dropped_events_cumulative"] ?? 0)
                 CPU/memory/battery/thermal samples, timestamped runtime events, phase markers and exclusions: diagnostics.json.

@@ -14,7 +14,7 @@ class Stats(C.Structure):
     _fields_ = [(x, C.c_uint64) for x in ['intervals','above20','above33','above50','discontinuities']] + [
         (x,C.c_double) for x in ['interval_seconds','p50_ms','p95_ms','p99_ms','worst_ms']] + [
         ('host_calls',C.c_uint64*6),('host_ns',C.c_uint64*6),('slow_pipeline_calls',C.c_uint64),
-        ('worst_pipeline_ns',C.c_uint64),('dropped',C.c_uint64), *[(x,C.c_uint64) for x in ['dropped_frames','dropped_host','dropped_events','lost_frame_ns','lost_frame_max_ns']],('width',C.c_uint32),('height',C.c_uint32)]
+        ('worst_pipeline_ns',C.c_uint64),('dropped',C.c_uint64), *[(x,C.c_uint64) for x in ['dropped_frames','dropped_host','dropped_events','lost_frame_ns','lost_frame_max_ns']],('guest_yield_calls',C.c_uint64),('width',C.c_uint32),('height',C.c_uint32)]
 class Event(C.Structure):
     _fields_ = [('monotonic_seconds',C.c_double),('text',C.c_char*512)]
 
@@ -91,6 +91,12 @@ class EfficiencyTests(unittest.TestCase):
         self.lib.tl_em_frame(200000000000);self.lib.tl_em_start();self.lib.tl_em_exclude(False)
         self.lib.tl_em_frame(300000000000);self.lib.tl_em_frame(300020000000)
         s=self.snapshot();self.assertEqual(s.intervals,1);self.assertEqual(s.worst_ms,20)
+    def test_guest_yield_counter_observes_only_included_enabled_spans(self):
+        self.lib.tl_em_guest_yield();self.lib.tl_em_guest_yield()
+        self.lib.tl_em_exclude(True);self.lib.tl_em_guest_yield()
+        self.lib.tl_em_stop();self.lib.tl_em_guest_yield()
+        self.assertEqual(self.snapshot().guest_yield_calls,2)
+
     def test_backward_clock_and_pipeline_batch_call_attribution(self):
         self.lib.tl_em_frame(100);self.lib.tl_em_frame(50)
         self.lib.tl_em_host(4,17000000);self.lib.tl_em_host(5,90000000)

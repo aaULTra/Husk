@@ -35,3 +35,7 @@ Prototype acceptance: compare total GPU time and measured power including scaler
 - Apple command-buffer GPU timing: https://developer.apple.com/documentation/metal/mtlcommandbuffer/gpustarttime
 - Apple MetalFX spatial support: https://developer.apple.com/documentation/metalfx/mtlfxspatialscalerdescriptor/supportsdevice(_:)
 - [Existing worker/upscaling analysis](../08-adaptive-worker-and-upscaling.md)
+
+## Additional M3 route found in CyPort source
+
+A subsequent [direct CyPort source review](13-cyport-source-review.md) found its commit interception/completion-handler GPU timestamp sampler. This demonstrates a concrete technique worth assessing, not a safe drop-in Husk implementation. Safe scope, method chaining, command-buffer lifetime, bounded nonblocking recording, clipped/merged interval semantics and LiveContainer attribution must be designed and reviewed separately. The current Vulkan API observation limitation remains; actual GPU execution is still unavailable in this candidate.

@@ -1,3 +1,4 @@
+#include "husk-tl-efficiency.h"
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /*
  * Files, directories, memory mapping, time, signals, polling, sockets.
@@ -1680,7 +1681,7 @@ static long linux_syscall_impl(long a0, long a1, long a2, long a3, long a4, long
     }
     case 62: { off_t r = lseek((int)a0, (off_t)a1, (int)a2); return r < 0 ? -tl_errno_to_guest(errno) : (long)r; }
     case 101: { int r = nanosleep((const struct timespec *)a0, (struct timespec *)a1); return r < 0 ? -tl_errno_to_guest(errno) : 0; }
-    case 124: sched_yield(); tl_thread_policy_checkpoint(); return 0;
+    case 124: tl_em_guest_yield(); sched_yield(); tl_thread_policy_checkpoint(); return 0;
     case 132: return 0;                                                                 /* sigaltstack: accepted (guest handlers are not installed) */
     /* memory and file status by raw system call (packers and protectors avoid libc): through the same shims as the calls */
     case 222: { void *r = b_mmap((void *)a0, (size_t)a1, (int)a2, (int)a3, (int)a4, a5); return r == (void *)-1 ? -*tl_guest_errno_ptr() : (long)r; }

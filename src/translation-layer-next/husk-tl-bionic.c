@@ -1,3 +1,4 @@
+#include "husk-tl-efficiency.h"
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /*
  * The core of the bionic shim: how names are looked up, how errno and signal
@@ -573,7 +574,7 @@ static int bionic_gettid(void)
 }
 
 static int bionic_getpriority(int which, int who) { (void)which; (void)who; return 0; }
-static int bionic_sched_yield(void) { int r = sched_yield(); tl_thread_policy_checkpoint(); return r; }
+static int bionic_sched_yield(void) { tl_em_guest_yield(); int r = sched_yield(); tl_thread_policy_checkpoint(); return r; }
 static int bionic_setpriority(int which, int who, int prio) { (void)which; (void)who; (void)prio; return 0; }
 
 static int bionic_sched_getaffinity(int pid, size_t size, void *mask)

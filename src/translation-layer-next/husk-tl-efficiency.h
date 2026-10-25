@@ -12,6 +12,7 @@ typedef struct {
     uint64_t host_calls[TL_EM_STAGES], host_ns[TL_EM_STAGES];
     uint64_t slow_pipeline_calls, worst_pipeline_ns, dropped;
     uint64_t dropped_frames, dropped_host, dropped_events, lost_frame_ns, lost_frame_max_ns;
+    uint64_t guest_yield_calls;
     uint32_t width, height;
 } tl_em_stats;
 typedef struct { double monotonic_seconds; char text[512]; } tl_em_event;
@@ -19,6 +20,7 @@ void tl_em_start(void);
 void tl_em_stop(void);
 void tl_em_exclude(bool excluded);
 void tl_em_frame(int64_t monotonic_ns);
+void tl_em_guest_yield(void);
 void tl_em_host(unsigned stage, uint64_t ns);
 void tl_em_size(uint32_t width, uint32_t height);
 void tl_em_log(const char *line);

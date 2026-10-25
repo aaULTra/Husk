@@ -24,7 +24,7 @@ static aggregate total_stats, window_stats;
 static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
 static atomic_bool enabled, frame_excluded;
 static atomic_uint_fast64_t dropped_host, dropped_events, dropped_frames, lost_ns, lost_max;
-static atomic_uint_fast64_t session, epoch;
+static atomic_uint_fast64_t session, epoch, guest_yields;
 /* Present producers never take the reporting mutex or build a histogram.
  * One serialized enqueue writer, one reporting consumer. Release/acquire cursor
  * publication keeps slot contents valid without waiting on the render path. */
@@ -58,7 +58,7 @@ void tl_em_start(void) {
     drain_frames();
     atomic_store(&frame_excluded, true);
     atomic_store(&dropped_host, 0); atomic_store(&dropped_events, 0); atomic_store(&dropped_frames, 0);
-    atomic_store(&lost_ns, 0); atomic_store(&lost_max, 0);
+    atomic_store(&lost_ns, 0); atomic_store(&lost_max, 0); atomic_store(&guest_yields, 0);
     atomic_store(&enabled, true);
     pthread_mutex_unlock(&mu);
 }
@@ -125,6 +125,11 @@ static void drain_frames(void) {
     }
     atomic_store_explicit(&frame_read, read, memory_order_release);
 }
+/* M8 observation only: no backoff, clocks, sleeps or thread-policy changes. */
+void tl_em_guest_yield(void) {
+    if (atomic_load_explicit(&enabled, memory_order_relaxed) && !atomic_load(&frame_excluded))
+        atomic_fetch_add_explicit(&guest_yields, 1, memory_order_relaxed);
+}
 void tl_em_host(unsigned stage, uint64_t ns) {
     if (stage >= TL_EM_STAGES || !enter(&dropped_host)) return;
     if (!excluded) {
@@ -175,6 +180,7 @@ void tl_em_snapshot(bool total, tl_em_stats *out) {
     copy.s.dropped_host = atomic_load(&dropped_host); copy.s.dropped_events = atomic_load(&dropped_events);
     copy.s.lost_frame_ns = atomic_load(&lost_ns); copy.s.lost_frame_max_ns = atomic_load(&lost_max);
     copy.s.dropped = copy.s.dropped_frames + copy.s.dropped_host + copy.s.dropped_events;
+    copy.s.guest_yield_calls = atomic_load(&guest_yields);
     copy.s.width = width; copy.s.height = height;
     pthread_mutex_unlock(&mu);
     copy.s.p50_ms = percentile(&copy, 50); copy.s.p95_ms = percentile(&copy, 95); copy.s.p99_ms = percentile(&copy, 99);
