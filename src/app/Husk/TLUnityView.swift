@@ -872,6 +872,7 @@ struct TLCocosAttemptView: View {
     /// Where the player has put the pad's controls in this game, and whether they are moving them now.
     @State private var padLayout = PadLayout()
     @State private var efficiencySheet = false
+    @State private var chromeClearance = GameChromeClearance()
     @State private var editingPad = false
     @State private var padSelected: String?
     /// This game's own settings (TLAppSettings), read once as the screen opens.
@@ -963,6 +964,9 @@ struct TLCocosAttemptView: View {
                         Spacer(minLength: 0)
                     }
                 }
+                .padding(.top, chromeClearance.top)
+                .padding(.leading, chromeClearance.leading)
+                .padding(.trailing, chromeClearance.trailing)
             }
             if hint {
                 VStack {
@@ -978,6 +982,7 @@ struct TLCocosAttemptView: View {
                 .transition(.opacity)
             }
         }
+        .background(GameChromeInsetsReader { chromeClearance = $0 }.allowsHitTesting(false))
         .statusBarHidden(true)
         .huskHideSystemOverlays()
         // Swipes near the edges are the game's.

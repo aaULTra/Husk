@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: M1 refinements, partial M2 diagnostics, M4 comparison and M8 counts built; 104 checks and IPA pass; device benefit/overhead gates open.
+Updated: 2026-10-25. Status: 104-check diagnostics candidate built; UI-01 overlay-clearance correction pending Apple build/device verification; benefit/overhead gates open.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -81,6 +81,7 @@ CPU time/activity is process-scoped with explicit normalisation. Track footprint
 | GAP-04 | E-M4-003 JSON archived and audited; pasted attempt log available; earlier run raw logs still unavailable | Use current JSON audit; preserve provenance and earlier gaps |
 | MON-01 | Schema-v1 loss defect confirmed; schema-v2 bounded independent frame ring and loss categories implemented/tested | M1: Apple build then real-device coverage/overhead acceptance remains open |
 | MON-02 | Schema-v2 null/unresolved flat-battery reporting implemented with sample count/span/change; API freshness still unknown | M1: verify against system battery indicator; no watts or efficiency claim |
+| UI-01 | User screenshot: native game toolbar overlaps visible iPadOS/LiveContainer status controls at top left/right | UI overlay clearance correction implemented; Apple build and physical screenshot/gesture/lifecycle verification pending |
 | COMPAT-01 | isnan/JNI/optional OBB/ANGLE warnings not demonstrated performance causes | Investigate only with malfunction or traceable cost |
 
 ## 6. Next actions and task handover
@@ -190,3 +191,11 @@ Next physical sequence: install final IPA preserving data/cache; fully restart; 
 After M1 evidence: dedicated M2 first/repeat/restart test with identification ON and other experiments OFF; dedicated M4 dual/engine-only A/B with identification/profiling OFF. M3: choose accessible Instruments trace or design scoped GPU buffer sampling using the reviewed CyPort mechanism; current monitor still cannot claim GPU execution/power. M7 Adaptive benefit and M6 async require their own controlled tests. M9 spatial prototype can be the next separate rendering feature after trustworthy GPU evidence and a safe interop design, ahead of lower-value research if justified. MetalFX support capability alone is not implementation or benefit.
 
 Do not mark M1 device acceptance, M2 full identification/cache efficacy, M3 GPU/power or any energy-saving optimisation complete from these checks. Existing failed/inconclusive experiments and both pipeline/non-pipeline bugs remain tracked.
+
+### UI-01 / M1 / M6 — hosted status/tool bar overlap
+
+User screenshot shows Husk controls and iPadOS status items occupying the same top row. Existing .statusBarHidden(true) / persistent overlay preferences are not sufficient for the observed hosted state. Candidate adds an event-driven reader of the actual attached window's safe area/status frame, converted to overlay-local coordinates. Extra top/side clearance applies only to Husk's toolbar/log overlay. A 24-point window-top reserve covers the LiveContainer iPad case where guest APIs claim hidden/zero-inset status chrome. Already-safe layouts avoid double padding; rotated/notched geometry uses current insets. No polling, global window selection, private API or status-bar forcing is added.
+
+Sequence: UI-01 usability/lifecycle correction supports M1 diagnostic access and M6 sizing correctness; it does not replace the ongoing M1 test or any M2–M9 experiment. The native game view, selected launch size, swapchain, graphics, FPS, worker policy and telemetry are untouched. User may finish the currently installed 6c4fef3 test before upgrading; associate its results with that source SHA.
+
+Validation: Foundation geometry cases cover hosted zero-inset fallback, visible status area, already-inset/no-double-padding, standalone hidden status, side safe areas, floating placement, empty geometry and converted scaled coordinates. Swift checks and clean iOS build/package are required. Actual iPad/LiveContainer screenshot acceptance remains pending: show/hide toolbar, open/close diagnostics, invoke/dismiss Control/Notification Center, resume and supported window/rotation transitions; verify no persistent overlap, clickable controls and retained 2128 × 1600 output/input/audio. System panels retain their standard ability to cover the app while open. No performance or energy claim.
