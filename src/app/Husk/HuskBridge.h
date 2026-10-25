@@ -140,3 +140,5 @@ static inline NSString * _Nullable husk_livecontainer_host_scheme(void) {
 #endif
 
 #endif /* HUSK_BRIDGE_H */
+
+#include "../../translation-layer-next/husk-tl-spatial.h"

@@ -60,6 +60,7 @@ jobs:
           python3 tests/translation-layer/test_render_inventory.py -v
           python3 tests/translation-layer/test_efficiency_analysis.py -v
           python3 tests/translation-layer/test_roadmap_progress.py -v
+          python3 tests/translation-layer/test_spatial.py -v
           {
             echo "## Husk IPA source"
             echo "Commit: $(git rev-parse HEAD)"
@@ -83,6 +84,13 @@ jobs:
             --output build/Husk-3.0-base.ipa
           # Verifies the SHA256 and stages dependencies only, not the donor app executable.
           python3 scripts/stage_graphics_build.py build/Husk-3.0-base.ipa
+
+      - name: Build separate pinned MetalFX experimental driver
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/logs
+          bash scripts/build_spatial_moltenvk_ios.sh 2>&1 | tee build/logs/spatial-driver.log
 
       - name: Install Rust iOS target
         shell: bash

@@ -31,6 +31,7 @@
 #include "husk-tl-pipeline-feedback.h"
 #include "husk-tl-gpu-timing.h"
 #include "husk-tl-render-inventory.h"
+#include "husk-tl-spatial.h"
 
 void *tl_nwindow_native(void *window);
 int tl_nwindow_width(void *window);
@@ -76,6 +77,14 @@ void tl_vk_configure(const char *path, const char *frame_dir, int frame_every)
     if (frame_dir) { snprintf(V.frame_dir, sizeof(V.frame_dir), "%s", frame_dir); V.frame_every = frame_every > 0 ? frame_every : 60; }
 }
 
+static bool spatial_requested;
+static atomic_bool spatial_prepared;
+static float spatial_touch_x=1.0f,spatial_touch_y=1.0f;
+void husk_ue4_set_spatial_upscaling(bool enabled){spatial_requested=enabled;}
+bool tl_vk_spatial_active(void){return atomic_load_explicit(&spatial_prepared,memory_order_acquire);}
+void tl_vk_spatial_touch(float *x,float *y){
+    if(tl_vk_spatial_active()){if(x)*x*=spatial_touch_x;if(y)*y*=spatial_touch_y;}
+}
 static int submission_mode;
 void husk_ue4_set_submission_mode(int mode) { submission_mode = mode == 1 ? 1 : 0; }
 static void vk_load(void)
@@ -90,6 +99,16 @@ static void vk_load(void)
     V.probe_frames = probe && !strcmp(probe, "1");
     if (submission_mode == 1) setenv("MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", "0", 1);
     V.lib = V.have_path ? dlopen(V.path, RTLD_NOW | RTLD_LOCAL) : RTLD_DEFAULT;
+    if(!V.lib&&V.have_path){
+        const char *suffix=strstr(V.path,"HuskMoltenVK.framework/HuskMoltenVK");
+        if(suffix&&!strcmp(suffix,"HuskMoltenVK.framework/HuskMoltenVK")){
+            char original[sizeof(V.path)];
+            snprintf(original,sizeof(original),"%.*sMoltenVK.framework/MoltenVK",(int)(suffix-V.path),V.path);
+            V.lib=dlopen(original,RTLD_NOW|RTLD_LOCAL);
+            if(V.lib)snprintf(V.path,sizeof(V.path),"%s",original);
+            tl_log_line("[M9-SPATIAL] experimental driver load failed; original driver fallback %s",V.lib?"loaded":"unavailable");
+        }
+    }
     typedef void (*version_fn)(char *, uint32_t, char *, uint32_t);
     version_fn versions = V.lib ? (version_fn)dlsym(V.lib, "vkGetVersionStringsMVK") : NULL;
     char mvk_version[64] = {0}, vulkan_version[64] = {0};
@@ -116,6 +135,33 @@ static void vk_load(void)
 }
 static bool vk_ready(void) { pthread_once(&V.once, vk_load); return V.gipa != NULL; }
 bool tl_vk_available(void) { return V.have_path && vk_ready(); }
+void tl_vk_spatial_snapshot(tl_spatial_stats *out){
+    if(!out)return;
+    *out=(tl_spatial_stats){.version=1,.size=sizeof(*out)};
+    if(V.lib){
+        tl_spatial_stats_fn read=(tl_spatial_stats_fn)dlsym(V.lib,"vkHuskSpatialSnapshot");
+        if(read&&!read(out))*out=(tl_spatial_stats){.version=1,.size=sizeof(*out)};
+    }
+}
+bool tl_vk_spatial_prepare(const char *project,int *width,int *height){
+    if(!spatial_requested)return false;
+    tl_spatial_config config;
+    if(!project||strcmp(project,"Dungeons")||!tl_ue4_sharp_graphics_enabled()||
+       !width||!height||!tl_spatial_dimensions(*width,*height,80,&config)||!vk_ready()){
+        tl_log_line("[M9-SPATIAL] preflight unavailable; original dimensions retained");return false;
+    }
+    tl_spatial_configure_fn configure=(tl_spatial_configure_fn)dlsym(V.lib,"vkHuskSpatialConfigure");
+    if(!configure||!configure(&config)){
+        tl_log_line("[M9-SPATIAL] driver/scaler preflight declined; original dimensions retained");return false;
+    }
+    spatial_touch_x=(float)config.input_width/config.output_width;
+    spatial_touch_y=(float)config.input_height/config.output_height;
+    *width=(int)config.input_width;*height=(int)config.input_height;
+    atomic_store_explicit(&spatial_prepared,true,memory_order_release);
+    tl_log_line("[M9-SPATIAL] configured experimental input %ux%u -> output %ux%u; 80%% dimension budget; actual encoding/quality/energy pending; restart with option OFF restores baseline",
+                config.input_width,config.input_height,config.output_width,config.output_height);
+    return true;
+}
 
 /* MoltenVK's own list of instance extensions */
 static vk_ext_props *mvk_instance_exts(uint32_t *n)
@@ -456,7 +502,7 @@ static int w_vkCreateSwapchainKHR(void *device, const void *ci, const void *allo
     tl_log_line("vulkan: vkCreateSwapchainKHR %ux%u images %u format %u colorspace %u usage %#x compositeAlpha %u presentMode %u -> %d", w, h, minimg, fmt, cs, usage, alpha, mode, r);
     if (r == VK_SUCCESS) tl_em_size(w, h);
     if (r == VK_SUCCESS && tl_ue4_sharp_graphics_enabled())
-        tl_log_line("ue4 graphics: actual presentation buffer %ux%u (inspect this size to verify the resolution change; not a measurement of internal 3D resolution)", w, h);
+        tl_log_line("ue4 graphics: actual guest swapchain buffer %ux%u (M9 experiment may upscale to a separate drawable; not a measurement of internal 3D resolution)", w, h);
     /* MoltenVK changes the layer from this thread, which has no run loop: make sure the changes are committed rather than waiting for a transaction nothing will flush. */
     [CATransaction flush];
     log_layer_state(g_swapchain_layer, "after swapchain");

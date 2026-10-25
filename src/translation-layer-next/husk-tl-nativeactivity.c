@@ -21,6 +21,7 @@
 #include "husk-tl-thread-policy.h"
 #include "husk-tl-render-inventory.h"
 #include "husk-tl-pipeline-feedback.h"
+#include "husk-tl-spatial.h"
 #include "husk-tl-jni.h"
 #include "husk-tl-internal.h"
 #include "husk-tl-ld.h"
@@ -28,6 +29,7 @@
 
 void tl_jni_hle_install(void);
 void tl_hle_configure(const char *pkg, const char *apk, const char *data, int w, int h);
+void tl_hle_set_dimensions(int w,int h);
 void tl_hle_set_activity(jobj *a);
 jobj *tl_hle_assets(void);
 void tl_set_data_dir(const char *dir);
@@ -318,6 +320,7 @@ static void drop_empty_saves(const char *dir, int depth)
 bool tl_na_start(const tl_ga_config *cfg)
 {
     N.cfg = *cfg;
+    cfg = &N.cfg; /* Owned effective launch dimensions; original caller is immutable. */
     snprintf(N.apk, sizeof(N.apk), "%s", cfg->apk_path);
     snprintf(N.data, sizeof(N.data), "%s", cfg->data_dir);
     snprintf(N.pkg, sizeof(N.pkg), "%s", cfg->package_name);
@@ -359,9 +362,13 @@ bool tl_na_start(const tl_ga_config *cfg)
     tl_thread_policy_activate(project);
     tl_ri_activate(project);
     tl_pf_activate(project);
+    if(tl_vk_spatial_prepare(project,&N.cfg.width,&N.cfg.height)){
+        tl_nwindow_configure(cfg->width,cfg->height,cfg->metal_layer);
+        tl_hle_set_dimensions(cfg->width,cfg->height);
+    }
     if (project && !strcmp(project, "Dungeons") && tl_ue4_sharp_graphics_enabled()) {
         char cache_dir[768];
-        snprintf(cache_dir, sizeof(cache_dir), "%s/husk-pipeline-cache-v1", N.internal_dir);
+        snprintf(cache_dir, sizeof(cache_dir), "%s/%s", N.internal_dir, tl_vk_spatial_active() ? "husk-pipeline-cache-spatial-v1" : "husk-pipeline-cache-v1");
         tl_pc_configure(cache_dir);
     }
     if (!tl_ue4_graphics_prepare(N.internal_dir, N.ext_dir, project))

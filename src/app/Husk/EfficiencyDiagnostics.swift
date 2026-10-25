@@ -71,7 +71,7 @@ final class EfficiencyDiagnostics: ObservableObject {
             $0.withMemoryRebound(to: CChar.self, capacity: machineSize) { String(cString: $0) }
         }
         var metalCapabilities: [String: Any] = ["gpu_execution_measurement": gpuSampling ? "M3-A opt-in sampled command-buffer GPU timestamps; device validation pending" : "UNAVAILABLE: GPU sampling disabled",
-                                                 "metalfx_integration": "M9 research; no upscaling implemented"]
+                                                 "metalfx_integration": "M9 default-off experimental spatial path; see spatial_upscaling actual driver counters; device/benefit unverified"]
         if let metalDevice = MTLCreateSystemDefaultDevice() {
             metalCapabilities["device_name"] = metalDevice.name
             #if canImport(MetalFX)
@@ -273,7 +273,21 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "observed_legacy_render_areas": s.observed_render_areas, "dropped_observations": s.dropped,
                 "groups_since_launch": rows, "plan_ids": ["M9", "GAP-03"],
                 "scope": "Requested base fields/legacy render areas since launch; not actual scene/HUD pixels, executed GPU passes, texture identity or replay state; swapchain images and newer renderpass paths may be absent",
-                "metalfx_integration": "not implemented", "benefit_validation": "unverified"]
+                "metalfx_integration": "separate opt-in prototype; requested inventory does not prove internal scene resolution", "benefit_validation": "unverified"]
+    }
+    private func spatialReport() -> [String: Any] {
+        var s = tl_spatial_stats()
+        tl_vk_spatial_snapshot(&s)
+        var build: Any = "UNAVAILABLE: experimental driver absent"
+        if let root = Bundle.main.privateFrameworksPath,
+           let data = try? Data(contentsOf: URL(fileURLWithPath: root + "/HuskMoltenVK.framework/HuskSpatialBuild.json")),
+           let object = try? JSONSerialization.jsonObject(with: data) { build = object }
+        return ["driver_build": build, "plan_ids": ["M9", "M3"], "scope": "MEASURED driver configuration/encode calls; successful encode is not proof of displayed quality or energy benefit",
+                "configured": s.configured != 0, "live_images": s.live_images,
+                "input_width": s.input_width, "input_height": s.input_height,
+                "output_width": s.output_width, "output_height": s.output_height,
+                "images_created": s.images_created, "encoded_calls": s.encoded, "failures": s.failures,
+                "patch": "M9-SPATIAL-v1", "energy_benefit": "UNVERIFIED"]
     }
     private func pipelineFeedbackReport() -> [String: Any] {
         var s = tl_pf_stats(); tl_pf_snapshot(&s)
@@ -314,8 +328,8 @@ final class EfficiencyDiagnostics: ObservableObject {
         observers.forEach { NotificationCenter.default.removeObserver($0) }; observers = []
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
-        stoppedReport = ["schema_version": 5, "metadata": metadata, "duration_seconds": now - origin,
-                         "summary": stats(total), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
+        stoppedReport = ["schema_version": 6, "metadata": metadata, "duration_seconds": now - origin,
+                         "summary": stats(total), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
                          "battery_included_sample_count": battery.sampleCount,
@@ -361,6 +375,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 let thermal = Set(rows.compactMap { ($0["environment"] as? [String: Any])?["thermal_classification"] as? Int }).sorted()
                 let feedback = report["pipeline_feedback_request"] as? [String: Any] ?? [:]
                 let inventory = report["render_inventory"] as? [String: Any] ?? [:]
+                let spatial = report["spatial_upscaling"] as? [String: Any] ?? [:]
                 let worker = report["worker_policy"] as? [String: Any] ?? [:]
                 let gpu = report["gpu_sampling"] as? [String: Any] ?? [:]
                 let text = """
@@ -391,7 +406,9 @@ final class EfficiencyDiagnostics: ObservableObject {
                 M2 driver feedback request active/devices/injected: \(feedback["active"] ?? false) / \(feedback["enabled_devices"] ?? 0) / \(feedback["injected_pipeline_infos"] ?? 0)
                 Stage cache feedback is separate from full pipeline reuse; no guaranteed compilation avoidance.
                 M9 render inventory active/images/legacy areas: \(inventory["active"] ?? false) / \(inventory["observed_image_creations"] ?? 0) / \(inventory["observed_legacy_render_areas"] ?? 0)
-                Render inventory is partial requested state; actual scene resolution and MetalFX integration remain unverified.
+                Render inventory is partial requested state; internal scene resolution remains unverified.
+                M9 spatial configured: \(spatial["configured"] ?? false); input \(spatial["input_width"] ?? 0) × \(spatial["input_height"] ?? 0) -> output \(spatial["output_width"] ?? 0) × \(spatial["output_height"] ?? 0)
+                M9 spatial encode calls / failures: \(spatial["encoded_calls"] ?? 0) / \(spatial["failures"] ?? 0); successful calls do not prove visual/energy benefit.
                 M7 worker policy requested/active: \(worker["requested_mode"] ?? 0) / \(worker["active_mode"] ?? 0)
                 Adaptive requested / reason: \(worker["trial_requested"] ?? false) / \(worker["waiting_reason"] ?? "UNAVAILABLE")
                 Admissions/rollbacks/caps/restores since launch: \(worker["admissions_since_launch"] ?? 0) / \(worker["rollback_requests_since_launch"] ?? 0) / \(worker["caps_applied_since_launch"] ?? 0) / \(worker["restores_applied_since_launch"] ?? 0)

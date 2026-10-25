@@ -1120,6 +1120,8 @@ static const tl_jhle k_hle[] = {
     { NULL, NULL, NULL, NULL }
 };
 
+void tl_hle_set_dimensions(int w,int h) { H.width=w;H.height=h; }
+
 void tl_hle_configure(const char *pkg, const char *apk, const char *data, int w, int h)
 {
     snprintf(H.pkg, sizeof(H.pkg), "%s", pkg);

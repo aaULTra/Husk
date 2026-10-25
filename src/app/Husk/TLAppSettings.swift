@@ -125,6 +125,7 @@ struct TLAppSettings: Codable, Equatable {
     var engineOnlyLimiter = false
     var pipelineIdentification = false
     var pipelineFeedback = false
+    var spatialUpscaling = false
     var renderTargetInventory = false
     var driverPhaseProfiling = false
     var workerScheduling: WorkerScheduling = .balanced
@@ -208,6 +209,7 @@ struct TLAppSettings: Codable, Equatable {
         engineOnlyLimiter = try c.decodeIfPresent(Bool.self, forKey: .engineOnlyLimiter) ?? false
         pipelineIdentification = try c.decodeIfPresent(Bool.self, forKey: .pipelineIdentification) ?? false
         pipelineFeedback = try c.decodeIfPresent(Bool.self, forKey: .pipelineFeedback) ?? false
+        spatialUpscaling = try c.decodeIfPresent(Bool.self, forKey: .spatialUpscaling) ?? false
         renderTargetInventory = try c.decodeIfPresent(Bool.self, forKey: .renderTargetInventory) ?? false
         driverPhaseProfiling = try c.decodeIfPresent(Bool.self, forKey: .driverPhaseProfiling) ?? false
         workerScheduling = try c.decodeIfPresent(WorkerScheduling.self, forKey: .workerScheduling) ?? .balanced
@@ -322,6 +324,8 @@ struct TLAppSettingsView: View {
                     Picker("Vulkan Submission", selection: $settings.vulkanSubmission) {
                         ForEach(TLAppSettings.VulkanSubmission.allCases) { Text($0.title).tag($0) }
                     }
+                    Toggle("MetalFX Spatial · 80% Input (Experimental)", isOn: $settings.spatialUpscaling)
+                    Text("Renders fewer pixels and upscales to your selected output. Includes HUD/text. Requires supported hardware and the experimental driver; fully restart. Visual quality, stability and energy benefit need testing. Off restores the original driver and rendering.").font(.caption)
                     Toggle("Engine-only 60 FPS Limiter (Diagnostic)", isOn: $settings.engineOnlyLimiter)
                     Text("Off keeps the existing engine + host limiter. On requests engine-only pacing at 60 FPS; verify actual cadence in a short test. Thermal fallback caps remain active. Fully restart after changes.").font(.caption)
                     Toggle("Pipeline Identification (Diagnostic)", isOn: $settings.pipelineIdentification)
