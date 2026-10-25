@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: M3-A sampler/M2 group-export IPA built with 119 passing checks; physical validation pending; M9-A input/output design 2/4 gates complete.
+Updated: 2026-10-25. Status: AUDIT-BATCH-2 IPA built with 137 passing checks; overall weighted roadmap approximately 21% (first baseline); device/energy acceptance pending while iPad unavailable.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -50,7 +50,7 @@ Inspection basis: branch head 3c2d52c, PR metadata, graphics/settings, Vulkan wr
 | SUBMIT-01 | Async submission option | Implemented, experimental; Driver Default retained | No controlled benefit evidence | Pending independent A/B |
 | PROF-01 | Detailed MoltenVK profiling | Implemented; strict 1.4.2/private API 43, 1152-byte guard, optional/off | Earlier report contains driver activity data | Adds overhead; no genuine GPU/power measurement |
 | MEAS-01 | Efficiency Test sessions/export | Implementation candidate: bounded aggregation, exclusions, process/API sampling, Markdown/JSON export | Previous build passed 92 checks; schema-v2 ring/loss/reporting/plan tags now implemented with portable tests; final 104-check Apple build passed; device coverage/overhead checks pending | M1 remains open; monitoring overhead and energy unmeasured |
-| GPU-01 | Genuine GPU execution timing | Opt-in candidate: known MoltenVK queue factory adapter and bounded completed-buffer GPU timestamps, schema-v3 raw records/overlap union | Apple adapter/build and M4 correctness/coverage/overhead pending; no per-frame attribution | M3-A physical gates open; watts remain external |
+| GPU-01 | Genuine GPU execution timing | Opt-in candidate: known MoltenVK queue factory adapter and bounded completed-buffer GPU timestamps, schema-v3 raw records/overlap union | Apple checks/build passed; M4 correctness/coverage/overhead pending; no per-frame attribution | M3-A physical gates open; watts remain external |
 | UPSCALE-01 | MetalFX spatial upscaling | M4 spatial support confirmed; lower internal resolution -> protected 2128 × 1600 output is the agreed goal; no scaler integrated | Visual quality and net cost unverified | Prepare interop now alongside M3; separate prototype after GPU evidence and safe design |
 | RES-01 | Manual resolution controls | Implemented 65–100%, with heuristics | Two different presentation runs reported | Dynamic GPU-driven resolution remains unimplemented |
 
@@ -292,3 +292,13 @@ User has no iPad available and authorises continued engineering. [Increment desi
 M7 audit clarifies that current Balanced runs do not exercise additional Adaptive caps; Adaptive admission also requires >=59 FPS and p95 <=20.5 ms for >=20 healthy seconds, so earlier approximately 57 FPS / 20.9 ms windows would often wait. This is a candidate explanation for an untested treatment, not proof of absent E-core use or the cause of heat. New observations distinguish controller requests from actual last self-queried QoS and errors, without live-thread/core-residency/energy claims.
 
 M9 inventory records requested creation/legacy render areas only; actual scene input and safe scaler integration remain open. Initial full progress ledger: [roadmap-v1.json](docs/performance/progress/roadmap-v1.json); run scripts/roadmap_progress.py for reproducible scoring. Before final Apple validation, M7-observer and M9-inventory build gates remain pending. Local named suites pass 134 checks; three Apple-only tests remain for CI (137 total). No additional physical test is requested while the iPad is unavailable. Preserve all open measurement/energy/Adaptive/MetalFX/Duo gates and inspect any existing session files before requesting further runs.
+
+### AUDIT-BATCH-2 final build, first overall score and deferred hardware handover
+
+Source `1950280348c4030aaecadf17d3a68444b6381f86`, packaged identity with documented -dirty suffix. [Run 40219623804](https://github.com/aaULTra/Husk/actions/runs/40219623804): **137 checks passed**, clean iOS compilation and IPA packaging. [IPA artifact](https://github.com/aaULTra/Husk/actions/runs/40219623804/artifacts/12609396972), archive SHA256 bfbdd8767ec2cb07274911177350bf8985e4486403166d1544eec6dee0948187.
+
+[Filled build handover and deferred device instructions](docs/performance/builds/1950280348c4030aaecadf17d3a68444b6381f86.md). Overall weighted permanent-plan completion is **approximately 21%** (exact gate arithmetic 21.17%, HUSK-ROADMAP-v1 / whole-milestones-1), the first scored baseline rather than a claimed change from a previous overall percentage. [Immutable gate snapshot](docs/performance/progress/1950280348c4030aaecadf17d3a68444b6381f86.ledger.json) and [calculated contribution breakdown](docs/performance/progress/1950280348c4030aaecadf17d3a68444b6381f86.score.json). M4-only normalised scope approximately 24%; Duo 0%. These are completion scores, not power reductions.
+
+Increment implementation/build: M7 observation W1–W3 3/3 (100%), M9 inventory R1–R3 3/3 (100%), offline tools A1–A3 3/3 (100%). M7/M9 increment device gates 0/3 and benefit gates 0/2 each; actual MetalFX input/synchronisation/game scaler and all energy evidence remain open. M9-A actual-input/safe-design work remains 2/4. Largest remaining weighted contributions are M3 13.95 points, M9 10.20 and M10 10.00. No hardware gate was passed by this build.
+
+User has no iPad now: **no current device action required**. Save this candidate for later. Inspect any existing GPU-BATCH-1 exports first; request only a focused combined capture if needed after access returns. Do not automatically request another long baseline or change worker/limiter/submission settings. All previous unresolved experiments, negative/inconclusive feedback and the protected 2128 × 1600/60 FPS reference remain tracked.

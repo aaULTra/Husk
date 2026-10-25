@@ -1,0 +1,904 @@
+{
+  "model": "HUSK-ROADMAP-v1",
+  "gate_version": "whole-milestones-1",
+  "updated": "2026-10-25",
+  "scope": "M0-M10; M4 platform plus explicitly reserved future Duo; first scored baseline",
+  "milestones": [
+    {
+      "id": "M0",
+      "name": "Durable handover",
+      "weight": 2,
+      "documentation": [
+        {
+          "id": "M0-DOC1",
+          "criterion": "Instructions/master plan saved and user-approved",
+          "status": "passed",
+          "evidence": [
+            "AGENTS.md",
+            "PROJECT_PLAN.md"
+          ],
+          "remaining": null
+        },
+        {
+          "id": "M0-DOC2",
+          "criterion": "Evidence/history/test protocols retained",
+          "status": "passed",
+          "evidence": [
+            "docs/performance/EVIDENCE.md",
+            "docs/performance/DECISIONS.md",
+            "docs/performance/TEST_PROTOCOL.md"
+          ],
+          "remaining": null
+        },
+        {
+          "id": "M0-DOC3",
+          "criterion": "Required IPA progress/device handover contract recorded",
+          "status": "passed",
+          "evidence": [
+            "docs/performance/IPA_HANDOVER.md",
+            "docs/performance/ROADMAP_PROGRESS.md"
+          ],
+          "remaining": null
+        }
+      ]
+    },
+    {
+      "id": "M1",
+      "name": "Lightweight measurement",
+      "weight": 12,
+      "tracks": {
+        "I": [
+          {
+            "id": "M1-I1",
+            "criterion": "Optional bounded CPU/memory/battery/thermal/frame collection and export implemented",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M1-I2",
+            "criterion": "Exclusions, independent frame ring and truthful loss/battery labels implemented",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M1-I3",
+            "criterion": "Required tests and clean iOS packaging for measurement foundation",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          }
+        ],
+        "D": [
+          {
+            "id": "M1-D1",
+            "criterion": "Real-device exports and window/summary arithmetic reconcile",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/runs/E-M4-004.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M1-D2",
+            "criterion": "Frame/host loss separation observed without mixed-loss anchor reset",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/runs/E-M4-004.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M1-D3",
+            "criterion": "Full relevant panel/window/lifecycle/input/audio regression matrix",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Status-bar fix is user-confirmed but full matrix is open"
+          },
+          {
+            "id": "M1-D4",
+            "criterion": "CPU/memory/battery readings calibrated and long-session coverage validated",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Battery freshness, sample scope and coverage require controlled validation"
+          }
+        ],
+        "E": [
+          {
+            "id": "M1-E1",
+            "criterion": "Matched monitoring-off/on overhead is acceptable",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No controlled overhead result"
+          },
+          {
+            "id": "M1-E2",
+            "criterion": "Representative repeatable baseline with quantified measurement limits",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Current runs useful but not controlled repeat baseline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M2",
+      "name": "Pipeline identity/cache evidence",
+      "weight": 10,
+      "tracks": {
+        "I": [
+          {
+            "id": "M2-I1",
+            "criterion": "Bounded stable shader/state groups and explicit incomplete-state semantics",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M2-I2",
+            "criterion": "Passive valid creation feedback path without inferred cache hits",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M2-I3",
+            "criterion": "Collision-resolved group costs and required executable/build checks",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M2-I4",
+            "criterion": "State coverage sufficient to distinguish the identified expensive full variants",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Current groups omit layout/render-pass/fixed state; scope must be justified using device variants"
+          }
+        ],
+        "D": [
+          {
+            "id": "M2-D1",
+            "criterion": "Same expensive event first/repeat/restart identifiers collected",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device exports pending"
+          },
+          {
+            "id": "M2-D2",
+            "criterion": "Actual supported feedback and cache reuse evidence assessed",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Accepted seed is not a hit"
+          },
+          {
+            "id": "M2-D3",
+            "criterion": "Expensive groups correlated with gameplay hitches using trustworthy timestamps",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Partial observations pending"
+          }
+        ],
+        "E": [
+          {
+            "id": "M2-E1",
+            "criterion": "Cache-effectiveness decision established with first/repeat/restart evidence",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Persistence mechanism works; actual reuse benefit unknown"
+          },
+          {
+            "id": "M2-E2",
+            "criterion": "Targeted diagnostic/implementation overhead acceptable",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No matched diagnostic cost result"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M3",
+      "name": "GPU/power/temperature baseline",
+      "weight": 18,
+      "tracks": {
+        "I": [
+          {
+            "id": "M3-I1",
+            "criterion": "Scoped GPU-buffer sampler candidate and clean Apple build",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M3-I2",
+            "criterion": "Explicit clock/coverage/drop/callback semantics in exports",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M3-I3",
+            "criterion": "Repeatable offline audit/analysis of export arithmetic and attribution limits",
+            "status": "passed",
+            "evidence": [
+              "scripts/analyse_efficiency.py",
+              "tests/translation-layer/test_efficiency_analysis.py"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M3-I4",
+            "criterion": "Practical supported power/temperature capture and attribution workflow established for this host",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Verify Instruments/host attachment and physical measurement availability; documentation alone is insufficient"
+          }
+        ],
+        "D": [
+          {
+            "id": "M3-D1",
+            "criterion": "Actual M4 GPU timestamps, queue attribution and exclusions validated",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No new sampler export supplied"
+          },
+          {
+            "id": "M3-D2",
+            "criterion": "Representative CPU/GPU/presentation attribution with coverage limits",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "New GPU data absent"
+          },
+          {
+            "id": "M3-D3",
+            "criterion": "Practical unplugged power capture attributed appropriately",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "External measurement pending"
+          },
+          {
+            "id": "M3-D4",
+            "criterion": "Numerical surface/ambient temperature baseline captured",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Subjective warmth is not numerical temperature"
+          }
+        ],
+        "E": [
+          {
+            "id": "M3-E1",
+            "criterion": "Repeatable useful GPU/work evidence guides a concrete intervention",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Sampler hardware validation pending"
+          },
+          {
+            "id": "M3-E2",
+            "criterion": "Electrical energy/temperature baseline and instrumentation cost quantified",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Watts/temperature unmeasured"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M4",
+      "name": "Independent frame pacing",
+      "weight": 6,
+      "tracks": {
+        "I": [
+          {
+            "id": "M4-I1",
+            "criterion": "Reversible engine-only limiter control with baseline default",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M4-I2",
+            "criterion": "Thermal/30 FPS safeguards preserved by actual-wrapper checks",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M4-I3",
+            "criterion": "Clean iOS build and separate A/B protocol",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          }
+        ],
+        "D": [
+          {
+            "id": "M4-D1",
+            "criterion": "Matched dual/engine-only runs with cap verified",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Independent A/B pending"
+          },
+          {
+            "id": "M4-D2",
+            "criterion": "Display/host pacing and p95/p99/late events assessed",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Physical comparison pending"
+          },
+          {
+            "id": "M4-D3",
+            "criterion": "Lifecycle/thermal fallback/input/audio checks",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Candidate-specific device regression pending"
+          }
+        ],
+        "E": [
+          {
+            "id": "M4-E1",
+            "criterion": "Meaningful pacing or CPU-work improvement without regression",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Unverified hypothesis"
+          },
+          {
+            "id": "M4-E2",
+            "criterion": "Net energy effect measured under matched conditions",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Unmeasured"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M5",
+      "name": "Selective preparation",
+      "weight": 8,
+      "tracks": {
+        "I": [
+          {
+            "id": "M5-I1",
+            "criterion": "Complete valid pipeline creation state and safe early preparation route",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Partial signatures cannot reconstruct pipelines"
+          },
+          {
+            "id": "M5-I2",
+            "criterion": "Bounded selective prototype with lifetime/synchronisation/loading budget",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Depends on known expensive variants and safe replay state"
+          },
+          {
+            "id": "M5-I3",
+            "criterion": "Relevant tests and clean build for preparation candidate",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No preparation candidate implemented"
+          }
+        ],
+        "D": [
+          {
+            "id": "M5-D1",
+            "criterion": "Same-event gameplay stall comparison with matched cold/warm conditions",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No prototype"
+          },
+          {
+            "id": "M5-D2",
+            "criterion": "No corruption/device loss/lifecycle/cache regression",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No prototype"
+          },
+          {
+            "id": "M5-D3",
+            "criterion": "Loading and gameplay critical-path work measured separately",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No prototype"
+          }
+        ],
+        "E": [
+          {
+            "id": "M5-E1",
+            "criterion": "Gameplay severe stalls reduced with correctness preserved",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No prototype"
+          },
+          {
+            "id": "M5-E2",
+            "criterion": "Loading plus gameplay net energy cost acceptable",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No prototype"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M6",
+      "name": "Sizing/submission/buffering",
+      "weight": 7,
+      "tracks": {
+        "I": [
+          {
+            "id": "M6-I1",
+            "criterion": "Boundary observations distinguish view points/drawable pixels/transforms",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M6-I2",
+            "criterion": "Independent opt-in async submission control while retaining Driver Default",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M6-I3",
+            "criterion": "Trace-supported buffering/synchronisation or sizing candidate/decision",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Cost of suboptimal and buffering remains unmeasured"
+          },
+          {
+            "id": "M6-I4",
+            "criterion": "Required candidate-specific correctness checks/build and rollback design",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No accepted presentation/buffering candidate"
+          }
+        ],
+        "D": [
+          {
+            "id": "M6-D1",
+            "criterion": "Actual sizing/compositing and suboptimal consequences understood",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Point/pixel logs alone do not prove wasted pixels"
+          },
+          {
+            "id": "M6-D2",
+            "criterion": "Independent async/default comparison without other changes",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "A/B pending"
+          },
+          {
+            "id": "M6-D3",
+            "criterion": "Aspect/input/latency/lifecycle/buffering regressions excluded",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device capture pending"
+          }
+        ],
+        "E": [
+          {
+            "id": "M6-E1",
+            "criterion": "Relevant redundant work/latency/pacing benefit established",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Unverified"
+          },
+          {
+            "id": "M6-E2",
+            "criterion": "Matched sustained energy/thermal result",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Unmeasured"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M7",
+      "name": "Adaptive versus Balanced",
+      "weight": 8,
+      "tracks": {
+        "I": [
+          {
+            "id": "M7-I1",
+            "criterion": "Guarded admission/rollback controller, classification and critical-role preservation",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M7-I2",
+            "criterion": "Structured controller requests versus last self-observed QoS export and clean Apple build",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/builds/1950280348c4030aaecadf17d3a68444b6381f86.md",
+              "docs/performance/EVIDENCE.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M7-I3",
+            "criterion": "Executable QoS failure/restore/role/rollback checks and protected launch forwarding",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M7-I4",
+            "criterion": "Independent Balanced/Adaptive procedure and no core-affinity assumption",
+            "status": "passed",
+            "evidence": [
+              "docs/08-adaptive-worker-and-upscaling.md",
+              "docs/performance/13-cyport-source-review.md"
+            ],
+            "remaining": null
+          }
+        ],
+        "D": [
+          {
+            "id": "M7-D1",
+            "criterion": "Admission and actual worker self-applied QoS observed",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Balanced runs do not exercise admitted Adaptive treatment"
+          },
+          {
+            "id": "M7-D2",
+            "criterion": "Rollback applied at checkpoints with delays/failures visible",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Controller request alone is insufficient"
+          },
+          {
+            "id": "M7-D3",
+            "criterion": "Critical roles, lifecycle and graphics correctness on M4",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device validation pending"
+          },
+          {
+            "id": "M7-D4",
+            "criterion": "Matched pacing and scheduling traces, without inferred P/E residency",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device comparison pending"
+          }
+        ],
+        "E": [
+          {
+            "id": "M7-E1",
+            "criterion": "Energy benefit versus Balanced measured",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Required before Adaptive optimisation completion"
+          },
+          {
+            "id": "M7-E2",
+            "criterion": "Smoothness/quality sustained across repeated matched runs",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No admitted matched comparison"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M8",
+      "name": "Translation/driver research",
+      "weight": 7,
+      "tracks": {
+        "I": [
+          {
+            "id": "M8-I1",
+            "criterion": "Targeted CyPort/source review and bounded guest-yield observation",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M8-I2",
+            "criterion": "Profile confirmed repeated encoding/resource/binding/allocation costs",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Real trace needed before translation changes"
+          },
+          {
+            "id": "M8-I3",
+            "criterion": "Assess sync/frame-in-flight overhead with an isolated candidate or evidence-based rejection",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Three-image swapchain already exists; broader work unverified"
+          },
+          {
+            "id": "M8-I4",
+            "criterion": "Profile meaningful JNI/Bionic/futex overhead before a targeted change",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No demonstrated dominant compatibility-layer cost"
+          },
+          {
+            "id": "M8-I5",
+            "criterion": "Compatible stable MoltenVK version benchmarking and retained decision",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Do not upgrade speculatively"
+          }
+        ],
+        "D": [
+          {
+            "id": "M8-D1",
+            "criterion": "Representative cost trace validates targeted hypothesis",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Trace pending"
+          },
+          {
+            "id": "M8-D2",
+            "criterion": "Isolated compatibility/driver candidate preserves graphics/lifecycle",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No candidate"
+          },
+          {
+            "id": "M8-D3",
+            "criterion": "Same-scene host/GPU/pacing results and driver version recorded",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device comparison pending"
+          }
+        ],
+        "E": [
+          {
+            "id": "M8-E1",
+            "criterion": "Targeted mechanism removes confirmed cost or research rejection supported",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No representative trace/experiment"
+          },
+          {
+            "id": "M8-E2",
+            "criterion": "Accepted changes demonstrate net energy/work benefit without quality regression",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Unverified"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M9",
+      "name": "Resolution/MetalFX",
+      "weight": 12,
+      "tracks": {
+        "I": [
+          {
+            "id": "M9-I1",
+            "criterion": "Runtime spatial capability query with explicit unavailable reasons",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M9-I2",
+            "criterion": "Current presentation path and alternative integration requirements audited",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/14-gpu-sampling-and-metalfx-inputs.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M9-I3",
+            "criterion": "Opt-in bounded render-target/area inventory with executable and Apple build checks",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/builds/1950280348c4030aaecadf17d3a68444b6381f86.md",
+              "docs/performance/EVIDENCE.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M9-I4",
+            "criterion": "Safe lower scene input -> scaler -> distinct baseline output integration",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Actual scene input/ownership/synchronisation not verified; no game scaler"
+          },
+          {
+            "id": "M9-I5",
+            "criterion": "Reversible controls and scaler-specific correctness/build/lifecycle checks",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Actual game integration pending"
+          },
+          {
+            "id": "M9-I6",
+            "criterion": "Separate fixed-budget/dynamic-resolution investigation and retained decision",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "User-controlled and GPU-evidence-driven; not implemented"
+          }
+        ],
+        "D": [
+          {
+            "id": "M9-D1",
+            "criterion": "Actual useful lower-resolution scene input and output dimensions verified",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Inventory requests alone will not prove scene pixels"
+          },
+          {
+            "id": "M9-D2",
+            "criterion": "Vulkan/Metal lifetime/synchronisation and colour correctness",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No scaler integration"
+          },
+          {
+            "id": "M9-D3",
+            "criterion": "HUD/detail/motion perceptual quality and input latency acceptable",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No scaler integration"
+          },
+          {
+            "id": "M9-D4",
+            "criterion": "Resize/pause/resume/device-loss/baseline restoration checks",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No scaler integration"
+          }
+        ],
+        "E": [
+          {
+            "id": "M9-E1",
+            "criterion": "Total GPU cost including scaler improves for chosen visual budget",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No actual game scaler"
+          },
+          {
+            "id": "M9-E2",
+            "criterion": "Comparable quality and smooth 60 FPS under matched conditions",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No prototype"
+          },
+          {
+            "id": "M9-E3",
+            "criterion": "Repeated sustained electrical/battery/temperature benefit",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Unmeasured"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M10",
+      "name": "Independent Duo profile",
+      "weight": 10,
+      "tracks": {
+        "I": [
+          {
+            "id": "M10-I1",
+            "criterion": "Runtime verified Duo capability inventory and independent baseline",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device unavailable; specifications provisional"
+          },
+          {
+            "id": "M10-I2",
+            "criterion": "Separate tested profile/manual override/cache compatibility",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No Duo profile validated"
+          },
+          {
+            "id": "M10-I3",
+            "criterion": "Device-specific correctness/measurement tooling checks",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Requires hardware baseline"
+          }
+        ],
+        "D": [
+          {
+            "id": "M10-D1",
+            "criterion": "Unfolded actual rendering/visual/pacing baseline",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device unavailable"
+          },
+          {
+            "id": "M10-D2",
+            "criterion": "Sustained warmed-device/lifecycle/profile correctness",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device unavailable"
+          },
+          {
+            "id": "M10-D3",
+            "criterion": "Separate charging/unplugged and display configuration",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device unavailable"
+          }
+        ],
+        "E": [
+          {
+            "id": "M10-E1",
+            "criterion": "Independent sustained energy/pacing optimum among tested choices",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No device"
+          },
+          {
+            "id": "M10-E2",
+            "criterion": "Battery/thermal/profile benefit on Duo itself",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No device"
+          }
+        ]
+      }
+    }
+  ],
+  "source_sha": "1950280348c4030aaecadf17d3a68444b6381f86"
+}

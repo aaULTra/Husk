@@ -60,3 +60,7 @@ Scope/weights can change only through an explicit documented roadmap revision wi
 ## Initial adoption
 
 This requirement applies to all future IPA deliveries after the user's 2026-10-25 request. Existing build records keep their original scoped progress figures. This documentation-only update does not invent a current overall number, rebuild the IPA or require a user test; initial full-ledger scoring is mandatory before the next build handover. Report model version and evidence date so future tasks can reproduce and update the score.
+
+## Reproducible ledger adopted
+
+The initial whole-milestone gates now live in [progress/roadmap-v1.json](progress/roadmap-v1.json); run scripts/roadmap_progress.py to calculate exact contributions, overall, M4-only normalised and Duo scores. Tests reject missing milestones, changed weights and evidence-free passes. The first source-specific AUDIT-BATCH-2 snapshot establishes the scored baseline after Apple validation; its device/energy gates do not pass merely because the build succeeds. Keep later per-build snapshots immutable while updating the current ledger.

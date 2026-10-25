@@ -61,3 +61,9 @@ Optional “Sample game GPU execution (Diagnostic)” is inside the Efficiency T
 Schema-v3 retains existing fields and adds gpu_sampling, gpu_records, metadata.gpu_clock_alignment and pipeline_groups_since_launch. Raw GPU/sample/completion values use media-clock seconds; host events use the monotonic origin. The bracketed alignment pair supports estimated correlation only. Pipeline groups require identification ON at launch; they aggregate since game launch, rather than the narrower Efficiency Test interval. They remain incomplete groups, not replayable full keys or aggregate cache-hit proof.
 
 The next test can combine these two diagnostic observations while retaining baseline limiter/worker/submission modes. Follow the final build handover for a first/repeat/restart pair, export both sessions before closing, and defer additional energy/limiter/Adaptive runs until those files are analysed. A successful iOS build validates compilation; actual M4 queue/timestamp/lifecycle/overhead acceptance is still required.
+
+## Schema v4 / M7 and M9 observation
+
+Schema v4 adds worker_policy and render_inventory to the stopped export, plus lightweight worker_controller snapshots in the existing periodic samples. See [AUDIT-BATCH-2](15-worker-and-render-audit.md). Worker records are last checkpoints since activation, not live threads or core residency. Render groups are requested creation/legacy render-area state since launch, not scene/HUD identity or executed GPU work. The inventory switch is default OFF and requires restart; off bypasses inventory interposition entirely. No extra worker-policy setter, resolution change or scaler is enabled by monitoring.
+
+While the user has no iPad, device correctness/overhead and all optimisation energy gates remain pending. Existing recorded files should be analysed before requesting more gameplay; do not reinterpret a diagnostic build as a cooling improvement.

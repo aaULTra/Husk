@@ -556,9 +556,12 @@
           {
             "id": "M7-I2",
             "criterion": "Structured controller requests versus last self-observed QoS export and clean Apple build",
-            "status": "pending",
-            "evidence": [],
-            "remaining": "Candidate implementation; final Apple validation pending"
+            "status": "passed",
+            "evidence": [
+              "docs/performance/builds/1950280348c4030aaecadf17d3a68444b6381f86.md",
+              "docs/performance/EVIDENCE.md"
+            ],
+            "remaining": null
           },
           {
             "id": "M7-I3",
@@ -743,9 +746,12 @@
           {
             "id": "M9-I3",
             "criterion": "Opt-in bounded render-target/area inventory with executable and Apple build checks",
-            "status": "pending",
-            "evidence": [],
-            "remaining": "Candidate implementation; final Apple validation pending"
+            "status": "passed",
+            "evidence": [
+              "docs/performance/builds/1950280348c4030aaecadf17d3a68444b6381f86.md",
+              "docs/performance/EVIDENCE.md"
+            ],
+            "remaining": null
           },
           {
             "id": "M9-I4",
@@ -893,5 +899,6 @@
         ]
       }
     }
-  ]
+  ],
+  "source_sha": "1950280348c4030aaecadf17d3a68444b6381f86"
 }
