@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: 104-check diagnostics candidate built; UI-01 overlay-clearance correction pending Apple build/device verification; benefit/overhead gates open.
+Updated: 2026-10-25. Status: UI-01 clearance candidate built with 105 passing checks; E-M4-004 archived/audited; physical UI and efficiency gates open.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -28,7 +28,7 @@ Inspection basis: branch head 3c2d52c, PR metadata, graphics/settings, Vulkan wr
 | ID | Feature | Implementation/correctness | Device performance evidence | Energy status / next action |
 | --- | --- | --- | --- | --- |
 | BASE-01 | V4 resolution interception | Implemented; guarded portable-hook tests exist | User reports retained selected presentation through resumes | Unmeasured; protect and separately verify internal scene resolution |
-| BASE-02 | Sharp / Efficient and 60 FPS | Implemented; engine request plus host limiter | Sustained smooth approximately 60 FPS reported on M4 | Unmeasured; preserve quality/reference |
+| BASE-02 | Sharp / Efficient and 60 FPS | Implemented; engine request plus host limiter | Historical approximately 60 FPS; latest E-M4-004 retained host mean 57.17 FPS with variable windows | Unmeasured; preserve quality/reference |
 | CACHE-01 | Compatible persistent pipeline cache | Implemented; checksum/header guards, fallback, checkpoints and generation tracking | Restored/saved bytes reported; first-use stalls persist | Actual reuse/hitch and energy benefit unverified |
 | PIPE-01 | Pipeline identification | Partial implementation: opt-in shader/state group signatures, bounded occurrences/slow events and passive valid feedback; existing timing retained | Device first/repeat/restart comparison pending; complete state identity absent | No prewarming key or verified energy benefit; see docs/performance/11-pipeline-identification.md |
 | WORK-01 | Balanced policy | Implemented, default; critical roles preserved | Active in supplied runs | Energy benefit unmeasured; baseline comparator |
@@ -37,7 +37,7 @@ Inspection basis: branch head 3c2d52c, PR metadata, graphics/settings, Vulkan wr
 | PROF-01 | Detailed MoltenVK profiling | Implemented; strict 1.4.2/private API 43, 1152-byte guard, optional/off | Earlier report contains driver activity data | Adds overhead; no genuine GPU/power measurement |
 | MEAS-01 | Efficiency Test sessions/export | Implementation candidate: bounded aggregation, exclusions, process/API sampling, Markdown/JSON export | Previous build passed 92 checks; schema-v2 ring/loss/reporting/plan tags now implemented with portable tests; final 104-check Apple build passed; device coverage/overhead checks pending | M1 remains open; monitoring overhead and energy unmeasured |
 | GPU-01 | Genuine GPU execution timing | Source investigation: callback latency is not GPU time; completed buffers not exposed by current interface | Measurement gap | Instruments or safe completed-buffer access |
-| UPSCALE-01 | MetalFX spatial upscaling | Capability query added to session metadata; upscaling itself is research, not wired into presenter | None | Separate prototype only after GPU evidence |
+| UPSCALE-01 | MetalFX spatial upscaling | E-M4-004 confirms spatial hardware support true; upscaling is research, not wired into presenter | None | Separate prototype only after GPU evidence |
 | RES-01 | Manual resolution controls | Implemented 65–100%, with heuristics | Two different presentation runs reported | Dynamic GPU-driven resolution remains unimplemented |
 
 Historical PR validation reports 82 passing portable checks and successful iOS compilation/IPA packaging at the reference SHA: [workflow](https://github.com/aaULTra/Husk/actions/runs/40143757823). These results were not rerun during the documentation handover and do not verify energy efficiency.
@@ -72,8 +72,8 @@ CPU time/activity is process-scoped with explicit normalisation. Track footprint
 
 | ID | Evidence / status | Next action |
 | --- | --- | --- |
-| BUG-01 | Severe pipeline-associated hitches persist despite restored cache; new reported worst call 436.954 ms | M2: stable variants and actual supported reuse evidence, first/repeat/restart |
-| BUG-02 | Approximately 33 ms irregularities reported with zero pipeline calls | M1/M3/M4: correlate CPU/GPU/presentation/limiter data; cause unknown |
+| BUG-01 | Severe pipeline-associated hitches persist; E-M4-004 has 40 slow calls, worst 254.135 ms; historical 436.954 ms retained | M2: stable variants and actual supported reuse evidence, first/repeat/restart |
+| BUG-02 | E-M4-004 has a 474.380 ms interval with pipeline maximum 1.697 ms, plus recurring approximately 20.9 ms pacing; older 33 ms cases retained | M1/M3/M4: correlate CPU/GPU/presentation/limiter data; cause unknown |
 | BUG-03 | Repeated VK_SUBOPTIMAL_KHR and view-size changes | M6: inspect pixel drawable versus point bounds/transforms; nonfatal, cost unproven |
 | GAP-01 | No measured watts, electrical energy, true GPU execution or numerical device temperature | M3 and external measurements |
 | GAP-02 | No controlled baseline/candidate energy comparison | M1/M3 before efficiency claims |
@@ -81,7 +81,7 @@ CPU time/activity is process-scoped with explicit normalisation. Track footprint
 | GAP-04 | E-M4-003 JSON archived and audited; pasted attempt log available; earlier run raw logs still unavailable | Use current JSON audit; preserve provenance and earlier gaps |
 | MON-01 | Schema-v1 loss defect confirmed; schema-v2 bounded independent frame ring and loss categories implemented/tested | M1: Apple build then real-device coverage/overhead acceptance remains open |
 | MON-02 | Schema-v2 null/unresolved flat-battery reporting implemented with sample count/span/change; API freshness still unknown | M1: verify against system battery indicator; no watts or efficiency claim |
-| UI-01 | User screenshot: native game toolbar overlaps visible iPadOS/LiveContainer status controls at top left/right | UI overlay clearance correction implemented; Apple build and physical screenshot/gesture/lifecycle verification pending |
+| UI-01 | User screenshot: native game toolbar overlaps visible iPadOS/LiveContainer status controls at top left/right | UI overlay clearance correction implemented and 105-check Apple build passed; physical screenshot/gesture/lifecycle verification pending |
 | COMPAT-01 | isnan/JNI/optional OBB/ANGLE warnings not demonstrated performance causes | Investigate only with malfunction or traceable cost |
 
 ## 6. Next actions and task handover
@@ -211,3 +211,11 @@ UI-01 follow-up screenshot: user also identifies the top-left hosted window/elli
 Battery is unplugged, with one five-point reported change (50% ->45%) and approximately 27.5 pp/hour over 653.994401 estimator seconds; this is coarse, not watts or reliable small-difference evidence. Brightness 100%, nominal thermal classifications; user says warmer than not playing. Weighted process CPU approximately 62.81% of one logical CPU, footprint maximum observed approximately 3.476 GiB. Yield count 4,076 (~5.59/s retained cadence duration) does not establish dominant spin waste. MetalFX spatial support true is now actual device capability evidence, not an upscaling implementation.
 
 Pipeline-associated events (255.822/254.135 ms frame/call) and separate non-pipeline stalls (474.380 ms with pipeline maximum 1.697 ms) persist. Continue M2 and M3/M4 independently. Finish UI-01 and monitoring-overhead acceptance, then run separate identification and limiter tests; no combined behaviour changes or default resolution cut. User's current test remains associated with 6c4fef3.
+
+### UI-01 final build handover
+
+Source `02c89cb8da7d9b3966f0da7260bad677ff3e6da2` (packaged with documented -dirty suffix), [run 40181321395](https://github.com/aaULTra/Husk/actions/runs/40181321395): **105 checks passed**, iOS compilation and IPA packaging succeeded. [IPA artifact](https://github.com/aaULTra/Husk/actions/runs/40181321395/artifacts/12593913066), archive SHA256 a8f44504c57d04d945d7d2ef39e1be46acd7ae3449b32ba8ec3db40b61dfe99a. New tests exercise actual CoreGraphics clearance policy. First geometry-import failure and intermediate successful status-only build are historical; this source includes the window-control-row extension.
+
+UI-01 implementation is build-validated, not physically verified. On this IPA, confirm toolbar/log clear status and host window controls after showing/hiding UI and returning from Control/Notification Center; verify diagnostic access, input/audio and actual 2128 × 1600 presentation. The host's own window-control button is not removed or moved by Husk; only Husk overlay placement is corrected. Rendering and performance options are unchanged from the supplied E-M4-004 source, so keep experiment toggles off for the initial UI check. Do not relabel the uploaded 6c4fef3 log as a result of this build.
+
+Sequence: UI-01 supports M1 usability/M6 sizing; E-M4-004 adds partial M1 on-device validation. M1 overhead/battery calibration, M2 variant/cache effectiveness, M3 GPU/power/temperature, M4 pacing and M7 Adaptive energy comparison remain open. M9 spatial capability is confirmed true on the test M4; actual upscaling/synchronisation/quality/energy validation remains research.
