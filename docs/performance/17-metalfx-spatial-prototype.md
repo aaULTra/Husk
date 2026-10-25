@@ -33,3 +33,7 @@ Device D1–D4: actual useful lower scene input/baseline output and stable 60 FP
 Benefit E1–E3: matched total GPU work including scaler and pacing; repeated unplugged electrical/battery comparison with diagnostics OFF; external ambient/surface-temperature comparison with acceptable quality. All device/benefit gates pending. Smaller input and successful encoding do not prove power savings. Do not close Adaptive energy versus Balanced.
 
 The local workspace became unavailable during implementation; final candidate must be compiled/tested in Apple CI rather than claiming local checks. No user test is requested while the iPad is unavailable. Existing exports should be examined first. A later short correctness smoke precedes any sustained energy comparison.
+
+## Final implementation/build evidence
+
+Source `9d298c5c7c56af87c715ba2b8ad03111a48dcbac`, [Apple run](https://github.com/aaULTra/Husk/actions/runs/40244864869): **161/161 checks passed**, including actual host forwarding/touch/fallback code, driver format guards and Apple scaler ABI/failure checks; exact source transforms, standalone driver exported symbols, app compilation and IPA packaging passed. S1–S6 build checklist 6/6. No real MetalFX GPU render or iPad lifecycle check was run by CI. D1–D4 0/4 and E1–E3 0/3 remain pending. Whole M9 implementation 4/6, whole milestone 20%; broader lifecycle/failure coverage and legacy M9-A R3/R4 remain open. [Source-specific handover](builds/9d298c5c7c56af87c715ba2b8ad03111a48dcbac.md).

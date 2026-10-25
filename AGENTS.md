@@ -21,7 +21,7 @@ The future iPhone Duo needs its own real-device baseline, initially unfolded. Do
 - Separate implementation, correctness, device performance and energy validation.
 - Prefer removing confirmed unnecessary work before changing visual quality.
 - Change one performance variable per comparison and keep experiments reversible.
-- MetalFX goal: lower internal rendering resolution with the protected 2128 × 1600 M4 output and comparable perceived visuals. Prepare integration alongside M3 GPU investigation; prototype after useful GPU evidence and safe interop design, without waiting for every scheduling/driver experiment. Include scaler cost, HUD quality and measured energy in acceptance.
+- MetalFX goal: lower internal rendering resolution with the protected 2128 × 1600 M4 output and comparable perceived visuals. Prepare integration alongside M3 GPU investigation; the user explicitly authorised the default-off M9-SPATIAL-v1 prototype before physical GPU evidence. Preserve its separate experimental driver and original-driver rollback. Adoption/default activation still requires useful GPU evidence, verified interop, acceptable visuals and energy results; investigate independently of scheduling/driver experiments. Include scaler cost, HUD quality and measured energy in acceptance.
 - Report findings before major architectural changes. Do not bundle translation rewrites, MoltenVK upgrades, worker-policy changes or MetalFX into diagnostics work.
 
 ## Evidence and measurement rules

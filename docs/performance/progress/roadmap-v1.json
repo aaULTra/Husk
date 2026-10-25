@@ -760,16 +760,19 @@
           {
             "id": "M9-I4",
             "criterion": "Safe lower scene input -> scaler -> distinct baseline output integration",
-            "status": "pending",
-            "evidence": [],
-            "remaining": "Actual scene input/ownership/synchronisation not verified; no game scaler"
+            "status": "passed",
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/builds/9d298c5c7c56af87c715ba2b8ad03111a48dcbac.md"
+            ],
+            "remaining": "Implementation/build gate only: actual useful scene input, correctness, colour, lifetime/lifecycle and benefit remain in M9-D/E and legacy M9-A R3/R4."
           },
           {
             "id": "M9-I5",
             "criterion": "Reversible controls and scaler-specific correctness/build/lifecycle checks",
             "status": "pending",
             "evidence": [],
-            "remaining": "Actual game integration pending"
+            "remaining": "Controls/build implemented; broader scaler-specific failure/resource/lifecycle checks remain open."
           },
           {
             "id": "M9-I6",
@@ -784,29 +787,37 @@
             "id": "M9-D1",
             "criterion": "Actual useful lower-resolution scene input and output dimensions verified",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Inventory requests alone will not prove scene pixels"
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md"
+            ],
+            "remaining": "Default-off prototype now built; Actual useful lower-resolution scene input and output dimensions verified requires physical matched evidence."
           },
           {
             "id": "M9-D2",
             "criterion": "Vulkan/Metal lifetime/synchronisation and colour correctness",
             "status": "pending",
-            "evidence": [],
-            "remaining": "No scaler integration"
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md"
+            ],
+            "remaining": "Default-off prototype now built; Vulkan/Metal lifetime/synchronisation and colour correctness requires physical matched evidence."
           },
           {
             "id": "M9-D3",
             "criterion": "HUD/detail/motion perceptual quality and input latency acceptable",
             "status": "pending",
-            "evidence": [],
-            "remaining": "No scaler integration"
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md"
+            ],
+            "remaining": "Default-off prototype now built; HUD/detail/motion perceptual quality and input latency acceptable requires physical matched evidence."
           },
           {
             "id": "M9-D4",
             "criterion": "Resize/pause/resume/device-loss/baseline restoration checks",
             "status": "pending",
-            "evidence": [],
-            "remaining": "No scaler integration"
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md"
+            ],
+            "remaining": "Default-off prototype now built; Resize/pause/resume/device-loss/baseline restoration checks requires physical matched evidence."
           }
         ],
         "E": [
@@ -814,22 +825,28 @@
             "id": "M9-E1",
             "criterion": "Total GPU cost including scaler improves for chosen visual budget",
             "status": "pending",
-            "evidence": [],
-            "remaining": "No actual game scaler"
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md"
+            ],
+            "remaining": "Default-off prototype now built; Total GPU cost including scaler improves for chosen visual budget requires physical matched evidence."
           },
           {
             "id": "M9-E2",
             "criterion": "Comparable quality and smooth 60 FPS under matched conditions",
             "status": "pending",
-            "evidence": [],
-            "remaining": "No prototype"
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md"
+            ],
+            "remaining": "Default-off prototype now built; Comparable quality and smooth 60 FPS under matched conditions requires physical matched evidence."
           },
           {
             "id": "M9-E3",
             "criterion": "Repeated sustained electrical/battery/temperature benefit",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Unmeasured"
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md"
+            ],
+            "remaining": "Default-off prototype now built; Repeated sustained electrical/battery/temperature benefit requires physical matched evidence."
           }
         ]
       }
@@ -904,5 +921,5 @@
       }
     }
   ],
-  "source_sha": "af11056edcfa565042884a801c01d3cc3826c557"
+  "source_sha": "9d298c5c7c56af87c715ba2b8ad03111a48dcbac"
 }
