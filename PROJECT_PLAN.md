@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: M1 refinements, partial M2 diagnostics and M4 comparison implemented; M3/M6/M9 investigation advanced; Apple build/device checks pending.
+Updated: 2026-10-25. Status: M1 refinements, partial M2 diagnostics, M4 comparison and M8 counts built; 104 checks and IPA pass; device benefit/overhead gates open.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -35,7 +35,7 @@ Inspection basis: branch head 3c2d52c, PR metadata, graphics/settings, Vulkan wr
 | WORK-02 | Adaptive Trial | Implemented revised cheap-pipeline admission and self-applied caps/rollback | Real-device admission/application fix not independently verified here | NOT COMPLETE: energy A/B versus Balanced pending |
 | SUBMIT-01 | Async submission option | Implemented, experimental; Driver Default retained | No controlled benefit evidence | Pending independent A/B |
 | PROF-01 | Detailed MoltenVK profiling | Implemented; strict 1.4.2/private API 43, 1152-byte guard, optional/off | Earlier report contains driver activity data | Adds overhead; no genuine GPU/power measurement |
-| MEAS-01 | Efficiency Test sessions/export | Implementation candidate: bounded aggregation, exclusions, process/API sampling, Markdown/JSON export | Previous build passed 92 checks; schema-v2 ring/loss/reporting/plan tags now implemented with portable tests; new Apple build and device checks pending | M1 remains open; monitoring overhead and energy unmeasured |
+| MEAS-01 | Efficiency Test sessions/export | Implementation candidate: bounded aggregation, exclusions, process/API sampling, Markdown/JSON export | Previous build passed 92 checks; schema-v2 ring/loss/reporting/plan tags now implemented with portable tests; final 104-check Apple build passed; device coverage/overhead checks pending | M1 remains open; monitoring overhead and energy unmeasured |
 | GPU-01 | Genuine GPU execution timing | Source investigation: callback latency is not GPU time; completed buffers not exposed by current interface | Measurement gap | Instruments or safe completed-buffer access |
 | UPSCALE-01 | MetalFX spatial upscaling | Capability query added to session metadata; upscaling itself is research, not wired into presenter | None | Separate prototype only after GPU evidence |
 | RES-01 | Manual resolution controls | Implemented 65–100%, with heuristics | Two different presentation runs reported | Dynamic GPU-driven resolution remains unimplemented |
@@ -178,3 +178,15 @@ Located and inspected public Thijs2004/CyPort at main SHA 65e2e57a95263f60516f56
 M8 observation implemented: clock-free included-span guest sched_yield counters in import/syscall paths, exported as cumulative metrics with plan association. No backoff, priority change, thread suspension or extra sleep is applied. This establishes whether yield activity deserves deeper CPU tracing; it is not proof of wasted energy. Added enabled/excluded/off counter test. CPU/GPU energy, Adaptive benefit and MetalFX remain unverified.
 
 Intermediate corrected Apple run 40178005735 passed all 103 then-current checks, iOS compilation and IPA packaging at a41c030575fad6ed7ac7353b1177fbae0e57ca12. The small M8 observation addition now requires a new final build (104 checks); do not confuse the earlier artifact with the final candidate.
+
+### Final candidate / validation handover
+
+Source `6c4fef3d20178f8b4a49a157a5863b2de981a616`, packaged identity with `-dirty` from documented staging/XcodeGen. [Run 40178749888](https://github.com/aaULTra/Husk/actions/runs/40178749888) passed **104 checks**, iOS compilation and validated IPA packaging. [Final IPA artifact](https://github.com/aaULTra/Husk/actions/runs/40178749888/artifacts/12593800140), archive digest `sha256:ebc30a6ea14e8be300296e796cdee635cebc854bcf69d8d3f717e548146b0ec5`. The intermediate a41c030 artifact omits M8 yield observation; use this final source for the next test. Documentation-only follow-up does not change the binary.
+
+Implementation progress: M1 cadence ring/loss categories, honest battery status, phase markers, CPU/memory/thermal report context and plan-tagged logs; M2 opt-in partial shader/state signatures and passive feedback; M4 default-off engine-only comparison preserving thermal/30 FPS caps; M6 point/pixel/transform observation; M8 included guest-yield counts; M3/M9 actual-source feasibility work and MetalFX capability metadata. All runtime changes are reversible diagnostics or monitoring corrections. No default quality/resolution, worker policy, cache lifetime/format, submission mode, prewarming or upscaling behaviour changed.
+
+Next physical sequence: install final IPA preserving data/cache; fully restart; retain 2128 × 1600, Sharp / Efficient, 60 FPS, Balanced, Driver Default, LPM off; Pipeline Identification OFF, Engine-only Limiter OFF and Detailed Driver Profiling OFF. Collect corrected M1 baseline with explicit phase markers and matched brightness/conditions. Export schema-v2 report + JSON; compare native battery levels with the system indicator. Confirm frame loss categories, exclusions, lifecycle and cache behaviour, then quantify monitoring-off/on overhead.
+
+After M1 evidence: dedicated M2 first/repeat/restart test with identification ON and other experiments OFF; dedicated M4 dual/engine-only A/B with identification/profiling OFF. M3: choose accessible Instruments trace or design scoped GPU buffer sampling using the reviewed CyPort mechanism; current monitor still cannot claim GPU execution/power. M7 Adaptive benefit and M6 async require their own controlled tests. M9 spatial prototype can be the next separate rendering feature after trustworthy GPU evidence and a safe interop design, ahead of lower-value research if justified. MetalFX support capability alone is not implementation or benefit.
+
+Do not mark M1 device acceptance, M2 full identification/cache efficacy, M3 GPU/power or any energy-saving optimisation complete from these checks. Existing failed/inconclusive experiments and both pipeline/non-pipeline bugs remain tracked.

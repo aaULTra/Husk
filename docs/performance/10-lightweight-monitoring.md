@@ -45,3 +45,9 @@ M1/MON-01: 8,192-slot bounded frame ring removes reporting-mutex contention from
 M1/MON-02: unchanged valid battery levels export null rate with UNRESOLVED status, observed level change, sample count and valid duration. Increasing unplugged readings are inconclusive. Human reports include observed CPU maximum, sampled footprint maximum and thermal classifications.
 
 Use Phase marker to label Loading, Menu, Gameplay, First-use effect and Repeated effect. Phase changes are events, not automatic engine-state detection; samples carry the latest marker. Event plan_ids/subsystem/outcome and benefit_validation make roadmap association explicit. recorded_t is capture time, occurred_t is supplied only when an existing diagnostic includes an actual completion timestamp. Phase at an occurrence can be reconstructed from phase events; it must not be guessed from report time.
+
+## Current corrected candidate
+
+Source **6c4fef3d20178f8b4a49a157a5863b2de981a616**, [104-check successful build](https://github.com/aaULTra/Husk/actions/runs/40178749888), [IPA](https://github.com/aaULTra/Husk/actions/runs/40178749888/artifacts/12593800140). Use this candidate for the next M1 validation; earlier build links above are historical. Start with Pipeline Identification, Engine-only Limiter and Detailed Driver Profiling all OFF. Mark Loading/Menu/Gameplay/First-use/Repeated effect explicitly, and compare battery samples against the system indicator. Export report and schema-v2 JSON after stopping.
+
+Events carry plan_ids/subsystem/outcome/benefit_validation, with separate recorded_t and available occurred_t. Metrics have metric_plan_ids. M8 guest-yield calls are observations without backoff; M9 MetalFX support is capability metadata, not active upscaling. First validate M1 and monitoring overhead; then test M2 and M4 separately using the dedicated guides.

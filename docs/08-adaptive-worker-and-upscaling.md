@@ -141,3 +141,7 @@ https://developer.apple.com/videos/play/tech-talks/110147/
 https://developer.apple.com/library/archive/documentation/Performance/Conceptual/EnergyGuide-iOS/PrioritizeWorkWithQoS.html
 https://developer.apple.com/videos/play/wwdc2022/10103/
 https://developer.apple.com/documentation/metalfx
+
+## Current-plan source review update
+
+The later [direct CyPort source review](performance/13-cyport-source-review.md) identifies its actual QoS/yield/GPU timestamp mechanisms and their applicability limits. The earlier comments above are historical and do not establish Apple core placement or verified Duo specifications. Use AGENTS.md and PROJECT_PLAN.md for current device assumptions and priorities. Adaptive energy A/B remains open; new diagnostics do not prove cooler operation.
