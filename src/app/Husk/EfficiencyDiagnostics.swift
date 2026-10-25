@@ -9,6 +9,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     @Published private(set) var running = false
     @Published var interrupted = false
     @Published var exporting = false
+    @Published private(set) var canExport = false
     @Published var message = "Monitoring is off"
     @Published var files: [URL] = []
     private var timer: Timer?
@@ -44,7 +45,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     func start() {
         guard !running, !exporting else { return }
         samples = []; windows = []; events = []; exclusions = []; files = []; dropped = 0
-        stoppedReport = nil; origin = now; windowAt = origin; lastCPUAt = origin; lastCPU = -1
+        stoppedReport = nil; canExport = false; origin = now; windowAt = origin; lastCPUAt = origin; lastCPU = -1
         lastMemoryAt = origin - 10; lastBatteryAt = origin - 30; excludedAt = nil; excludedReason = ""
         lastBattery = nil; battery = EfficiencyMath.Battery(); environment = [:]
         interrupted = false
@@ -183,7 +184,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                                           "Pipeline identity/cache hits unavailable; runtime event buffer captures selected existing logs",
                                           "Retention is bounded; dropped counts invalidate claims of complete event coverage",
                                           "Monitoring overhead and physical-device correctness remain unverified"]]
-        running = false; excludedAt = nil; message = "Stopped; ready to export"
+        running = false; canExport = true; excludedAt = nil; message = "Stopped; ready to export"
     }
     func export() {
         guard !running, !exporting, let report = stoppedReport else { return }
@@ -239,7 +240,7 @@ struct EfficiencyDiagnosticsView: View {
                     Toggle("Exclude manual interruption", isOn: Binding(get: { monitor.interrupted }, set: { monitor.setInterrupted($0) }))
                         .disabled(!monitor.running)
                     Button("Stop test") { monitor.stop() }.disabled(!monitor.running)
-                    Button("Export report and JSON") { monitor.export() }.disabled(monitor.running || monitor.exporting)
+                    Button("Export report and JSON") { monitor.export() }.disabled(!monitor.canExport || monitor.running || monitor.exporting)
                     Button("Share exported files") { sharing = true }.disabled(monitor.files.isEmpty)
                 } header: { Text("Performance & Efficiency Diagnostics") }
                 Section {

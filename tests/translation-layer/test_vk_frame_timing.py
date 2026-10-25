@@ -200,6 +200,16 @@ int exercise(int enabled, int efficient, int fps, int status) {
     if (sleep_calls) return 5;
     return 0;
 }
+int exercise_efficiency_observer(void) {
+    tl_em_start(); tl_em_exclude(false);
+    int result = exercise(1, 1, 60, 0);
+    tl_em_stats stats; tl_em_snapshot(true, &stats); tl_em_stop();
+    if (result) return result;
+    if (stats.intervals != 699 || stats.host_calls[TL_EM_ACQUIRE] != 700 ||
+        stats.host_calls[TL_EM_SUBMIT] != 700 || stats.host_calls[TL_EM_PRESENT] != 700) return 6;
+    if (stats.dropped || stats.host_calls[TL_EM_SLEEP]) return 7;
+    return 0;
+}
 """
         root = Path(cls.tmp.name)
         (root / "timing.c").write_text(harness)
@@ -211,6 +221,9 @@ int exercise(int enabled, int efficient, int fps, int status) {
         cls.lib.exercise.argtypes = [ctypes.c_int] * 4
         cls.lib.restored_seed_count.restype=ctypes.c_uint64
         cls.lib.restored_seed_bytes.restype=ctypes.c_uint64
+
+    def test_enabled_efficiency_observer_collects_without_changing_forwarding_or_sleep(self):
+        self.assertEqual(self.lib.exercise_efficiency_observer(), 0)
 
     def test_original_sharp_passes_through_without_added_host_sleeps(self):
         self.assertEqual(self.lib.exercise(1, 0, 60, 0), 0)
