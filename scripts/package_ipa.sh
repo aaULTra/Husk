@@ -94,7 +94,7 @@ fi
 # fix did not work.
 APP_PLIST="$DD/Build/Products/Release-iphoneos/Husk.app/Info.plist"
 if [ -f "$APP_PLIST" ]; then
-    COMMIT="$(git -C "$HUSK_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    COMMIT="$(git -C "$HUSK_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
     git -C "$HUSK_ROOT" diff --quiet 2>/dev/null || COMMIT="$COMMIT-dirty"
     plutil -replace HuskBuildCommit -string "$COMMIT" "$APP_PLIST"
     plutil -replace HuskBuildDate -string "$(date -u '+%Y-%m-%d %H:%M UTC')" "$APP_PLIST"

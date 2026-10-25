@@ -270,6 +270,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         updateStatsTimer()
+        if engine == .ue4 { EfficiencyDiagnostics.shared.visible(window != nil) }
         if window != nil {
             husk_unity_set_paused(UIApplication.shared.applicationState != .active)
         } else {
@@ -282,6 +283,17 @@ final class TLUnityUIView: UIView, UIKeyInput {
     private func launch(width: Int, height: Int) {
         launched = true
         launchedSize = bounds.size
+        if engine == .ue4 {
+            EfficiencyDiagnostics.shared.attach([
+                "engine": "ue4", "game": (apk as NSString).lastPathComponent,
+                "launch_width": width, "launch_height": height,
+                "sharp_graphics": sharpGraphics, "efficient_graphics": efficientGraphics,
+                "requested_fps": efficientFrameLimit, "worker_policy": threadPolicy,
+                "submission_mode": submissionMode, "detailed_driver_profiling": driverProfiling,
+                "windowed": windowed, "cache": "existing compatible persistence; see runtime events",
+                "driver": "bundled MoltenVK; verify runtime version in attempt log"
+            ])
+        }
         let angle = (Bundle.main.privateFrameworksPath ?? "") + "/libANGLE-shared.dylib"
         let ca = Bundle.main.path(forResource: "cacert", ofType: "pem") ?? ""
         try? FileManager.default.createDirectory(atPath: dataDir, withIntermediateDirectories: true)
@@ -851,6 +863,7 @@ struct TLCocosAttemptView: View {
     @StateObject private var virtualPad = VirtualPad()
     /// Where the player has put the pad's controls in this game, and whether they are moving them now.
     @State private var padLayout = PadLayout()
+    @State private var efficiencySheet = false
     @State private var editingPad = false
     @State private var padSelected: String?
     /// This game's own settings (TLAppSettings), read once as the screen opens.
@@ -1034,6 +1047,13 @@ struct TLCocosAttemptView: View {
 
     private var bar: some View {
         HStack(spacing: 12) {
+            if engine == .ue4 {
+                Button { efficiencySheet = true } label: {
+                    Image(systemName: "gauge").accessibilityLabel("Efficiency Test")
+                }
+                .tint(.white)
+                .sheet(isPresented: $efficiencySheet) { EfficiencyDiagnosticsView() }
+            }
             Button { dismiss() } label: {
                 Label("Close", systemImage: "xmark").font(.system(size: 13, weight: .semibold))
             }

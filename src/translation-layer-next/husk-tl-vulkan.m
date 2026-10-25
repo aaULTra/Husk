@@ -26,6 +26,7 @@
 #include "husk-tl-pipeline-store.h"
 #include "husk-tl-thread-policy.h"
 #include "husk-tl-driver-profile.h"
+#include "husk-tl-efficiency.h"
 
 void *tl_nwindow_native(void *window);
 int tl_nwindow_width(void *window);
@@ -350,6 +351,7 @@ static uint64_t record_host_timing(unsigned stage, int64_t start)
     uint64_t elapsed = (uint64_t)(monotonic_ns() - start);
     atomic_fetch_add_explicit(&host_timings[stage].ns, elapsed, memory_order_relaxed);
     atomic_fetch_add_explicit(&host_timings[stage].calls, 1, memory_order_relaxed);
+    tl_em_host(stage, elapsed);
     return elapsed;
 }
 /* Keep one worst slow call per reporting period. Producers never wait for the
@@ -386,6 +388,7 @@ static int w_vkCreateSwapchainKHR(void *device, const void *ci, const void *allo
     memcpy(&usage, c + 56, 4); memcpy(&alpha, c + 84, 4); memcpy(&mode, c + 88, 4);
     int r = real ? real(device, ci, alloc, out) : -3;
     tl_log_line("vulkan: vkCreateSwapchainKHR %ux%u images %u format %u colorspace %u usage %#x compositeAlpha %u presentMode %u -> %d", w, h, minimg, fmt, cs, usage, alpha, mode, r);
+    if (r == VK_SUCCESS) tl_em_size(w, h);
     if (r == VK_SUCCESS && tl_ue4_sharp_graphics_enabled())
         tl_log_line("ue4 graphics: actual presentation buffer %ux%u (inspect this size to verify the resolution change; not a measurement of internal 3D resolution)", w, h);
     /* MoltenVK changes the layer from this thread, which has no run loop: make sure the changes are committed rather than waiting for a transaction nothing will flush. */
@@ -615,6 +618,7 @@ static void pace_efficient_frame(void)
         record_host_timing(TIMING_SLEEP, sleep_started);
         now = monotonic_ns();
     }
+    tl_em_frame(now);
     /* Present-to-present wall-clock cadence including pacing, not GPU time.
      * Discard background/loading gaps instead of reporting them as gameplay. */
     if (previous && now - previous < 1000000000LL) {

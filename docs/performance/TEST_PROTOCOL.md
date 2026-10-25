@@ -50,7 +50,7 @@ Where supported, Instruments system power requires an appropriate unplugged/wire
 ## 4. Portable/build checks
 
 For future runtime changes, run the relevant existing suites and required CI regressions:
-`test_ue4_graphics.py`, `test_ue4_resolution_hook.py`, `test_source_efficiency.py`, `test_thread_policy.py`, `test_vk_frame_timing.py`, `test_pipeline_store.py`, `test_driver_profile.py` under `tests/translation-layer/`.
+`test_ue4_graphics.py`, `test_ue4_resolution_hook.py`, `test_source_efficiency.py`, `test_thread_policy.py`, `test_vk_frame_timing.py`, `test_pipeline_store.py`, `test_driver_profile.py`, `test_efficiency.py`, `test_efficiency_math.py` under `tests/translation-layer/`.
 
 Add meaningful tests for aggregation/percentiles and threshold boundaries, CPU deltas, unknown battery readings, pause/exclusion/discontinuity handling, bounded retention, JSON export and no baseline setting changes. Pipeline identity tests must cover deterministic identity across handle changes, changed relevant state, incomplete/unsupported state, batch attribution and bounded recording. Feedback must not alter original chains/results or invent supported flags. Test failure paths and object lifetimes.
 
@@ -61,3 +61,7 @@ Use the existing iOS compilation/IPA packaging workflow for device candidates an
 Before adoption, record matched repeat results and relevant variability. Define the candidate's primary metric and practical acceptance margin before measuring, using baseline variability and user-perceptible impact. Report inconclusive small differences honestly.
 
 Require preserved visuals/responsiveness, normal approximately 60 FPS, no material p95/p99 regression, no new device loss/artifacts or lifecycle/cache failures. Pipeline work must improve severe-stall metrics and account for total loading/session cost. Reduced confirmed computation may establish less work, but electrical energy benefit remains pending until measured. Temperature comparisons use matched ambient/start conditions. Keep rejected/no-benefit experiments and default restoration instructions.
+
+## M1 candidate-specific checks
+
+See [lightweight monitoring guide](10-lightweight-monitoring.md). Percentiles use bounded histograms, not raw frame storage. Native collector stage order is documented in export. Large intervals are retained unless explicitly excluded; calls spanning exclusion boundaries use completion-time attribution. Validate that the same pause/marker boundaries appear in the report and JSON. Swift CPU/battery/JSON tests run on macOS CI; they do not validate UIKit/Mach or share-sheet behaviour.

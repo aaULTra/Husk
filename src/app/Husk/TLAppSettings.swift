@@ -242,6 +242,7 @@ struct TLAppSettings: Codable, Equatable {
 struct TLAppSettingsView: View {
     let app: TLApp
 
+    @State private var efficiencySheet = false
     @ObservedObject private var store = TranslationLayerStore.shared
     @ObservedObject private var geode = GeodeSupport.shared
     @State private var settings: TLAppSettings
@@ -314,6 +315,8 @@ struct TLAppSettingsView: View {
                         ForEach(TLAppSettings.VulkanSubmission.allCases) { Text($0.title).tag($0) }
                     }
                     Toggle("Driver Phase Profiling", isOn: $settings.driverPhaseProfiling)
+                    Button("Performance & Efficiency Diagnostics") { efficiencySheet = true }
+                        .sheet(isPresented: $efficiencySheet) { EfficiencyDiagnosticsView() }
                     Picker("Worker Scheduling", selection: $settings.workerScheduling) {
                         ForEach(TLAppSettings.WorkerScheduling.allCases) { Text($0.title).tag($0) }
                     }

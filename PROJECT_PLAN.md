@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: approved roadmap saved; measurement implementation is next.
+Updated: 2026-10-25. Status: M1 implementation candidate in progress; device validation pending.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -35,7 +35,7 @@ Inspection basis: branch head 3c2d52c, PR metadata, graphics/settings, Vulkan wr
 | WORK-02 | Adaptive Trial | Implemented revised cheap-pipeline admission and self-applied caps/rollback | Real-device admission/application fix not independently verified here | NOT COMPLETE: energy A/B versus Balanced pending |
 | SUBMIT-01 | Async submission option | Implemented, experimental; Driver Default retained | No controlled benefit evidence | Pending independent A/B |
 | PROF-01 | Detailed MoltenVK profiling | Implemented; strict 1.4.2/private API 43, 1152-byte guard, optional/off | Earlier report contains driver activity data | Adds overhead; no genuine GPU/power measurement |
-| MEAS-01 | Efficiency Test sessions/export | Planned; existing cadence/API/thermal observations can be reused | No integrated session/export validation | First implementation priority |
+| MEAS-01 | Efficiency Test sessions/export | Implementation candidate: bounded aggregation, exclusions, process/API sampling, Markdown/JSON export | Portable core checks pass; Swift/iOS CI and real-device validation pending | M1 remains open; monitoring overhead and energy unmeasured |
 | GPU-01 | Genuine GPU execution timing | Research; current callback latency is not GPU time | Measurement gap | Instruments or safe completed-buffer access |
 | UPSCALE-01 | MetalFX spatial upscaling | Research, not wired into Vulkan presenter | None | Separate prototype only after GPU evidence |
 | RES-01 | Manual resolution controls | Implemented 65–100%, with heuristics | Two different presentation runs reported | Dynamic GPU-driven resolution remains unimplemented |
@@ -83,10 +83,24 @@ CPU time/activity is process-scoped with explicit normalisation. Track footprint
 
 ## 6. Next actions and task handover
 
-Next engineering task: M1 measurement foundation, beginning with a fresh source audit of lifecycle, UI/export plumbing and available telemetry; add no optimisation toggles in that patch. M2 then extends existing slow-call support instead of duplicating it. Obtain M4 baseline evidence with monitoring overhead separated, then prioritise measured costs.
+Current engineering task: M1 measurement foundation. Source/lifecycle/UI audit completed; observer and export candidate implemented without optimisation toggles. Complete Apple build/package validation and physical-device checks before M1 acceptance. M2 then extends existing slow-call support instead of duplicating it. Obtain M4 baseline evidence with monitoring overhead separated, then prioritise measured costs.
 
 Physical iPad tasks: export raw first/repeat/restart logs; validate lightweight reports; run matched monitoring-off/on baseline; gather unplugged power if tooling supports it and surface/ambient temperatures; later perform limiter, submission and Adaptive A/B separately.
 
 2026-10-25: User approved the structured plan and authorised saving it to GitHub. M0 documents prepared from the targeted repository inspection and supplied Sections 1–19/new-run summary. No runtime source, defaults, cache files or graphics settings changed. No device tests performed. M1–M10 remain open; all energy claims pending.
 
 At each handover append dated implementation/evidence/decision updates here and in the linked records. Do not close a milestone whose physical-device gate is pending.
+
+### 2026-10-25 — M1 / MEAS-01 implementation candidate
+
+Sequence: M0 durable instructions -> M1 measurement foundation (current) -> M2 variant/cache identification -> M3 GPU/power baseline -> separately measured optimisation experiments. Every future task/update must explain its relationship to this sequence, per the user's standing instruction.
+
+Candidate adds a default-off Efficiency Test panel in UE4 Game Graphics and the fullscreen game bar; CPU samples at roughly 2 seconds, memory at 10 seconds, battery at 30 seconds/on changes, environment transitions, selected existing cache/worker/pipeline log events, host Vulkan statistics and bounded 0.1 ms histogram summaries. Stop/export writes Markdown and schema-v1 JSON in Documents/EfficiencyTests; nothing is transmitted automatically. Metadata captures actual launch arguments and packaged build identity; packaging now stamps the full source SHA.
+
+New files: efficiency C header/core, Swift diagnostics UI/model and Foundation-only calculation helpers; integration touches the bridge, settings, native view, existing Vulkan observation points and selected log capture. Portable observer/math tests are wired into the IPA workflow. Rendering, resolution V4, limiter algorithm, worker policy, submission defaults and cache contents/lifetimes remain unchanged.
+
+Validation so far: 82 existing required portable checks + 8 observer tests pass on Linux. Swift calculation/JSON check is skipped locally because swiftc is unavailable; macOS CI is required. Broad test discovery additionally encountered an unrelated scanner test requiring unavailable clang; this does not replace the successful named required suites. iOS build/package and physical-device checks remain pending at this entry.
+
+Limitations: session is in memory until exported; retained windows/samples/events are bounded with explicit drop counts. Host cadence currently comes from the Sharp Vulkan path. Percentiles are estimated histogram bounds; long hitches are retained. API calls crossing exclusion boundaries are classified by completion time, not split. Peak footprint, actual GPU execution, actual displayed frames and verified cache hits are unavailable. Driver-phase details remain in the separate attempt log. Power and numerical temperature require external tools. No energy/heat reduction or negligible-overhead claim is made.
+
+Next: validate CI then use the device checklist in docs/performance/10-lightweight-monitoring.md. Keep M1 open until correctness and overhead A/B are established. Adaptive Trial energy validation and M2–M10 remain pending.

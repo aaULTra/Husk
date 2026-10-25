@@ -1,3 +1,4 @@
+#include "../translation-layer-next/husk-tl-efficiency.h"
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /*
  * The translation layer's loader: an attempt at actually running an app.
@@ -333,6 +334,7 @@ void tl_log_line(const char *fmt, ...)
     }
     line[w] = '\n';
     line[w + 1] = '\0';
+    tl_em_log(line);
     fputs(line, stderr);
     /* A file written line by line with write(2): what a process killed without warning still leaves behind. */
     if (tl_log_sink_fd >= 0) { ssize_t ignored = write(tl_log_sink_fd, line, strlen(line)); (void)ignored; }

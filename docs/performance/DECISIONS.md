@@ -48,3 +48,5 @@ This is a structured digest of the supplied technical handover Sections 1–19 a
 Append decision date, roadmap/experiment IDs, evidence references, build/device/conditions, result (positive, inconclusive, no benefit or regression), retained/reverted setting and reopening trigger. Do not delete unsuccessful work or turn historical priority scores into measured predictions.
 
 2026-10-25: Approved permanent-plan structure saved as documentation only. Next action is the lightweight measurement implementation audit; no behavioural optimisation, energy validation or iPhone validation completed by this task.
+
+2026-10-25 — M1 implementation: reuse Vulkan host counters and selected existing event logs; no raw per-frame file logging or GPU waits. Bounded histogram percentiles are explicitly estimated (0.1 ms upper bins; overflow conservative worst). Multi-second hitches are retained, unlike older cadence logging that discards long gaps. Keep diagnostics default off and measure overhead before adoption. M0 -> M1 -> M2/M3 is the next evidence sequence. No optimisation benefit is verified by these coding checks.
