@@ -65,8 +65,10 @@ int exercise_busy_mutex(void){unsigned before=api_calls;pthread_mutex_lock(&prof
         device_prefix = vulkan[start:vulkan.index('    uint32_t base[N_FEATURES]',start)]
         source += r'''
 #define VK_SUCCESS 0
-typedef void vk_device_ci;
-typedef int (*pfn_create_device)(void *,const void *,const void *,void **);
+#include "husk-tl-pipeline-feedback.h"
+typedef tl_pf_device_info vk_device_ci;
+typedef tl_pf_create_fn pfn_create_device;
+static tl_pf_enum_fn g_real_enum_dev_ext;
 static struct { void *lib; } V = {.lib=(void *)1};
 static int create_status, forwarded, store_devices;
 static bool dxvk_game(void){return false;}
@@ -74,7 +76,7 @@ static void properties(void *pd,void *out){(void)pd;memset(out,0,4096);}
 static void *fake_dlsym(void *lib,const char *name){(void)lib;(void)name;return (void *)properties;}
 #define dlsym fake_dlsym
 void tl_pc_device(void *d,uint32_t v,uint32_t id,const uint8_t uuid[16]){(void)d;(void)v;(void)id;(void)uuid;++store_devices;}
-static int host_create(void *pd,const void *ci,const void *a,void **out){
+static int host_create(void *pd,const tl_pf_device_info *ci,const void *a,void **out){
  forwarded=pd==(void *)3&&ci==(void *)5&&a==(void *)7;*out=(void *)1;return create_status;
 }
 ''' + device_prefix + '    return -4;\n}\n' + r'''
@@ -89,7 +91,7 @@ int exercise_create(int status){
         (root / 'test.c').write_text(source)
         tl = ROOT / 'src/translation-layer-next'
         subprocess.run([os.environ.get('CC', 'cc'), '-std=c11', '-Wall', '-Wextra', '-Werror',
-                        '-shared', '-fPIC', '-pthread', '-I', str(tl), str(root/'test.c'),
+                        '-shared', '-fPIC', '-pthread', '-I', str(tl), str(root/'test.c'), str(tl/'husk-tl-pipeline-feedback.c'),
                         '-o', str(root/'profile.so')], check=True)
         cls.lib = ctypes.CDLL(str(root/'profile.so'))
         cls.lib.setup.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_char_p]

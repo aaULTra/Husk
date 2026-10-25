@@ -39,6 +39,7 @@ class VulkanTimingTests(unittest.TestCase):
 #include "husk-tl-driver-profile.h"
 #include "husk-tl-efficiency.h"
 #include "husk-tl-pipeline-diagnostics.h"
+#include "husk-tl-pipeline-feedback.h"
 #undef TARGET_OS_IOS
 #undef TARGET_OS_OSX
 #define TARGET_OS_IOS 0
@@ -48,7 +49,7 @@ static struct { void *lib; atomic_ulong frames; bool probe_frames; } V = {.lib=(
 static void *g_swapchain_layer;
 static int64_t fake_clock;
 static unsigned sleep_calls, acquire_calls, submit_calls, present_calls;
-static int native_status, forwarding_failures;
+static int native_status, forwarding_failures, feedback_case;
 static int reject_seed, seed_attempts;
 static int64_t pipeline_delay_ns;
 static unsigned cache_create_calls, cache_data_calls, graphics_calls, compute_calls;
@@ -95,7 +96,15 @@ static int host_cache_data(void *device, uint64_t cache, size_t *size, void *dat
 static int host_graphics(void *device, uint64_t cache, uint32_t count, const void *ci, const void *alloc, uint64_t *out) {
     ++graphics_calls;
     fake_clock += pipeline_delay_ns;
-    if (device!=(void *)7 || (cache!=37 && cache!=0) || count!=2 || ci!=(void *)41 || alloc!=(void *)31) ++forwarding_failures;
+    if (device!=(void *)7 || (cache!=37 && cache!=0) || count!=2 || (!feedback_case && ci!=(void *)41) || alloc!=(void *)31) ++forwarding_failures;
+    if(feedback_case){
+        const tl_pi_graphics *infos=ci;
+        for(unsigned i=0;i<count;i++){
+            const tl_pf_info *feedback=infos[i].next;
+            if(!feedback||feedback->type!=1000192000||feedback->count!=1||!feedback->stages||!feedback->pipeline)forwarding_failures++;
+            else{feedback->pipeline->flags=1;feedback->stages[0].flags=3;}
+        }
+    }
     out[0]=43; out[1]=47; return native_status;
 }
 static int host_compute(void *device, uint64_t cache, uint32_t count, const void *ci, const void *alloc, uint64_t *out) {
@@ -211,6 +220,22 @@ int exercise_fast_limiter(int engine_only) {
     int sleeps=(int)sleep_calls;
     husk_ue4_set_engine_only_limiter(false);return sleeps;
 }
+static int feedback_device(void*p,const tl_pf_device_info*info,const void*a,void**out){(void)p;(void)a;if(info->extCount!=1)forwarding_failures++;*out=(void *)7;return 0;}
+static int feedback_extensions(void*p,const char*l,uint32_t*n,tl_pf_extension*out){(void)p;(void)l;if(out)snprintf(out[0].name,256,"VK_EXT_pipeline_creation_feedback");*n=1;return 0;}
+int exercise_requested_feedback(void){
+    forwarding_failures=0;feedback_case=1;native_status=0;
+    husk_ue4_set_pipeline_diagnostics(true);husk_ue4_set_pipeline_feedback(true);tl_pf_activate("Dungeons");
+    tl_pf_device_info device_info={.sType=3};void *device=NULL;
+    if(tl_pf_create_device((void *)5,&device_info,NULL,&device,feedback_device,feedback_extensions))return 1;
+    tl_pi_stage stage={.type=18,.stage=1,.module=77,.name="main"};
+    tl_pi_graphics infos[2]={{.type=28,.count=1,.stages=&stage,.base_index=-1},{.type=28,.count=1,.stages=&stage,.base_index=0}},saved[2];memcpy(saved,infos,sizeof(infos));
+    tl_pi_request r=tl_pi_identify(false,device,2,infos);uint64_t out[2];
+    int result=w_vkCreateGraphicsPipelines(device,37,2,infos,(void *)31,out);
+    tl_pi_group groups[2048];uint32_t count=tl_pi_copy_groups(groups,2048);int found=0;
+    for(unsigned i=0;i<count;i++)if(groups[i].signature==r.id[0]&&groups[i].stage_feedback_valid&&groups[i].stage_application_hits&&!groups[i].application_hits)found=1;
+    feedback_case=0;husk_ue4_set_pipeline_diagnostics(false);husk_ue4_set_pipeline_feedback(false);tl_pf_activate("Dungeons");
+    return !result&&out[1]==47&&!memcmp(infos,saved,sizeof(infos))&&!forwarding_failures&&found?0:2;
+}
 int exercise_efficiency_observer(void) {
     tl_em_start(); tl_em_exclude(false);
     int result = exercise(1, 1, 60, 0);
@@ -226,12 +251,15 @@ int exercise_efficiency_observer(void) {
         (root / "timing.c").write_text(harness)
         tl = ROOT / "src/translation-layer-next"
         subprocess.run([os.environ.get("CC", "cc"), "-std=c11", "-Wall", "-Wextra", "-Werror", "-shared", "-fPIC",
-                        "-I", str(tl), str(root / "timing.c"), str(tl / "husk-tl-ue4-graphics.c"), str(tl / "husk-tl-pipeline-store.c"), str(tl / "husk-tl-thread-policy.c"), str(tl / "husk-tl-driver-profile.c"), str(tl / "husk-tl-efficiency.c"), str(tl / "husk-tl-pipeline-diagnostics.c"), "-pthread",
+                        "-I", str(tl), str(root / "timing.c"), str(tl / "husk-tl-ue4-graphics.c"), str(tl / "husk-tl-pipeline-store.c"), str(tl / "husk-tl-thread-policy.c"), str(tl / "husk-tl-driver-profile.c"), str(tl / "husk-tl-efficiency.c"), str(tl / "husk-tl-pipeline-diagnostics.c"), str(tl / "husk-tl-pipeline-feedback.c"), "-pthread",
                         "-o", str(root / "timing.so")], check=True)
         cls.lib = ctypes.CDLL(str(root / "timing.so"))
         cls.lib.exercise.argtypes = [ctypes.c_int] * 4
         cls.lib.restored_seed_count.restype=ctypes.c_uint64
         cls.lib.restored_seed_bytes.restype=ctypes.c_uint64
+
+    def test_requested_stage_feedback_flows_through_actual_wrapper_without_guest_mutation(self):
+        self.assertEqual(self.lib.exercise_requested_feedback(), 0)
 
     def test_engine_only_comparison_bypasses_host_sleep_on_actual_present_wrapper(self):
         self.assertGreater(self.lib.exercise_fast_limiter(0),0)

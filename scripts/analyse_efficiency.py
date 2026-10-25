@@ -25,7 +25,7 @@ def interval_union(rows):
 
 
 def audit(data):
-    if data.get('schema_version') not in (1, 2, 3, 4):
+    if data.get('schema_version') not in (1, 2, 3, 4, 5):
         raise ValueError('Unsupported diagnostic schema; preserve source for a version-aware audit')
     summary, metadata = data.get('summary', {}), data.get('metadata', {})
     windows, samples = data.get('windows', []), data.get('samples', [])
@@ -89,6 +89,7 @@ def audit(data):
                        'rollbacks': worker.get('rollback_requests_since_launch'), 'waiting_reason': worker.get('waiting_reason'),
                        'normal_utility_last_observations': len(utility), 'core_residency': 'UNAVAILABLE',
                        'scope': 'Last observations, not live thread count or verified placement'},
+            'pipeline_feedback_request': data.get('pipeline_feedback_request', {}),
             'pipeline_groups_since_launch_top8': groups[:8], 'render_inventory': data.get('render_inventory', {}),
             'conditions': {'brightness_values': brightness, 'battery_states': states},
             'battery': {'coarse_pp_per_hour': data.get('battery_drain_pp_per_hour_estimated'),

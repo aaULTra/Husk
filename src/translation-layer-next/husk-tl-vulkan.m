@@ -28,6 +28,7 @@
 #include "husk-tl-driver-profile.h"
 #include "husk-tl-efficiency.h"
 #include "husk-tl-pipeline-diagnostics.h"
+#include "husk-tl-pipeline-feedback.h"
 #include "husk-tl-gpu-timing.h"
 #include "husk-tl-render-inventory.h"
 
@@ -38,7 +39,7 @@ int tl_nwindow_height(void *window);
 /* Only the parts of the Vulkan structures this layer reads or writes; they are the same on the guest and the host. */
 typedef struct { uint32_t sType; const void *pNext; uint32_t flags; const void *pApplicationInfo; uint32_t layerCount; const char *const *layers; uint32_t extCount; const char *const *exts; } vk_instance_ci;
 typedef struct { uint32_t sType; const void *pNext; const char *appName; uint32_t appVersion; const char *engineName; uint32_t engineVersion; uint32_t apiVersion; } vk_app_info;
-typedef struct { char name[256]; uint32_t specVersion; } vk_ext_props;
+typedef tl_pf_extension vk_ext_props;
 typedef struct { uint32_t sType; const void *pNext; uint32_t flags; void *window; } vk_android_surface_ci;
 typedef struct { uint32_t sType; const void *pNext; uint32_t flags; const void *pLayer; } vk_metal_surface_ci;
 
@@ -563,22 +564,25 @@ typedef int (*pfn_create_pipelines)(void *, uint64_t, uint32_t, const void *, co
 static int measure_pipeline_create(pfn_create_pipelines real, unsigned stage, void *device, uint64_t cache, uint32_t count, const void *ci, const void *alloc, uint64_t *out)
 {
     tl_pi_request identity = tl_pi_identify(stage == TIMING_COMPUTE_PIPELINES, device, count, ci);
+    tl_pf_batch feedback_batch;
+    const void *observed_ci = tl_pf_prepare(stage == TIMING_COMPUTE_PIPELINES, device, count, ci, &feedback_batch);
     bool measure = tl_ue4_sharp_graphics_enabled();
     int64_t start = measure ? monotonic_ns() : 0;
     if (measure) atomic_fetch_add_explicit(&pipeline_inflight, 1, memory_order_relaxed);
     bool locked = tl_pc_enter();
     int64_t entered = measure ? monotonic_ns() : 0;
-    int result = real ? real(device, cache, count, ci, alloc, out) : -3;
+    int result = real ? real(device, cache, count, observed_ci, alloc, out) : -3;
     if (real && count) tl_pc_changed(device, cache);
     tl_pc_leave(locked);
     if (measure) {
         uint64_t elapsed = record_host_timing(stage, start);
-        tl_pi_completed(identity, stage == TIMING_COMPUTE_PIPELINES, elapsed, start + elapsed, cache != 0, result, ci);
+        tl_pi_completed(identity, stage == TIMING_COMPUTE_PIPELINES, elapsed, start + elapsed, cache != 0, result, observed_ci);
         record_pipeline_event(stage, count, cache != 0, result, start + (int64_t)elapsed, elapsed, (uint64_t)(entered - start));
         tl_thread_policy_pipeline_completed(start + (int64_t)elapsed, (int64_t)elapsed);
         atomic_fetch_sub_explicit(&pipeline_inflight, 1, memory_order_relaxed);
         atomic_fetch_add_explicit(cache ? &cached_pipeline_calls : &uncached_pipeline_calls, 1, memory_order_relaxed);
     }
+    tl_pf_release(&feedback_batch);
     return result;
 }
 static int w_vkCreateGraphicsPipelines(void *device, uint64_t cache, uint32_t count, const void *ci, const void *alloc, uint64_t *out)
@@ -624,6 +628,7 @@ static void w_vkDestroyDevice(void *device, const void *alloc)
 {
     tl_dp_forget(device);
     tl_pi_forget_device(device);
+    tl_pf_forget_device(device);
     tl_gput_native_forget(device);
     typedef void (*fn)(void *, const void *);
     fn real = V.lib ? (fn)dlsym(V.lib, "vkDestroyDevice") : NULL;
@@ -803,10 +808,7 @@ typedef struct { uint32_t sType; void *pNext; uint32_t f[N_FEATURES]; } vk_featu
 typedef void (*pfn_get_features2)(void *, vk_features2 *);
 static pfn_get_features2 g_real_gpdf2, g_real_gpdf2khr;
 typedef struct { uint32_t sType; const void *pNext; } vk_base;
-typedef struct {
-    uint32_t sType; const void *pNext; uint32_t flags; uint32_t queueCount; const void *queues;
-    uint32_t layerCount; const char *const *layers; uint32_t extCount; const char *const *exts; const uint32_t *features;
-} vk_device_ci;
+typedef tl_pf_device_info vk_device_ci;
 typedef int (*pfn_create_device)(void *, const vk_device_ci *, const void *, void **);
 
 static bool dxvk_game(void)
@@ -1073,7 +1075,7 @@ static int w_vkCreateDevice(void *pd, const vk_device_ci *ci, const void *alloc,
 {
     if (!g_real_create_device) return -3;
     if (!dxvk_game()) {
-        int result = g_real_create_device(pd, ci, alloc, out);
+        int result = tl_pf_create_device(pd, ci, alloc, out, g_real_create_device, g_real_enum_dev_ext);
         if (result == VK_SUCCESS && out && *out) {
             tl_dp_device(*out);
             typedef void (*properties_fn)(void *, void *);

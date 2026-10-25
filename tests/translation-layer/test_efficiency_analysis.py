@@ -22,6 +22,9 @@ class AnalysisTests(unittest.TestCase):
  def test_metadata_differences_and_matching_conditions_still_do_not_prove_improvement(self):
   a=m.audit({'schema_version':4,'metadata':{'launch_configuration':{'worker_policy':2}}});b=copy.deepcopy(a);b['configuration']['worker_policy']=3
   c=m.compare(a,b);self.assertEqual(c['changed_fields'],['configuration.worker_policy']);self.assertEqual(c['energy_improvement'],'UNVERIFIED')
+ def test_stage_library_hits_do_not_become_full_pipeline_or_energy_claims(self):
+  d={'schema_version':5,'pipeline_groups_since_launch':[{'signature_version':'partial-v2','first_pipeline_application_hit_calls':0,'first_pipeline_valid_stage_feedback_count':2,'first_pipeline_stage_application_cache_hit_count':2}], 'pipeline_feedback_request':{'active':True,'enabled_devices':1}}
+  a=m.audit(d);self.assertEqual(a['pipeline_groups_since_launch_top8'][0]['first_pipeline_stage_application_cache_hit_count'],2);self.assertTrue(a['energy_benefit'].startswith('UNVERIFIED'))
  def test_unknown_schema_is_not_silently_reinterpreted(self):
   with self.assertRaises(ValueError):m.audit({'schema_version':999})
 if __name__=='__main__':unittest.main()

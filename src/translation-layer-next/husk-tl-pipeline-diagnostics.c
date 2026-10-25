@@ -12,7 +12,7 @@ static atomic_bool enabled;
 static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
 static struct { void *device; uint64_t module, hash; } modules[MODULES];
 static tl_pi_group signatures[SIGNATURES];
-static struct event { tl_pi_request request; bool compute, cache; int result; uint64_t ns, finished, occurrence; int feedback; } events[EVENTS];
+static struct event { tl_pi_request request; bool compute, cache; int result; uint64_t ns, finished, occurrence; int feedback; unsigned stage_count, stage_valid, stage_hits, stage_valid_mask, stage_hit_mask; } events[EVENTS];
 static unsigned head, length;
 static atomic_uint_fast64_t drops;
 void tl_log_line(const char *fmt, ...);
@@ -48,10 +48,11 @@ void tl_pi_forget_device(void *device) {
     for (unsigned i = 0; i < MODULES; i++) if (modules[i].device == device) modules[i].device = NULL;
     pthread_mutex_unlock(&mu);
 }
-static uint64_t stage_hash(uint64_t h, void *device, const tl_pi_stage *stage, unsigned *known) {
+static uint64_t stage_hash(uint64_t h, void *device, const tl_pi_stage *stage, unsigned *known, uint64_t *shader_identity) {
     h = number(number(h, stage->stage), stage->flags);
     uint64_t shader = 0;
     for (unsigned i = 0; i < MODULES; i++) if (modules[i].device == device && modules[i].module == stage->module) { shader = modules[i].hash; break; }
+    if (shader_identity) *shader_identity = shader;
     if (!shader) *known = 0;
     h = number(h, shader);
     if (stage->name) { size_t n = 0; while (n < 256 && stage->name[n]) n++; h = bytes(h, stage->name, n); if (n == 256) *known = 0; }
@@ -68,6 +69,8 @@ static uint64_t stage_hash(uint64_t h, void *device, const tl_pi_stage *stage, u
     }
     return h;
 }
+#include "husk-tl-pipeline-state.h"
+
 tl_pi_request tl_pi_identify(bool compute, void *device, uint32_t count, const void *ci) {
     tl_pi_request r = {.count = count};
     if (!atomic_load(&enabled) || !ci || !count) return r;
@@ -77,36 +80,46 @@ tl_pi_request tl_pi_identify(bool compute, void *device, uint32_t count, const v
         uint64_t h = number(14695981039346656037ULL, compute); r.known[i] = 1;
         if (compute) {
             const tl_pi_compute *p = (const tl_pi_compute *)ci + i;
-            h = number(h, p->flags); h = stage_hash(h, device, &p->stage, &r.known[i]);
+            h = number(h, p->flags); h = stage_hash(h, device, &p->stage, &r.known[i], i == 0 ? &r.shader_hashes[0] : NULL);
+            if (i == 0) { r.shader_stages = 1; r.stage_bits[0] = p->stage.stage; }
             if (p->next || p->type != 29) r.known[i] = 0;
         } else {
             const tl_pi_graphics *p = (const tl_pi_graphics *)ci + i;
             h = number(number(number(h, p->flags), p->count), p->subpass);
             if (p->count > 16 || (p->count && !p->stages) || p->type != 28) r.known[i] = 0;
-            else for (unsigned j = 0; j < p->count; j++) h = stage_hash(h, device, p->stages+j, &r.known[i]);
-            /* Explicit scalar fields only: no pointers, opaque handles or padding.
-             * Input-assembly topology/restart distinguish common shader variants.
-             * Remaining fixed/layout/render-pass state is deliberately unrepresented. */
-            if (p->assembly) { const uint32_t *a = (const uint32_t *)((const char *)p->assembly + 16); h = number(number(number(h,a[0]),a[1]),a[2]); }
+            else {
+                if (i == 0) r.shader_stages = p->count < 4 ? p->count : 4;
+                for (unsigned j = 0; j < p->count; j++) {
+                    if (i == 0 && j < 4) r.stage_bits[j] = p->stages[j].stage;
+                    h = stage_hash(h, device, p->stages+j, &r.known[i], i == 0 && j < 4 ? &r.shader_hashes[j] : NULL);
+                }
+            }
+            h = fixed_state(h,p,&r.known[i]);
             if (p->next) r.known[i] = 0;
         }
         r.id[i] = h;
     }
     pthread_mutex_unlock(&mu); return r;
 }
-/* Passive feedback only: read a feedback chain the guest already supplied.
- * No extension is enabled, chain injected, compile flag changed or cache-hit
- * claim inferred from cache presence. -1 means unavailable/invalid feedback. */
-static int feedback(const void *chain) {
+/* Read actual valid driver outputs, from guest-supplied or explicitly requested
+ * diagnostic feedback. Stage hits and pipeline hits are different evidence. */
+typedef struct { int pipeline_hit; unsigned stage_count, stage_valid, stage_hits, stage_valid_mask, stage_hit_mask; } feedback_result;
+static feedback_result feedback(const void *chain, unsigned expected_stages) {
     typedef struct node { uint32_t type; const struct node *next; } node;
     typedef struct { uint32_t flags; uint64_t duration; } data;
     typedef struct { uint32_t type; const void *next; const data *pipeline; uint32_t count; const data *stages; } info;
+    feedback_result r = {.pipeline_hit = -1};
     const node *n = chain;
     for (unsigned i = 0; n && i < 32; i++, n = n->next) if (n->type == 1000192000) {
         const info *p = (const info *)n;
-        return p->pipeline && (p->pipeline->flags & 1) ? !!(p->pipeline->flags & 2) : -1;
+        if (p->pipeline && (p->pipeline->flags & 1)) r.pipeline_hit = !!(p->pipeline->flags & 2);
+        r.stage_count = p->count;
+        if (p->count <= 16 && p->count == expected_stages && p->stages) for (unsigned j = 0; j < p->count; j++) {
+            if (p->stages[j].flags & 1) { r.stage_valid++; r.stage_valid_mask |= 1u << j; r.stage_hits += !!(p->stages[j].flags & 2); if (p->stages[j].flags & 2) r.stage_hit_mask |= 1u << j; }
+        }
+        break;
     }
-    return -1;
+    return r;
 }
 void tl_pi_completed(tl_pi_request r, bool compute, uint64_t elapsed, uint64_t finished, bool cache, int result, const void *ci) {
     if (!atomic_load(&enabled) || !r.sampled) return;
@@ -118,17 +131,21 @@ void tl_pi_completed(tl_pi_request r, bool compute, uint64_t elapsed, uint64_t f
         slot = (slot + 1) % SIGNATURES; checked++;
     }
     const void *chain = compute ? ((const tl_pi_compute *)ci)->next : ((const tl_pi_graphics *)ci)->next;
-    int hit = result == 0 ? feedback(chain) : -1;
+    feedback_result f = result == 0 ? feedback(chain, compute ? 1 : ((const tl_pi_graphics *)ci)->count) : (feedback_result){.pipeline_hit = -1};
+    int hit = f.pipeline_hit;
     if (checked < SIGNATURES) {
         tl_pi_group *g = &signatures[slot]; g->signature = r.id[0]; occurrence = ++g->calls;
         g->slow_calls += elapsed >= 16666667; g->total_ns += elapsed;
         if (elapsed > g->worst_ns) g->worst_ns = elapsed;
         g->valid_feedback += hit >= 0; g->application_hits += hit == 1;
+        g->stage_feedback_valid += f.stage_valid; g->stage_application_hits += f.stage_hits;
+        g->shader_stages = r.shader_stages; memcpy(g->shader_hashes,r.shader_hashes,sizeof(g->shader_hashes)); memcpy(g->stage_bits,r.stage_bits,sizeof(g->stage_bits));
+        g->last_stage_valid_mask = f.stage_valid_mask; g->last_stage_hit_mask = f.stage_hit_mask;
     } else atomic_fetch_add(&drops, 1);
     if (elapsed >= 16666667 || occurrence == 1 || occurrence == 2) {
         if (length == EVENTS) atomic_fetch_add(&drops, 1);
         else {
-            events[(head+length++)%EVENTS] = (struct event){r,compute,cache,result,elapsed,finished,occurrence,hit};
+            events[(head+length++)%EVENTS] = (struct event){r,compute,cache,result,elapsed,finished,occurrence,hit,f.stage_count,f.stage_valid,f.stage_hits,f.stage_valid_mask,f.stage_hit_mask};
         }
     }
     pthread_mutex_unlock(&mu);
@@ -142,8 +159,8 @@ void tl_pi_report(void) {
         pthread_mutex_unlock(&mu);
         char ids[220] = {0}; size_t used = 0;
         for (unsigned j = 0; j < e.request.sampled; j++) used += (size_t)snprintf(ids+used,sizeof(ids)-used,"%s%016llx/%s",j?",":"",(unsigned long long)e.request.id[j],e.request.known[j]?"shader-known":"incomplete");
-        tl_log_line("ue4 pipeline identity: M2/PIPE-01 partial-v1 ids=%s kind=%s batch %u sampled %u host %.3f ms cache-present %d occurrence %llu feedback-first %s result %d, finished monotonic %.6f s; partial key; batch time; hitch unverified",
-            ids,e.compute?"compute":"graphics",e.request.count,e.request.sampled,e.ns/1e6,e.cache,(unsigned long long)e.occurrence,e.feedback<0?"unavailable":e.feedback?"application-cache-hit":"valid-no-application-hit",e.result,e.finished/1e9);
+        tl_log_line("ue4 pipeline identity: M2/PIPE-01 partial-v2 ids=%s kind=%s batch %u sampled %u host %.3f ms cache-present %d occurrence %llu feedback-first %s stages-valid %u/%u stage-hits %u masks %#x/%#x result %d, finished monotonic %.6f s; partial key; batch time; hitch unverified",
+            ids,e.compute?"compute":"graphics",e.request.count,e.request.sampled,e.ns/1e6,e.cache,(unsigned long long)e.occurrence,e.feedback<0?"unavailable":e.feedback?"application-cache-hit":"valid-no-application-hit",e.stage_valid,e.stage_count,e.stage_hits,e.stage_valid_mask,e.stage_hit_mask,e.result,e.finished/1e9);
     }
     uint64_t lost = atomic_exchange(&drops,0);
     if (lost) tl_log_line("ue4 pipeline identity: M2/PIPE-01 diagnostic records unavailable/dropped %llu; bounded registry/events",(unsigned long long)lost);

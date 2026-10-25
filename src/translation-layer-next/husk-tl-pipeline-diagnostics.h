@@ -17,7 +17,7 @@ typedef struct {
     uint64_t layout, renderpass; uint32_t subpass; uint64_t base; int32_t base_index;
 } tl_pi_graphics;
 typedef struct { uint32_t type; const void *next; uint32_t flags; tl_pi_stage stage; uint64_t layout, base; int32_t base_index; } tl_pi_compute;
-typedef struct { uint64_t id[4]; unsigned known[4], sampled, count; } tl_pi_request;
+typedef struct { uint64_t id[4], shader_hashes[4]; unsigned known[4], sampled, count, shader_stages; uint32_t stage_bits[4]; } tl_pi_request;
 void husk_ue4_set_pipeline_diagnostics(bool enabled);
 void tl_pi_shader(void *device, uint64_t module, const tl_pi_module_ci *ci);
 void tl_pi_forget_shader(void *device, uint64_t module);
@@ -27,7 +27,7 @@ void tl_pi_completed(tl_pi_request request, bool compute, uint64_t elapsed_ns, u
 void tl_pi_report(void);
 /* Lifetime since game launch; one group per batch's first sampled partial key.
  * Durations may overlap. This cannot reconstruct pipelines or prove cache hits. */
-typedef struct { uint64_t signature, calls, slow_calls, total_ns, worst_ns, valid_feedback, application_hits; } tl_pi_group;
+typedef struct { uint64_t signature, calls, slow_calls, total_ns, worst_ns, valid_feedback, application_hits, stage_feedback_valid, stage_application_hits; uint64_t shader_hashes[4]; uint32_t stage_bits[4], shader_stages, last_stage_valid_mask, last_stage_hit_mask; } tl_pi_group;
 uint32_t tl_pi_copy_groups(tl_pi_group *out, uint32_t capacity);
 
 #endif

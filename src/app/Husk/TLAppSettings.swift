@@ -124,6 +124,7 @@ struct TLAppSettings: Codable, Equatable {
     var vulkanSubmission: VulkanSubmission = .driverDefault
     var engineOnlyLimiter = false
     var pipelineIdentification = false
+    var pipelineFeedback = false
     var renderTargetInventory = false
     var driverPhaseProfiling = false
     var workerScheduling: WorkerScheduling = .balanced
@@ -206,6 +207,7 @@ struct TLAppSettings: Codable, Equatable {
         vulkanSubmission = try c.decodeIfPresent(VulkanSubmission.self, forKey: .vulkanSubmission) ?? .driverDefault
         engineOnlyLimiter = try c.decodeIfPresent(Bool.self, forKey: .engineOnlyLimiter) ?? false
         pipelineIdentification = try c.decodeIfPresent(Bool.self, forKey: .pipelineIdentification) ?? false
+        pipelineFeedback = try c.decodeIfPresent(Bool.self, forKey: .pipelineFeedback) ?? false
         renderTargetInventory = try c.decodeIfPresent(Bool.self, forKey: .renderTargetInventory) ?? false
         driverPhaseProfiling = try c.decodeIfPresent(Bool.self, forKey: .driverPhaseProfiling) ?? false
         workerScheduling = try c.decodeIfPresent(WorkerScheduling.self, forKey: .workerScheduling) ?? .balanced
@@ -323,6 +325,8 @@ struct TLAppSettingsView: View {
                     Toggle("Engine-only 60 FPS Limiter (Diagnostic)", isOn: $settings.engineOnlyLimiter)
                     Text("Off keeps the existing engine + host limiter. On requests engine-only pacing at 60 FPS; verify actual cadence in a short test. Thermal fallback caps remain active. Fully restart after changes.").font(.caption)
                     Toggle("Pipeline Identification (Diagnostic)", isOn: $settings.pipelineIdentification)
+                    Toggle("Pipeline Creation Feedback (Diagnostic)", isOn: $settings.pipelineFeedback).disabled(!settings.pipelineIdentification)
+                    Text("Optional driver feedback request, only where advertised; requires identification and full restart. Adds diagnostic overhead, with no guaranteed cache hits or savings.").font(.caption)
                     Toggle("Render Target Inventory (Diagnostic)", isOn: $settings.renderTargetInventory)
                     Text("Records requested image and render-area sizes for MetalFX investigation; adds CPU observation overhead. No upscaling or resolution change. Restart after changing.").font(.caption)
                     Toggle("Driver Phase Profiling", isOn: $settings.driverPhaseProfiling)

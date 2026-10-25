@@ -29,7 +29,7 @@ uint64_t identity(int mode) {
  if(mode==1) { tl_pi_module_ci m={.type=16,.size=sizeof(code),.code=code};tl_pi_shader((void *)1,99,&m);st.module=99; }
  if(mode==2)st.name="other";
  if(mode==3)p.subpass=1;
- uint32_t state[8]={0};state[5]=mode==4?2:1;if(mode==4||mode==5)p.assembly=state;
+ uint32_t state[8]={20};state[5]=mode==4?2:1;if(mode==4||mode==5)p.assembly=state;
  tl_pi_request r=tl_pi_identify(false,(void *)1,1,&p);return r.id[0];
 }
 int known_after_destroy(void) {tl_pi_forget_shader((void *)1,4);return tl_pi_identify(false,(void *)1,1,&ci).known[0];}
@@ -56,10 +56,32 @@ int group_collisions(void) {
   if(groups[i].signature==2049&&groups[i].calls!=1)return 3;
  }return 0;
 }
+uint64_t state_variant(int kind,int variant){
+ tl_pi_graphics p=ci;
+ pi_vertex vertex={.type=19};pi_raster raster={.type=23,.line=1};
+ pi_depth depth={.type=25,.test=1};pi_blend blend={.type=26,.count=1};uint32_t attachment[8]={0};blend.attachments=attachment;
+ pi_multi multi={.type=24,.samples=64};uint32_t mask[2]={UINT32_MAX,UINT32_MAX};
+ if(kind==0){raster.cull=variant?2:1;p.raster=&raster;}
+ if(kind==1){depth.compare=variant?2:1;p.depth=&depth;}
+ if(kind==2){attachment[0]=variant?1:0;p.blend=&blend;}
+ if(kind==3){multi.mask=mask;mask[1]=variant?1:UINT32_MAX;p.multisample=&multi;}
+ if(kind==4){uint32_t binding[3]={0,(uint32_t)(variant?24:16),0};vertex.bindings=1;vertex.binding_data=binding;p.vertex=&vertex;return tl_pi_identify(false,(void *)1,1,&p).id[0];}
+ if(kind==5){pi_viewport viewport={.type=22,.viewports=1,.viewport_data=variant?(void *)1:NULL};uint32_t state=0;pi_dynamic dyn={.type=27,.count=1,.states=&state};p.viewport=&viewport;p.dynamic=&dyn;return tl_pi_identify(false,(void *)1,1,&p).id[0];}
+ if(kind==6){raster.discard=1;p.raster=&raster;p.viewport=p.multisample=p.depth=p.blend=variant?(void *)1:NULL;}
+ if(kind==7){uint32_t state=1000267003;pi_dynamic dyn={.type=27,.count=1,.states=&state};p.dynamic=&dyn;p.raster=(void *)1;return tl_pi_identify(false,(void *)1,1,&p).known[0];}
+ return tl_pi_identify(false,(void *)1,1,&p).id[0];
+}
+int stage_feedback_counts(void){
+ struct {uint32_t flags;uint64_t duration;} pipeline={1,1000},stages[3]={{3,100},{1,200},{2,300}};
+ struct {uint32_t type;const void*next;void*pipeline;uint32_t count;void*stages;} fb={1000192000,NULL,&pipeline,3,stages};
+ tl_pi_graphics p=ci;tl_pi_stage ss[3]={stage,stage,stage};p.stages=ss;p.count=3;p.next=&fb;tl_pi_request r=tl_pi_identify(false,(void *)1,1,&p);
+ tl_pi_completed(r,false,20000000,123,true,0,&p);tl_pi_group g[2];
+ return tl_pi_copy_groups(g,2)==1&&g[0].valid_feedback==1&&g[0].application_hits==0&&g[0].stage_feedback_valid==2&&g[0].stage_application_hits==1&&g[0].last_stage_valid_mask==3&&g[0].last_stage_hit_mask==1&&g[0].shader_stages==3&&g[0].shader_hashes[0]!=0?0:1;
+}
 unsigned bounded(void) {for(unsigned i=0;i<100;i++){tl_pi_request r=tl_pi_identify(false,(void *)1,1,&ci);tl_pi_completed(r,false,20000000,1,true,0,&ci);}return length;}
 ''')
   lib=root/'identity.so';subprocess.run([os.environ.get('CC','cc'),'-std=c11','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(ROOT/'src/translation-layer-next'),str(src),'-o',str(lib)],check=True)
-  cls.lib=ctypes.CDLL(str(lib));cls.lib.identity.restype=ctypes.c_uint64;cls.lib.emit.restype=ctypes.c_char_p
+  cls.lib=ctypes.CDLL(str(lib));cls.lib.identity.restype=ctypes.c_uint64;cls.lib.emit.restype=ctypes.c_char_p;cls.lib.state_variant.restype=ctypes.c_uint64
  def setUp(self):self.lib.setup()
  def test_identity_ignores_handles_but_distinguishes_entry_subpass_and_topology(self):
   self.assertEqual(self.lib.identity(0),self.lib.identity(1))
@@ -72,5 +94,11 @@ unsigned bounded(void) {for(unsigned i=0;i<100;i++){tl_pi_request r=tl_pi_identi
   self.assertIn(b'feedback-first unavailable',self.lib.emit(-1,1));self.assertIn(b'feedback-first unavailable',self.lib.emit(2,1))
   self.assertIn(b'valid-no-application-hit',self.lib.emit(1,1));self.assertIn(b'application-cache-hit',self.lib.emit(3,1))
  def test_collision_groups_keep_separate_counts_and_host_costs(self):self.assertEqual(self.lib.group_collisions(),0)
+ def test_raster_depth_blend_sample_mask_and_vertex_state_distinguish_groups(self):
+  for kind in range(5):self.assertNotEqual(self.lib.state_variant(kind,0),self.lib.state_variant(kind,1))
+ def test_dynamic_viewport_and_discard_do_not_read_ignored_pointers(self):
+  for kind in (5,6):self.assertEqual(self.lib.state_variant(kind,0),self.lib.state_variant(kind,1))
+ def test_extended_dynamic_state_is_explicitly_incomplete(self):self.assertEqual(self.lib.state_variant(7,0),0)
+ def test_valid_stage_hits_are_separate_from_pipeline_hits(self):self.assertEqual(self.lib.stage_feedback_counts(),0)
  def test_bounded_slow_events(self):self.assertEqual(self.lib.bounded(),64)
 if __name__=='__main__':unittest.main()

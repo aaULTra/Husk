@@ -275,13 +275,33 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "scope": "Requested base fields/legacy render areas since launch; not actual scene/HUD pixels, executed GPU passes, texture identity or replay state; swapchain images and newer renderpass paths may be absent",
                 "metalfx_integration": "not implemented", "benefit_validation": "unverified"]
     }
+    private func pipelineFeedbackReport() -> [String: Any] {
+        var s = tl_pf_stats(); tl_pf_snapshot(&s)
+        return ["requested": s.requested, "active": s.active, "enabled_devices": s.enabled_devices,
+                "appended_extension_devices": s.appended_devices, "guest_enabled_devices": s.guest_enabled_devices,
+                "unsupported_devices": s.unsupported_devices, "declined_devices": s.declined_devices,
+                "injected_pipeline_infos": s.injected_pipelines, "passive_pipeline_infos": s.passive_pipelines,
+                "skipped_batches": s.skipped_batches, "plan_ids": ["M2", "CACHE-01"],
+                "scope": "Optional supported driver feedback; stage shader-library hits differ from whole-pipeline hits; neither guarantees no Metal pipeline work",
+                "benefit_validation": "unverified"]
+    }
     private func pipelineGroups() -> [[String: Any]] {
         var groups = Array(repeating: tl_pi_group(), count: 2048)
         let count = groups.withUnsafeMutableBufferPointer { tl_pi_copy_groups($0.baseAddress, UInt32($0.count)) }
         return groups.prefix(Int(count)).map { g in
-            ["partial_signature": String(format: "%016llx", g.signature), "batch_calls": g.calls,
+            var hashes = g.shader_hashes, bits = g.stage_bits
+            let hashList = withUnsafeBytes(of: &hashes) { Array($0.bindMemory(to: UInt64.self)) }
+            let bitList = withUnsafeBytes(of: &bits) { Array($0.bindMemory(to: UInt32.self)) }
+            let stages: [[String: Any]] = (0..<min(Int(g.shader_stages), 4)).map { i in
+                ["stage_index": i, "vulkan_stage": bitList[i], "module_content_hash": String(format: "%016llx", hashList[i]), "module_known": hashList[i] != 0]
+            }
+            return ["signature_version": "partial-v2", "partial_signature": String(format: "%016llx", g.signature), "batch_calls": g.calls,
              "slow_batch_calls": g.slow_calls, "aggregate_host_ns": g.total_ns, "worst_host_ns": g.worst_ns,
              "first_pipeline_valid_feedback_calls": g.valid_feedback, "first_pipeline_application_hit_calls": g.application_hits,
+             "first_pipeline_shader_stages": stages,
+             "first_pipeline_last_stage_valid_mask": g.last_stage_valid_mask, "first_pipeline_last_stage_hit_mask": g.last_stage_hit_mask,
+             "first_pipeline_valid_stage_feedback_count": g.stage_feedback_valid,
+             "first_pipeline_stage_application_cache_hit_count": g.stage_application_hits,
              "scope": "since game launch; first partial group per batch; not full variants or replay state",
              "plan_ids": ["M2", "PIPE-01"]]
         }.sorted { ($0["worst_host_ns"] as? UInt64 ?? 0) > ($1["worst_host_ns"] as? UInt64 ?? 0) }
@@ -294,8 +314,8 @@ final class EfficiencyDiagnostics: ObservableObject {
         observers.forEach { NotificationCenter.default.removeObserver($0) }; observers = []
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
-        stoppedReport = ["schema_version": 4, "metadata": metadata, "duration_seconds": now - origin,
-                         "summary": stats(total), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
+        stoppedReport = ["schema_version": 5, "metadata": metadata, "duration_seconds": now - origin,
+                         "summary": stats(total), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
                          "battery_included_sample_count": battery.sampleCount,
@@ -339,6 +359,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 let cpu = rows.compactMap { $0["process_cpu_percent_one_core"] as? Double }
                 let footprints = rows.compactMap { $0["footprint_bytes"] as? Int64 }
                 let thermal = Set(rows.compactMap { ($0["environment"] as? [String: Any])?["thermal_classification"] as? Int }).sorted()
+                let feedback = report["pipeline_feedback_request"] as? [String: Any] ?? [:]
                 let inventory = report["render_inventory"] as? [String: Any] ?? [:]
                 let worker = report["worker_policy"] as? [String: Any] ?? [:]
                 let gpu = report["gpu_sampling"] as? [String: Any] ?? [:]
@@ -367,6 +388,8 @@ final class EfficiencyDiagnostics: ObservableObject {
                 Frame distribution complete: \(summary["frame_distribution_complete"] ?? false)
                 Dropped frame/host/event records: \(summary["dropped_frame_intervals_cumulative"] ?? 0) / \(summary["dropped_host_records_cumulative"] ?? 0) / \(summary["dropped_events_cumulative"] ?? 0)
                 CPU/memory/battery/thermal samples, timestamped runtime events, phase markers and exclusions: diagnostics.json.
+                M2 driver feedback request active/devices/injected: \(feedback["active"] ?? false) / \(feedback["enabled_devices"] ?? 0) / \(feedback["injected_pipeline_infos"] ?? 0)
+                Stage cache feedback is separate from full pipeline reuse; no guaranteed compilation avoidance.
                 M9 render inventory active/images/legacy areas: \(inventory["active"] ?? false) / \(inventory["observed_image_creations"] ?? 0) / \(inventory["observed_legacy_render_areas"] ?? 0)
                 Render inventory is partial requested state; actual scene resolution and MetalFX integration remain unverified.
                 M7 worker policy requested/active: \(worker["requested_mode"] ?? 0) / \(worker["active_mode"] ?? 0)
