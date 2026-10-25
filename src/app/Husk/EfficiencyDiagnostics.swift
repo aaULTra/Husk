@@ -2,6 +2,7 @@
 import SwiftUI
 import UIKit
 import Metal
+import QuartzCore
 #if canImport(MetalFX)
 import MetalFX
 #endif
@@ -89,7 +90,15 @@ final class EfficiencyDiagnostics: ObservableObject {
                     "build_date": Bundle.main.object(forInfoDictionaryKey: "HuskBuildDate") as? String ?? "UNAVAILABLE",
                     "launch_configuration": attached, "metal_capabilities": metalCapabilities,
                     "process_scope": "Husk/LiveContainer host process; not isolated guest-game utilisation"]
-        tl_em_start(); tl_gput_native_start(gpuSampling); running = true; refreshExclusion(); event("phase", phase); sample()
+        tl_em_start(); tl_gput_native_start(gpuSampling)
+        // Bracket a host-clock read with media-clock reads. Raw values remain
+        // authoritative; this mapping supports estimated host/GPU correlation.
+        let mediaBefore = CACurrentMediaTime(), monotonicAnchor = now, mediaAfter = CACurrentMediaTime()
+        metadata["gpu_clock_alignment"] = ["media_anchor_seconds": (mediaBefore + mediaAfter) / 2,
+                                           "monotonic_anchor_seconds": monotonicAnchor,
+                                           "read_bracket_seconds": mediaAfter - mediaBefore,
+                                           "mapping": "estimated host/GPU correlation; raw clocks retained; lifecycle spans excluded"]
+        running = true; refreshExclusion(); event("phase", phase); sample()
         timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.sample() }
         }
@@ -166,9 +175,9 @@ final class EfficiencyDiagnostics: ObservableObject {
     }
     private func gpuReport() -> [String: Any] {
         var s = tl_gput_stats(); tl_gput_snapshot(&s)
-        let status = !s.requested ? "UNAVAILABLE: disabled" : s.hooked_queues == 0 ?
-            "UNAVAILABLE: no compatible registered game queue" : s.completed == 0 ?
-            "UNAVAILABLE: no valid sampled GPU timestamps" : "MEASURED: sampled command-buffer GPU intervals; partial coverage"
+        let status = !s.requested ? "UNAVAILABLE: disabled" : s.completed > 0 ?
+            "MEASURED: sampled command-buffer GPU intervals; partial coverage" : s.hooked_queues == 0 ?
+            "UNAVAILABLE: no compatible registered game queue" : "UNAVAILABLE: no valid sampled GPU timestamps"
         return ["status": status, "requested": s.requested, "registered_queues": s.registered_queues,
                 "hooked_queues": s.hooked_queues, "hook_failures": s.hook_failures,
                 "attached_handlers": s.attached, "valid_records": s.completed, "invalid_timestamps": s.invalid,
