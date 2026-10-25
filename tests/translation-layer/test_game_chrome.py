@@ -31,6 +31,11 @@ check(GameChromeLayout.clearance(view: notch, safe: notch, status: nil, hostedTo
 let floating = CGRect(x: 150, y: 100, width: 700, height: 500)
 check(GameChromeLayout.clearance(view: floating, safe: safe, status: status, hostedTopBoundary: 24).top == 0)
 check(GameChromeLayout.clearance(view: .zero, safe: safe, status: status, hostedTopBoundary: 24) == GameChromeClearance())
+// Hosted iPad status row plus the window/ellipsis control row.
+let hostedControls = GameChromeLayout.clearance(view: full, safe: safe, status: status, hostedTopBoundary: 52)
+check(hostedControls.top == 52)
+let alreadyBelowControls = CGRect(x: 0, y: 52, width: 1376, height: 980)
+check(GameChromeLayout.clearance(view: alreadyBelowControls, safe: safe, status: status, hostedTopBoundary: 52).top == 0)
 // Geometry already converted into a scaled guest's local points by UIKit.
 check(GameChromeLayout.clearance(view: full, safe: full, status: nil, hostedTopBoundary: 32).top == 32)
 let returned = GameChromeLayout.clearance(view: full, safe: safe, status: status, hostedTopBoundary: 24)

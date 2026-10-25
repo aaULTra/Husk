@@ -91,10 +91,10 @@ final class GameChromeProbe: UIView {
             status = convert(windowStatus, from: window)
         }
         // LiveContainer can keep the host iPad status area visible while the
-        // guest reports a hidden status bar/zero inset. Reserve its top strip.
+        // guest reports a hidden status bar/zero inset. Reserve status + window controls.
         // Relative-to-window math avoids adding this twice to an already-safe view.
         let hosted = getenv("LC_HOME_PATH") != nil && UIDevice.current.userInterfaceIdiom == .pad
-        let reserve: CGFloat? = hosted ? convert(CGPoint(x: window.bounds.midX, y: window.bounds.minY + 24), from: window).y : nil
+        let reserve: CGFloat? = hosted ? convert(CGPoint(x: window.bounds.midX, y: window.bounds.minY + 52), from: window).y : nil
         let value = GameChromeLayout.clearance(view: bounds, safe: safe,
                                                status: status, hostedTopBoundary: reserve)
         guard value != last else { return }
