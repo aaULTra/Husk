@@ -331,9 +331,9 @@ struct TLWindowScreen: UIViewRepresentable {
     var efficientFrameLimit: Int = 60
     var threadPolicy: Int = 0
     var submissionMode: Int = 0
-    var engineOnlyLimiter: Bool = false
-    var pipelineIdentification: Bool = false
     var driverProfiling: Bool = false
+    var pipelineIdentification: Bool = false
+    var engineOnlyLimiter: Bool = false
 
     func makeUIView(context: Context) -> TLWindowHost {
         TLWindowHost(game: TLUnityScreen.view(apk: apk, extraApks: extraApks, dataDir: dataDir, engine: engine,
