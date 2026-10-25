@@ -1,0 +1,4551 @@
+{
+  "battery_drain_pp_per_hour_estimated" : 0,
+  "battery_estimate_observed_seconds" : 309.85364400000253,
+  "dropped_export_records" : 0,
+  "duration_seconds" : 405.46794199999567,
+  "events" : [
+    {
+      "detail" : "game view not attached",
+      "t" : 0.00225499999942258,
+      "type" : "exclusion"
+    },
+    {
+      "detail" : "[\"brightness\": 1.0, \"maximum_refresh_hz\": 120, \"orientation\": 3, \"thermal_classification\": 0, \"low_power_mode\": false]",
+      "t" : 0.0025529999984428287,
+      "type" : "environment"
+    },
+    {
+      "detail" : "included gameplay resumed",
+      "t" : 3.659218000000692,
+      "type" : "exclusion"
+    },
+    {
+      "detail" : "Actual launch values captured; selected settings may require restart",
+      "t" : 3.6661800000001676,
+      "type" : "launch_configuration"
+    },
+    {
+      "detail" : "ue4 submission: mode Driver Default; MoltenVK synchronous=1, prefill=0, active-command-buffer-limit=64; asynchronous may move work rather than reduce it\n",
+      "t" : 3.6885780000011437,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: Balanced (experimental) for Dungeons; normal Default and background Utility baseline; extra caps only in admitted Adaptive trials; no core affinity\n",
+      "t" : 3.6910119999956805,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 cache store: enabled; compatible data restored on launch, checkpoints on pause; no first-use warm-up guarantee\n",
+      "t" : 3.6910979999956908,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='main' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.2874400000000605,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='EventWorker' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.2892369999972288,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='TaskGraphNP 0' role=normal-worker mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3428560000029393,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='TaskGraphNP 1' role=normal-worker mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3428989999956684,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='TaskGraphNP 2' role=normal-worker mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3429340000002412,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='TaskGraphNP 3' role=normal-worker mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3429780000005849,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='TaskGraphHP 4' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3430099999968661,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='TaskGraphHP 5' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.343047000002116,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='TaskGraphHP 6' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3430809999990743,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='TaskGraphHP 7' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3431209999980638,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='TaskGraphBP 8' role=background-worker mode=2 requested QoS 0x15\/0 -> 0x11\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3431730000011157,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='TaskGraphBP 9' role=background-worker mode=2 requested QoS 0x15\/0 -> 0x11\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3432570000004489,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='TaskGraphBP 10' role=background-worker mode=2 requested QoS 0x15\/0 -> 0x11\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3433149999982561,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='TaskGraphBP 11' role=background-worker mode=2 requested QoS 0x15\/0 -> 0x11\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.343377999997756,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 0' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3511060000018915,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 1' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3511529999959748,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 2' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3511930000022403,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 3' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3512360000022454,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 4' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3512889999983599,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 5' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.3513420000017504,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='HttpManager' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.5083989999984624,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='OnlineA-ance(1)' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.5085170000020298,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 6' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.5132269999958226,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 7' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.5132739999971818,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 8' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.5133080000014161,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 9' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.5133409999980358,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 cache store: loaded 11580626 compatible bytes; cache hit still depends on shader\/config keys\n",
+      "t" : 4.5444260000003851,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 cache: game initial data 0 bytes, host restored 11580626 bytes, host seed accepted 1, result 0; acceptance is not proof of cache hits\n",
+      "t" : 4.568133000000671,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='RHIThread' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.5786200000002282,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='RenderThread 0' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.5786759999973583,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='RTHeartBeat 0' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.5787249999993946,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "vulkan: vkCreateSwapchainKHR 2128x1600 images 3 format 44 colorspace 0 usage 0x16 compositeAlpha 1 presentMode 2 -> 0\n",
+      "t" : 4.5934919999999693,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='FMediaTicker' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.688798000002862,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 10' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.6931409999961033,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 11' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.6931899999981397,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 12' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.6932259999957751,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 13' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.6932589999996708,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='AudioMi-nder(1)' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.6995949999982258,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='AudioThread' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 4.69971799999621,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='PoolThread 14' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 5.289533000002848,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='FAsyncPurge' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 5.5304209999958402,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='RenderThread 1' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 6.0037739999970654,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "thread-policy: name='RTHeartBeat 1' role=preserve mode=2 requested QoS 0x15\/0 -> 0x15\/0 rc=0 after_query_rc=0; core placement not measured\n",
+      "t" : 6.0038710000007995,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "game view not attached",
+      "t" : 34.071871000000101,
+      "type" : "exclusion"
+    },
+    {
+      "detail" : "included gameplay resumed",
+      "t" : 34.695169999999052,
+      "type" : "exclusion"
+    },
+    {
+      "detail" : "ue4 cache store: pause checkpoint saved (11580626 bytes)\n",
+      "t" : 34.128420000000915,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "vulkan: vkCreateSwapchainKHR 2128x1600 images 3 format 44 colorspace 0 usage 0x16 compositeAlpha 1 presentMode 2 -> 0\n",
+      "t" : 34.695551999997406,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 131.924 ms, store-lock wait 0.000 ms, batch 1, cache yes, result 0, finished monotonic 57859.108849 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 74.195081999998365,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 128.874 ms, store-lock wait 0.000 ms, batch 1, cache yes, result 0, finished monotonic 57865.402587 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 84.215702000001329,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 133.262 ms, store-lock wait 0.000 ms, batch 1, cache yes, result 0, finished monotonic 57897.414413 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 114.22750400000223,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 243.308 ms, store-lock wait 0.000 ms, batch 1, cache yes, result 0, finished monotonic 57914.494538 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 134.24826700000267,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 179.688 ms, store-lock wait 0.000 ms, batch 1, cache yes, result 0, finished monotonic 57920.407098 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 144.2517200000002,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 134.263 ms, store-lock wait 0.001 ms, batch 1, cache yes, result 0, finished monotonic 57930.930432 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 154.25989100000152,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 125.775 ms, store-lock wait 0.000 ms, batch 1, cache yes, result 0, finished monotonic 57970.054355 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 184.28074000000197,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 66.056 ms, store-lock wait 0.000 ms, batch 1, cache yes, result 0, finished monotonic 57970.255375 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 194.30053000000044,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 71.803 ms, store-lock wait 0.001 ms, batch 1, cache yes, result 0, finished monotonic 58013.307094 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 234.32065999999759,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 116.610 ms, store-lock wait 0.001 ms, batch 1, cache yes, result 0, finished monotonic 58024.452229 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 244.32494800000131,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 135.277 ms, store-lock wait 0.000 ms, batch 1, cache yes, result 0, finished monotonic 58031.887836 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 254.33315900000161,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 129.687 ms, store-lock wait 0.001 ms, batch 1, cache yes, result 0, finished monotonic 58062.853056 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 284.36225299999933,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 146.036 ms, store-lock wait 0.001 ms, batch 1, cache yes, result 0, finished monotonic 58095.119046 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 314.39958199999819,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 129.029 ms, store-lock wait 0.001 ms, batch 1, cache yes, result 0, finished monotonic 58141.864270 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 364.44920299999649,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "ue4 pipeline stall: worst observed graphics call 141.950 ms, store-lock wait 0.000 ms, batch 1, cache yes, result 0, finished monotonic 58160.331159 s; host duration, not exclusive frame\/GPU time or verified cache miss\n",
+      "t" : 374.48820500000147,
+      "type" : "runtime"
+    },
+    {
+      "detail" : "game view not attached",
+      "t" : 393.2107079999987,
+      "type" : "exclusion"
+    },
+    {
+      "detail" : "ue4 cache store: pause checkpoint saved (12266295 bytes)\n",
+      "t" : 393.27321400000073,
+      "type" : "runtime"
+    }
+  ],
+  "exclusions" : [
+    {
+      "end" : 3.6592170000003534,
+      "reason" : "game view not attached",
+      "start" : 0.0022539999990840442
+    },
+    {
+      "end" : 34.695167999998375,
+      "reason" : "game view not attached",
+      "start" : 34.071869999999763
+    },
+    {
+      "end" : 405.4678120000026,
+      "reason" : "game view not attached",
+      "start" : 393.2107079999987
+    }
+  ],
+  "limitations" : [
+    "0.1 ms upper-bin nearest-rank percentiles; >=1 s overflow uses exact worst as conservative bound",
+    "Host API stages: acquire, submit, present, sleep, graphics creation, compute creation; durations overlap",
+    "Vulkan host cadence is not displayed-frame timing; no frame source for non-Vulkan games",
+    "No measured watts, GPU execution, degrees Celsius or energy saving",
+    "CPU includes host\/LiveContainer work; 100% = one logical CPU",
+    "Driver phase counters remain in attempt log if separately enabled",
+    "Pipeline identity\/cache hits unavailable; runtime event buffer captures selected existing logs",
+    "Retention is bounded; dropped counts invalidate claims of complete event coverage",
+    "Monitoring overhead and physical-device correctness remain unverified"
+  ],
+  "metadata" : {
+    "build_date" : "2026-10-25 04:51 UTC",
+    "build_sha" : "1a68f40a377be7a8d0feac1bf05b6170d87659b9-dirty",
+    "device_identifier" : "iPad16,5",
+    "launch_configuration" : {
+      "cache" : "existing compatible persistence; see runtime events",
+      "detailed_driver_profiling" : false,
+      "driver" : "bundled MoltenVK; verify runtime version in attempt log",
+      "efficient_graphics" : true,
+      "engine" : "ue4",
+      "game" : "Minecraft-Dungeons-v1.4-full-apkvision.apk",
+      "launch_height" : 1600,
+      "launch_width" : 2128,
+      "requested_fps" : 60,
+      "sharp_graphics" : true,
+      "submission_mode" : 0,
+      "windowed" : false,
+      "worker_policy" : 2
+    },
+    "monotonic_origin_seconds" : 57785.843924000001,
+    "os" : "27.2",
+    "physical_memory_bytes" : 16165273600,
+    "process_scope" : "Husk\/LiveContainer host process; not isolated guest-game utilisation",
+    "processor_count" : 10,
+    "session_id" : "4F2090D5-8746-446A-95FD-68FB01D2F52B",
+    "started_utc" : "2026-10-25T05:10:21Z"
+  },
+  "metric_labels" : {
+    "electrical_power_chip_temperature_surface_temperature" : "EXTERNAL",
+    "gpu_execution_displayed_frames_peak_footprint_cache_hits" : "UNAVAILABLE",
+    "histogram_percentiles_battery_drain" : "ESTIMATED",
+    "host_cadence_cpu_memory_battery_thermal" : "MEASURED (process\/API scope)"
+  },
+  "samples" : [
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 2.6621338749999999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : true,
+      "footprint_bytes" : 619676944,
+      "jetsam_headroom_bytes" : 16560192240,
+      "process_cpu_percent_one_core" : null,
+      "t" : 0.0022779999999329448
+    },
+    {
+      "cpu_seconds" : 2.7570206666666666,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : true,
+      "process_cpu_percent_one_core" : null,
+      "t" : 2.0106210000012652
+    },
+    {
+      "cpu_seconds" : 3.4969246250000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : null,
+      "t" : 4.0126220000020112
+    },
+    {
+      "cpu_seconds" : 8.1972941250000009,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 228.32102034985158,
+      "t" : 6.0712889999995241
+    },
+    {
+      "cpu_seconds" : 9.3827117916666669,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 56.865446513043096,
+      "t" : 8.1558900000018184
+    },
+    {
+      "cpu_seconds" : 10.531249416666666,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 2722335888,
+      "jetsam_headroom_bytes" : 14457533296,
+      "process_cpu_percent_one_core" : 61.961202013539726,
+      "t" : 10.009529999995721
+    },
+    {
+      "cpu_seconds" : 12.746304125,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 111.02841898061509,
+      "t" : 12.004564000002574
+    },
+    {
+      "cpu_seconds" : 14.076584374999999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 65.395809552657838,
+      "t" : 14.038761999996495
+    },
+    {
+      "cpu_seconds" : 15.400344583333334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.356863054991251,
+      "t" : 16.196238999997149
+    },
+    {
+      "cpu_seconds" : 16.492433625,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 60.412711394903887,
+      "t" : 18.003952999999456
+    },
+    {
+      "cpu_seconds" : 17.793052166666669,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 2868071808,
+      "jetsam_headroom_bytes" : 14311797376,
+      "process_cpu_percent_one_core" : 59.221154193475265,
+      "t" : 20.200158999999985
+    },
+    {
+      "cpu_seconds" : 18.977892166666667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 59.241496447325126,
+      "t" : 22.200175999998464
+    },
+    {
+      "cpu_seconds" : 20.149972333333331,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 58.824157743745239,
+      "t" : 24.192690999996557
+    },
+    {
+      "cpu_seconds" : 21.326060333333331,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 58.832580806114919,
+      "t" : 26.191732999999658
+    },
+    {
+      "cpu_seconds" : 22.481079874999999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 57.719577633180243,
+      "t" : 28.192820999996911
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 23.558390916666667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 58.131911176366671,
+      "t" : 30.046039000000746
+    },
+    {
+      "cpu_seconds" : 24.860694166666669,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 2835090792,
+      "jetsam_headroom_bytes" : 14344778392,
+      "process_cpu_percent_one_core" : 60.581514566669789,
+      "t" : 32.195709999999963
+    },
+    {
+      "cpu_seconds" : 26.003347083333331,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.0794469998566,
+      "t" : 34.066474999999627
+    },
+    {
+      "cpu_seconds" : 26.922950624999999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : null,
+      "t" : 36.042527999998129
+    },
+    {
+      "cpu_seconds" : 28.128907250000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.235841875725917,
+      "t" : 38.011892000002263
+    },
+    {
+      "cpu_seconds" : 29.427980541666667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 59.366043518408226,
+      "t" : 40.200134999999136
+    },
+    {
+      "cpu_seconds" : 30.566129708333332,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.125778897933756,
+      "t" : 42.062114000000292
+    },
+    {
+      "cpu_seconds" : 31.899867791666669,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 2879982976,
+      "jetsam_headroom_bytes" : 14299886208,
+      "process_cpu_percent_one_core" : 62.51992022374224,
+      "t" : 44.195415000001958
+    },
+    {
+      "cpu_seconds" : 33.128542000000003,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.434109738515211,
+      "t" : 46.195401999997557
+    },
+    {
+      "cpu_seconds" : 34.358269208333333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.339636007205598,
+      "t" : 48.20018600000185
+    },
+    {
+      "cpu_seconds" : 35.527453208333334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.049047652081654,
+      "t" : 50.084475999996357
+    },
+    {
+      "cpu_seconds" : 36.699175416666662,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 59.028142662965791,
+      "t" : 52.06949899999745
+    },
+    {
+      "cpu_seconds" : 37.463237624999998,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 36.170440189287781,
+      "t" : 54.181893000000855
+    },
+    {
+      "cpu_seconds" : 38.559395000000002,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 2940456368,
+      "jetsam_headroom_bytes" : 14239412816,
+      "process_cpu_percent_one_core" : 54.424610641997781,
+      "t" : 56.195976999995764
+    },
+    {
+      "cpu_seconds" : 39.584397041666662,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 55.948549361547151,
+      "t" : 58.028020999998262
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 40.806309416666664,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 56.357086719999238,
+      "t" : 60.196181999999681
+    },
+    {
+      "cpu_seconds" : 41.919461583333337,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 55.574191471999455,
+      "t" : 62.199183999997331
+    },
+    {
+      "cpu_seconds" : 42.931729333333337,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 54.966127666888674,
+      "t" : 64.040804999996908
+    },
+    {
+      "cpu_seconds" : 44.024078875000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 54.620290028228403,
+      "t" : 66.040701999998419
+    },
+    {
+      "cpu_seconds" : 45.120939583333339,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 2925923760,
+      "jetsam_headroom_bytes" : 14253945424,
+      "process_cpu_percent_one_core" : 55.075177288986275,
+      "t" : 68.032271999996738
+    },
+    {
+      "cpu_seconds" : 46.290062833333337,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 55.450916883083458,
+      "t" : 70.14066499999899
+    },
+    {
+      "cpu_seconds" : 47.350554416666661,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 55.34598342236098,
+      "t" : 72.056777999998303
+    },
+    {
+      "cpu_seconds" : 48.488145291666662,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 57.320481554321887,
+      "t" : 74.041392999999516
+    },
+    {
+      "cpu_seconds" : 49.604304208333339,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 55.927350727069935,
+      "t" : 76.037123000001884
+    },
+    {
+      "cpu_seconds" : 50.714364541666662,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 2930593200,
+      "jetsam_headroom_bytes" : 14249275984,
+      "process_cpu_percent_one_core" : 55.388777313471607,
+      "t" : 78.04124800000136
+    },
+    {
+      "cpu_seconds" : 51.775078791666665,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 53.478056242347428,
+      "t" : 80.024704999996175
+    },
+    {
+      "cpu_seconds" : 52.93401575,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 57.495793417302934,
+      "t" : 82.040394999996352
+    },
+    {
+      "cpu_seconds" : 54.025653124999998,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 54.246058524690319,
+      "t" : 84.052775999996811
+    },
+    {
+      "cpu_seconds" : 55.213992500000003,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 60.956298147096291,
+      "t" : 86.002269999997225
+    },
+    {
+      "cpu_seconds" : 56.530433833333333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 64.613059405548483,
+      "t" : 88.039692999998806
+    },
+    {
+      "cpu_seconds" : 57.751279458333336,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 2927349168,
+      "jetsam_headroom_bytes" : 14252520016,
+      "process_cpu_percent_one_core" : 62.209359947239875,
+      "t" : 90.002172000000428
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 59.122537958333339,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 64.215683749451429,
+      "t" : 92.137566999997944
+    },
+    {
+      "cpu_seconds" : 60.246589583333339,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 59.213124534171634,
+      "t" : 94.035881999996491
+    },
+    {
+      "cpu_seconds" : 61.407716333333333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 55.29359311966634,
+      "t" : 96.135812000000442
+    },
+    {
+      "cpu_seconds" : 62.464090374999998,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 55.352199951245971,
+      "t" : 98.044270999998844
+    },
+    {
+      "cpu_seconds" : 63.631029958333336,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 2927644080,
+      "jetsam_headroom_bytes" : 14252225104,
+      "process_cpu_percent_one_core" : 54.425588315774412,
+      "t" : 100.18837199999689
+    },
+    {
+      "cpu_seconds" : 64.675337416666665,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 55.001269730295633,
+      "t" : 102.08706900000107
+    },
+    {
+      "cpu_seconds" : 65.997836041666659,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 63.87314731466244,
+      "t" : 104.15757699999813
+    },
+    {
+      "cpu_seconds" : 67.282528624999998,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 63.493877840691184,
+      "t" : 106.18091000000277
+    },
+    {
+      "cpu_seconds" : 68.538981958333338,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.304789258468155,
+      "t" : 108.197533999999
+    },
+    {
+      "cpu_seconds" : 69.748448999999994,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.157637588976932,
+      "t" : 110.14334000000235
+    },
+    {
+      "cpu_seconds" : 70.851944291666669,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 2934148528,
+      "jetsam_headroom_bytes" : 14245720656,
+      "process_cpu_percent_one_core" : 54.233621433812239,
+      "t" : 112.17804700000124
+    },
+    {
+      "cpu_seconds" : 71.918967749999993,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 57.189197124934587,
+      "t" : 114.04382500000065
+    },
+    {
+      "cpu_seconds" : 73.057702958333323,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 57.024835274691199,
+      "t" : 116.04073600000265
+    },
+    {
+      "cpu_seconds" : 74.247999500000006,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 55.170508173095314,
+      "t" : 118.19822299999942
+    },
+    {
+      "cpu_seconds" : 75.238842708333323,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 53.690998064543791,
+      "t" : 120.04367800000182
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 76.544705958333324,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 2948566568,
+      "jetsam_headroom_bytes" : 14231302616,
+      "process_cpu_percent_one_core" : 60.635703775242845,
+      "t" : 122.19729899999948
+    },
+    {
+      "cpu_seconds" : 80.284135000000006,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 186.9318225371413,
+      "t" : 124.1977229999975
+    },
+    {
+      "cpu_seconds" : 81.281344500000003,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 49.883820627972106,
+      "t" : 126.19678700000077
+    },
+    {
+      "cpu_seconds" : 82.310225375000002,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 55.967018336967222,
+      "t" : 128.03515699999843
+    },
+    {
+      "cpu_seconds" : 83.378447083333327,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 49.69792946566993,
+      "t" : 130.18458599999576
+    },
+    {
+      "cpu_seconds" : 84.43394983333333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 56.169129037498287,
+      "t" : 132.06373699999676
+    },
+    {
+      "cpu_seconds" : 85.534631458333322,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3769028904,
+      "jetsam_headroom_bytes" : 13410840280,
+      "process_cpu_percent_one_core" : 51.58536731106237,
+      "t" : 134.19744599999831
+    },
+    {
+      "cpu_seconds" : 86.531961291666676,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 54.415965685811464,
+      "t" : 136.03023499999836
+    },
+    {
+      "cpu_seconds" : 87.861032249999994,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.330008353797794,
+      "t" : 138.19731599999795
+    },
+    {
+      "cpu_seconds" : 89.122277541666676,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 63.093338052285873,
+      "t" : 140.19633099999919
+    },
+    {
+      "cpu_seconds" : 90.371790958333335,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.551451917270938,
+      "t" : 142.1939080000011
+    },
+    {
+      "cpu_seconds" : 91.492078791666671,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 59.926097654150681,
+      "t" : 144.06335699999909
+    },
+    {
+      "cpu_seconds" : 92.616825541666671,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3807007016,
+      "jetsam_headroom_bytes" : 13372862168,
+      "process_cpu_percent_one_core" : 52.722536857894639,
+      "t" : 146.1966889999967
+    },
+    {
+      "cpu_seconds" : 93.946254749999994,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 66.475648382481012,
+      "t" : 148.1965629999977
+    },
+    {
+      "cpu_seconds" : 95.230264041666672,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 65.685078732915386,
+      "t" : 150.15135899999586
+    },
+    {
+      "cpu_seconds" : 96.532481916666669,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 63.80343378467456,
+      "t" : 152.19234300000244
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 97.723729250000005,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.152607667550974,
+      "t" : 154.10899200000131
+    },
+    {
+      "cpu_seconds" : 99.033415416666671,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 64.410868996119504,
+      "t" : 156.14232300000003
+    },
+    {
+      "cpu_seconds" : 100.27140287500001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3805073704,
+      "jetsam_headroom_bytes" : 13374795480,
+      "process_cpu_percent_one_core" : 62.397743695617791,
+      "t" : 158.1263489999983
+    },
+    {
+      "cpu_seconds" : 101.56285841666667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.374903786082257,
+      "t" : 160.19682199999806
+    },
+    {
+      "cpu_seconds" : 102.79093804166668,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.405762017031492,
+      "t" : 162.19676400000026
+    },
+    {
+      "cpu_seconds" : 104.00204029166667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 60.759629412652863,
+      "t" : 164.19003199999861
+    },
+    {
+      "cpu_seconds" : 105.30194420833332,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 66.029548713868564,
+      "t" : 166.15870200000063
+    },
+    {
+      "cpu_seconds" : 106.59019358333333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3806482728,
+      "jetsam_headroom_bytes" : 13373386456,
+      "process_cpu_percent_one_core" : 64.146261763638663,
+      "t" : 168.16700200000196
+    },
+    {
+      "cpu_seconds" : 107.86067575,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.596552616681301,
+      "t" : 170.19663800000126
+    },
+    {
+      "cpu_seconds" : 108.98663529166667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 60.070013511876837,
+      "t" : 172.07104999999865
+    },
+    {
+      "cpu_seconds" : 110.275812,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 64.175500581635376,
+      "t" : 174.0798799999975
+    },
+    {
+      "cpu_seconds" : 111.63664591666667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 67.989649756386711,
+      "t" : 176.08141099999921
+    },
+    {
+      "cpu_seconds" : 112.95212608333333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 65.803290797836169,
+      "t" : 178.08052099999622
+    },
+    {
+      "cpu_seconds" : 114.26218824999999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3811922240,
+      "jetsam_headroom_bytes" : 13367946944,
+      "process_cpu_percent_one_core" : 62.062399913342603,
+      "t" : 180.19139999999607
+    },
+    {
+      "cpu_seconds" : 115.53067925000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 68.480832249057357,
+      "t" : 182.04372999999759
+    },
+    {
+      "cpu_seconds" : 116.79528858333333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.853938199035028,
+      "t" : 184.08823899999697
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 117.93142954166667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 56.633918029154714,
+      "t" : 186.09435300000041
+    },
+    {
+      "cpu_seconds" : 119.300049,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 67.821831140333146,
+      "t" : 188.11231599999883
+    },
+    {
+      "cpu_seconds" : 120.68863854166668,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 70.383454424677822,
+      "t" : 190.08520799999678
+    },
+    {
+      "cpu_seconds" : 122.00125291666667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3807072600,
+      "jetsam_headroom_bytes" : 13372796584,
+      "process_cpu_percent_one_core" : 64.796016465712285,
+      "t" : 192.11097200000222
+    },
+    {
+      "cpu_seconds" : 123.39145345833333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 66.559574274879367,
+      "t" : 194.19962800000212
+    },
+    {
+      "cpu_seconds" : 124.67845629166668,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 66.677727788401597,
+      "t" : 196.12981199999922
+    },
+    {
+      "cpu_seconds" : 126.07250166666667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 67.592405605307277,
+      "t" : 198.19224099999701
+    },
+    {
+      "cpu_seconds" : 127.338036,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 63.073871097156776,
+      "t" : 200.19867299999896
+    },
+    {
+      "cpu_seconds" : 128.66658329166668,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3807842672,
+      "jetsam_headroom_bytes" : 13372026512,
+      "process_cpu_percent_one_core" : 66.419294638961375,
+      "t" : 202.19891600000119
+    },
+    {
+      "cpu_seconds" : 130.01346849999999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 67.162384678955689,
+      "t" : 204.20433200000116
+    },
+    {
+      "cpu_seconds" : 131.29409129166666,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 68.615844462998211,
+      "t" : 206.0706979999959
+    },
+    {
+      "cpu_seconds" : 132.75749325000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 68.715156866684922,
+      "t" : 208.20036199999595
+    },
+    {
+      "cpu_seconds" : 134.01383845833334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.869693741157072,
+      "t" : 210.1986939999988
+    },
+    {
+      "cpu_seconds" : 135.28961383333333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3808760176,
+      "jetsam_headroom_bytes" : 13371109008,
+      "process_cpu_percent_one_core" : 63.256591049527657,
+      "t" : 212.21551999999792
+    },
+    {
+      "cpu_seconds" : 136.59871000000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 65.531283340896451,
+      "t" : 214.21318600000086
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 137.98040137500001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 68.889336370795291,
+      "t" : 216.21885399999883
+    },
+    {
+      "cpu_seconds" : 139.34659825,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 68.160096018935576,
+      "t" : 218.22324800000206
+    },
+    {
+      "cpu_seconds" : 140.65139083333335,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 65.36837217573283,
+      "t" : 220.21930900000007
+    },
+    {
+      "cpu_seconds" : 141.93563583333335,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3809890672,
+      "jetsam_headroom_bytes" : 13369978512,
+      "process_cpu_percent_one_core" : 64.073626708539848,
+      "t" : 222.22363600000244
+    },
+    {
+      "cpu_seconds" : 143.17514758333334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.971404430362554,
+      "t" : 224.22377099999721
+    },
+    {
+      "cpu_seconds" : 144.38256720833334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.144892149898958,
+      "t" : 226.1984569999986
+    },
+    {
+      "cpu_seconds" : 145.56852333333333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.207479614034689,
+      "t" : 228.13605699999607
+    },
+    {
+      "cpu_seconds" : 146.87952712500001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 65.007023399196726,
+      "t" : 230.15276799999992
+    },
+    {
+      "cpu_seconds" : 148.14609412499999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.391271219176588,
+      "t" : 232.21587400000135
+    },
+    {
+      "cpu_seconds" : 149.28495624999999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3816100232,
+      "jetsam_headroom_bytes" : 13363768952,
+      "process_cpu_percent_one_core" : 61.436710100217759,
+      "t" : 234.06958999999915
+    },
+    {
+      "cpu_seconds" : 150.56419833333334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 59.432901074379799,
+      "t" : 236.22200400000293
+    },
+    {
+      "cpu_seconds" : 151.71731058333333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 57.602733191050646,
+      "t" : 238.22383999999875
+    },
+    {
+      "cpu_seconds" : 152.85555675000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 56.9714732081856,
+      "t" : 240.22176300000137
+    },
+    {
+      "cpu_seconds" : 154.151258125,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 64.698663684818911,
+      "t" : 242.22443399999611
+    },
+    {
+      "cpu_seconds" : 155.432508625,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3810480520,
+      "jetsam_headroom_bytes" : 13369388664,
+      "process_cpu_percent_one_core" : 64.061852350555597,
+      "t" : 244.22445499999594
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 156.65590845833336,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.169288219837867,
+      "t" : 246.22447799999645
+    },
+    {
+      "cpu_seconds" : 157.96660850000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 65.619618581492276,
+      "t" : 248.22189899999648
+    },
+    {
+      "cpu_seconds" : 159.33319908333334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 68.341728165047329,
+      "t" : 250.22154199999932
+    },
+    {
+      "cpu_seconds" : 160.56749470833336,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 65.560076411784408,
+      "t" : 252.10423599999922
+    },
+    {
+      "cpu_seconds" : 161.87656999999999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 64.282505197491275,
+      "t" : 254.14067699999578
+    },
+    {
+      "cpu_seconds" : 163.14213545833334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3813003680,
+      "jetsam_headroom_bytes" : 13366865504,
+      "process_cpu_percent_one_core" : 66.737265381152582,
+      "t" : 256.03701700000238
+    },
+    {
+      "cpu_seconds" : 164.54513825000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 64.228379349926982,
+      "t" : 258.22141399999964
+    },
+    {
+      "cpu_seconds" : 165.76224266666665,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.02942933929868,
+      "t" : 260.21570500000234
+    },
+    {
+      "cpu_seconds" : 166.979871,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 60.971593653821273,
+      "t" : 262.21274699999776
+    },
+    {
+      "cpu_seconds" : 168.20801308333336,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 63.820044311872351,
+      "t" : 264.1371300000028
+    },
+    {
+      "cpu_seconds" : 169.42974820833334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3812118944,
+      "jetsam_headroom_bytes" : 13367750240,
+      "process_cpu_percent_one_core" : 61.814623441184139,
+      "t" : 266.11357999999746
+    },
+    {
+      "cpu_seconds" : 170.64803491666666,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 60.222350498209543,
+      "t" : 268.13656099999935
+    },
+    {
+      "cpu_seconds" : 171.85569562500001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 59.637624744957073,
+      "t" : 270.16155900000012
+    },
+    {
+      "cpu_seconds" : 173.08804187499999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.268862745264066,
+      "t" : 272.14063200000237
+    },
+    {
+      "cpu_seconds" : 174.32589054166667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.762454248404943,
+      "t" : 274.14484100000118
+    },
+    {
+      "cpu_seconds" : 175.54281312500001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3810349472,
+      "jetsam_headroom_bytes" : 13369519712,
+      "process_cpu_percent_one_core" : 58.590991210537588,
+      "t" : 276.22181999999884
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 176.60242720833335,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 54.93812198379667,
+      "t" : 278.1505610000022
+    },
+    {
+      "cpu_seconds" : 177.82145474999999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 58.897617172554142,
+      "t" : 280.2203010000012
+    },
+    {
+      "cpu_seconds" : 178.99047312499999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 58.451152554689735,
+      "t" : 282.22029299999849
+    },
+    {
+      "cpu_seconds" : 180.15354495833336,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 58.15516185593507,
+      "t" : 284.22023900000204
+    },
+    {
+      "cpu_seconds" : 181.35099804166666,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.534169031926453,
+      "t" : 286.1662359999973
+    },
+    {
+      "cpu_seconds" : 182.65700858333335,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3819786656,
+      "jetsam_headroom_bytes" : 13360082528,
+      "process_cpu_percent_one_core" : 64.119446871932368,
+      "t" : 288.20307599999796
+    },
+    {
+      "cpu_seconds" : 183.79629675000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.287638342016805,
+      "t" : 290.06199599999673
+    },
+    {
+      "cpu_seconds" : 185.08976525,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.707604312362697,
+      "t" : 292.12469399999827
+    },
+    {
+      "cpu_seconds" : 186.32378199999999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.95861632324857,
+      "t" : 294.11637299999711
+    },
+    {
+      "cpu_seconds" : 187.6456475,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.832727678941517,
+      "t" : 296.22015799999645
+    },
+    {
+      "cpu_seconds" : 188.72447016666666,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 59.793347418522245,
+      "t" : 298.02440999999817
+    },
+    {
+      "cpu_seconds" : 190.08353454166667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3821146528,
+      "jetsam_headroom_bytes" : 13358722656,
+      "process_cpu_percent_one_core" : 63.336672060255729,
+      "t" : 300.17018799999641
+    },
+    {
+      "cpu_seconds" : 191.38167316666664,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 63.860575716712731,
+      "t" : 302.20295800000167
+    },
+    {
+      "cpu_seconds" : 192.52173812500001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.470373925949005,
+      "t" : 304.02792700000282
+    },
+    {
+      "cpu_seconds" : 193.85511016666666,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 64.396718068250848,
+      "t" : 306.09848600000259
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 195.16742854166665,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.854922943028697,
+      "t" : 308.22009299999627
+    },
+    {
+      "cpu_seconds" : 196.34087608333334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3816559008,
+      "jetsam_headroom_bytes" : 13363310176,
+      "process_cpu_percent_one_core" : 58.67475341079826,
+      "t" : 310.22001199999795
+    },
+    {
+      "cpu_seconds" : 197.54934941666664,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.839070225501757,
+      "t" : 312.17423499999859
+    },
+    {
+      "cpu_seconds" : 198.85317170833335,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 63.732313786908591,
+      "t" : 314.22001399999863
+    },
+    {
+      "cpu_seconds" : 200.19086541666667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 67.080190632315492,
+      "t" : 316.21418499999709
+    },
+    {
+      "cpu_seconds" : 201.40711358333334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 63.14465621047286,
+      "t" : 318.14031499999692
+    },
+    {
+      "cpu_seconds" : 202.74509212500001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 70.728896847628135,
+      "t" : 320.03201499999705
+    },
+    {
+      "cpu_seconds" : 204.09530166666664,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3811660192,
+      "jetsam_headroom_bytes" : 13368208992,
+      "process_cpu_percent_one_core" : 67.639770504620671,
+      "t" : 322.02819199999794
+    },
+    {
+      "cpu_seconds" : 205.48936329166665,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 63.605333349729563,
+      "t" : 324.21992899999896
+    },
+    {
+      "cpu_seconds" : 206.81245770833334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 66.142980454179451,
+      "t" : 326.22028400000272
+    },
+    {
+      "cpu_seconds" : 208.00455129166664,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.936945830397519,
+      "t" : 328.14497300000221
+    },
+    {
+      "cpu_seconds" : 209.29463091666665,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 68.198931140426339,
+      "t" : 330.03661499999725
+    },
+    {
+      "cpu_seconds" : 210.74782808333333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3814183328,
+      "jetsam_headroom_bytes" : 13365685856,
+      "process_cpu_percent_one_core" : 71.769556978916796,
+      "t" : 332.06142499999987
+    },
+    {
+      "cpu_seconds" : 212.04583366666665,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 65.582037234827467,
+      "t" : 334.04063399999723
+    },
+    {
+      "cpu_seconds" : 213.29610441666665,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.119389970537362,
+      "t" : 336.05332400000043
+    },
+    {
+      "cpu_seconds" : 214.53485549999999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.358574656194129,
+      "t" : 338.07219600000099
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 215.799751125,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 64.671003219552333,
+      "t" : 340.02808899999945
+    },
+    {
+      "cpu_seconds" : 217.08478575000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3812725152,
+      "jetsam_headroom_bytes" : 13367144032,
+      "process_cpu_percent_one_core" : 61.085777570117209,
+      "t" : 342.13174499999877
+    },
+    {
+      "cpu_seconds" : 218.30856570833333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.077450386557395,
+      "t" : 344.1031210000001
+    },
+    {
+      "cpu_seconds" : 219.65350220833335,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 68.108603155840115,
+      "t" : 346.07781499999692
+    },
+    {
+      "cpu_seconds" : 221.10390487500001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 67.702523326990757,
+      "t" : 348.2201320000022
+    },
+    {
+      "cpu_seconds" : 222.39249012499999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 64.432967395706612,
+      "t" : 350.22001699999964
+    },
+    {
+      "cpu_seconds" : 223.62381270833333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 65.39292302181731,
+      "t" : 352.10297700000228
+    },
+    {
+      "cpu_seconds" : 224.94530775000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3813675424,
+      "jetsam_headroom_bytes" : 13366193760,
+      "process_cpu_percent_one_core" : 65.371744344716475,
+      "t" : 354.12448500000028
+    },
+    {
+      "cpu_seconds" : 226.14970879166665,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 63.282713949104576,
+      "t" : 356.02769199999602
+    },
+    {
+      "cpu_seconds" : 227.44787766666667,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 59.693994268507353,
+      "t" : 358.20239800000127
+    },
+    {
+      "cpu_seconds" : 228.68642675000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 61.924388909504636,
+      "t" : 360.2024969999984
+    },
+    {
+      "cpu_seconds" : 229.86096004166666,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 59.221161280024418,
+      "t" : 362.18579699999827
+    },
+    {
+      "cpu_seconds" : 231.10502112500001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3816149408,
+      "jetsam_headroom_bytes" : 13363719776,
+      "process_cpu_percent_one_core" : 61.818481393937965,
+      "t" : 364.19823899999756
+    },
+    {
+      "cpu_seconds" : 232.23161116666665,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 56.28557119488562,
+      "t" : 366.19980000000214
+    },
+    {
+      "cpu_seconds" : 233.341151,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 58.193767712387597,
+      "t" : 368.10642999999982
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 234.50803612499999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 60.043610514715255,
+      "t" : 370.04982600000221
+    },
+    {
+      "cpu_seconds" : 235.77575375000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 58.42740989566132,
+      "t" : 372.21955699999671
+    },
+    {
+      "cpu_seconds" : 236.85747054166666,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 55.805111356543499,
+      "t" : 374.15793999999732
+    },
+    {
+      "cpu_seconds" : 237.98316137500001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3820900768,
+      "jetsam_headroom_bytes" : 13359099488,
+      "process_cpu_percent_one_core" : 54.635585073461442,
+      "t" : 376.21830200000113
+    },
+    {
+      "cpu_seconds" : 239.23876816666666,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.77961761771391,
+      "t" : 378.21832500000164
+    },
+    {
+      "cpu_seconds" : 240.45302108333334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 60.678938682963491,
+      "t" : 380.2194359999994
+    },
+    {
+      "cpu_seconds" : 241.602760875,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 59.456731646001494,
+      "t" : 382.15317800000048
+    },
+    {
+      "cpu_seconds" : 242.90263016666665,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 63.545889226789001,
+      "t" : 384.19873799999914
+    },
+    {
+      "cpu_seconds" : 244.16254075000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 62.408236457551091,
+      "t" : 386.21755899999698
+    },
+    {
+      "cpu_seconds" : 245.49491145833335,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "footprint_bytes" : 3857142176,
+      "jetsam_headroom_bytes" : 13322727008,
+      "process_cpu_percent_one_core" : 71.611234908847052,
+      "t" : 388.07811999999831
+    },
+    {
+      "cpu_seconds" : 246.68517245833334,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 60.012655355768985,
+      "t" : 390.06147000000055
+    },
+    {
+      "cpu_seconds" : 247.91875291666665,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : false,
+      "process_cpu_percent_one_core" : 57.703969565353574,
+      "t" : 392.19924399999582
+    },
+    {
+      "cpu_seconds" : 248.61102816666664,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : true,
+      "process_cpu_percent_one_core" : null,
+      "t" : 394.18365300000005
+    },
+    {
+      "cpu_seconds" : 248.83524508333335,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : true,
+      "process_cpu_percent_one_core" : null,
+      "t" : 396.15281500000128
+    },
+    {
+      "cpu_seconds" : 249.00026841666664,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : true,
+      "process_cpu_percent_one_core" : null,
+      "t" : 398.03722600000037
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 249.29482250000001,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : true,
+      "footprint_bytes" : 3740750240,
+      "jetsam_headroom_bytes" : 13439118944,
+      "process_cpu_percent_one_core" : null,
+      "t" : 400.14462700000149
+    },
+    {
+      "cpu_seconds" : 249.38378208333333,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : true,
+      "process_cpu_percent_one_core" : null,
+      "t" : 402.19858199999726
+    },
+    {
+      "cpu_seconds" : 249.63910512499999,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : true,
+      "process_cpu_percent_one_core" : null,
+      "t" : 404.78454799999599
+    },
+    {
+      "battery_fraction" : 0.69999998807907104,
+      "battery_state" : 1,
+      "cpu_seconds" : 249.69436229166666,
+      "environment" : {
+        "brightness" : 1,
+        "low_power_mode" : false,
+        "maximum_refresh_hz" : 120,
+        "orientation" : 3,
+        "thermal_classification" : 0
+      },
+      "excluded" : true,
+      "process_cpu_percent_one_core" : null,
+      "t" : 405.46765600000072
+    }
+  ],
+  "schema_version" : 1,
+  "summary" : {
+    "above_20_ms" : 6087,
+    "above_33_333333_ms" : 31,
+    "above_50_ms" : 28,
+    "discontinuities" : 0,
+    "dropped_collector_records" : 6,
+    "host_cadence_fps" : 55.421610622611709,
+    "host_calls" : [
+      21358,
+      54219,
+      21356,
+      13429,
+      480,
+      2
+    ],
+    "host_ns" : [
+      263260000,
+      344159711000,
+      295513000,
+      12165263000,
+      9543963000,
+      169000
+    ],
+    "interval_count" : 21350,
+    "interval_seconds" : 385.22879000000262,
+    "p50_ms" : 16.699999999999999,
+    "p95_ms" : 20.899999999999999,
+    "p99_ms" : 21.100000000000001,
+    "slow_pipeline_calls" : 69,
+    "swapchain_height" : 1600,
+    "swapchain_width" : 2128,
+    "worst_ms" : 587.22900000000004,
+    "worst_pipeline_ns" : 312790000
+  },
+  "windows" : [
+    {
+      "above_20_ms" : 138,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 1,
+      "end" : 10.009623999998439,
+      "host_cadence_fps" : 50.671260145981528,
+      "host_calls" : [
+        192,
+        3590,
+        191,
+        47,
+        66,
+        0
+      ],
+      "host_ns" : [
+        4852000,
+        3561866000,
+        5375000,
+        80735000,
+        31397000,
+        0
+      ],
+      "interval_count" : 189,
+      "interval_seconds" : 3.729924999999997,
+      "p50_ms" : 20.800000000000001,
+      "p95_ms" : 21,
+      "p99_ms" : 21.300000000000001,
+      "slow_pipeline_calls" : 0,
+      "start" : 0,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 25.683,
+      "worst_pipeline_ns" : 1663000
+    },
+    {
+      "above_20_ms" : 155,
+      "above_33_333333_ms" : 3,
+      "above_50_ms" : 1,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 1,
+      "end" : 20.200325999998313,
+      "host_cadence_fps" : 53.710602260743855,
+      "host_calls" : [
+        557,
+        1760,
+        557,
+        368,
+        66,
+        0
+      ],
+      "host_ns" : [
+        9052000,
+        8358748000,
+        8946000,
+        797269000,
+        44965000,
+        0
+      ],
+      "interval_count" : 557,
+      "interval_seconds" : 10.370392000000001,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 21,
+      "p99_ms" : 21.300000000000001,
+      "slow_pipeline_calls" : 0,
+      "start" : 10.009624999998778,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 410.72199999999998,
+      "worst_pipeline_ns" : 1517000
+    },
+    {
+      "above_20_ms" : 331,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 3,
+      "end" : 32.195876999998291,
+      "host_cadence_fps" : 53.069547642185114,
+      "host_calls" : [
+        636,
+        1279,
+        636,
+        288,
+        1,
+        0
+      ],
+      "host_ns" : [
+        14196000,
+        10818435000,
+        14684000,
+        187522000,
+        1535000,
+        0
+      ],
+      "interval_count" : 636,
+      "interval_seconds" : 11.984273999999994,
+      "p50_ms" : 20.5,
+      "p95_ms" : 21.100000000000001,
+      "p99_ms" : 21.199999999999999,
+      "slow_pipeline_calls" : 0,
+      "start" : 20.200326999998651,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.257000000000001,
+      "worst_pipeline_ns" : 1535000
+    },
+    {
+      "above_20_ms" : 209,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 3,
+      "end" : 44.195573999997578,
+      "host_cadence_fps" : 55.360188330762142,
+      "host_calls" : [
+        629,
+        1273,
+        627,
+        390,
+        5,
+        0
+      ],
+      "host_ns" : [
+        10574000,
+        10180244000,
+        11559000,
+        308657000,
+        4706000,
+        0
+      ],
+      "interval_count" : 626,
+      "interval_seconds" : 11.307764999999989,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 21,
+      "p99_ms" : 21.199999999999999,
+      "slow_pipeline_calls" : 0,
+      "start" : 32.195877999998629,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.297000000000001,
+      "worst_pipeline_ns" : 1349000
+    },
+    {
+      "above_20_ms" : 320,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 56.196099000000686,
+      "host_cadence_fps" : 52.696869614153904,
+      "host_calls" : [
+        578,
+        1435,
+        578,
+        227,
+        60,
+        2
+      ],
+      "host_ns" : [
+        10994000,
+        9995756000,
+        11078000,
+        95081000,
+        3925239000,
+        169000
+      ],
+      "interval_count" : 577,
+      "interval_seconds" : 10.949416999999997,
+      "p50_ms" : 20.699999999999999,
+      "p95_ms" : 21,
+      "p99_ms" : 21.199999999999999,
+      "slow_pipeline_calls" : 24,
+      "start" : 44.195574999997916,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.262,
+      "worst_pipeline_ns" : 312790000
+    },
+    {
+      "above_20_ms" : 517,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 68.032381999997597,
+      "host_cadence_fps" : 49.082756484224952,
+      "host_calls" : [
+        581,
+        2337,
+        581,
+        47,
+        3,
+        0
+      ],
+      "host_ns" : [
+        7032000,
+        11018581000,
+        6191000,
+        3188000,
+        5070000,
+        0
+      ],
+      "interval_count" : 581,
+      "interval_seconds" : 11.837151000000002,
+      "p50_ms" : 20.899999999999999,
+      "p95_ms" : 21,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 0,
+      "start" : 56.196100000001024,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.055,
+      "worst_pipeline_ns" : 4194000
+    },
+    {
+      "above_20_ms" : 394,
+      "above_33_333333_ms" : 1,
+      "above_50_ms" : 1,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 78.041362999996636,
+      "host_cadence_fps" : 49.459670584605298,
+      "host_calls" : [
+        495,
+        2003,
+        495,
+        75,
+        2,
+        0
+      ],
+      "host_ns" : [
+        5831000,
+        9145678000,
+        5348000,
+        46400000,
+        132407000,
+        0
+      ],
+      "interval_count" : 495,
+      "interval_seconds" : 10.008154000000003,
+      "p50_ms" : 20.899999999999999,
+      "p95_ms" : 21,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 1,
+      "start" : 68.032381999997597,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 134.62899999999999,
+      "worst_pipeline_ns" : 131924000
+    },
+    {
+      "above_20_ms" : 247,
+      "above_33_333333_ms" : 1,
+      "above_50_ms" : 1,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 90.002266999996209,
+      "host_cadence_fps" : 53.687395855232658,
+      "host_calls" : [
+        642,
+        2585,
+        642,
+        357,
+        4,
+        0
+      ],
+      "host_ns" : [
+        7257000,
+        10751796000,
+        6734000,
+        81148000,
+        499426000,
+        0
+      ],
+      "interval_count" : 642,
+      "interval_seconds" : 11.958114000000007,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 4,
+      "start" : 78.041362999996636,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 252.07499999999999,
+      "worst_pipeline_ns" : 128874000
+    },
+    {
+      "above_20_ms" : 315,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 100.18847500000265,
+      "host_cadence_fps" : 52.277822198124476,
+      "host_calls" : [
+        533,
+        2134,
+        533,
+        196,
+        0,
+        0
+      ],
+      "host_ns" : [
+        5336000,
+        9438144000,
+        5663000,
+        28257000,
+        0,
+        0
+      ],
+      "interval_count" : 533,
+      "interval_seconds" : 10.195528000000007,
+      "p50_ms" : 20.800000000000001,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 0,
+      "start" : 90.002266999996209,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.015999999999998,
+      "worst_pipeline_ns" : 0
+    },
+    {
+      "above_20_ms" : 206,
+      "above_33_333333_ms" : 1,
+      "above_50_ms" : 1,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 112.17817800000194,
+      "host_cadence_fps" : 55.123127637893973,
+      "host_calls" : [
+        661,
+        1618,
+        661,
+        429,
+        16,
+        0
+      ],
+      "host_ns" : [
+        9238000,
+        10855834000,
+        9099000,
+        95783000,
+        309913000,
+        0
+      ],
+      "interval_count" : 661,
+      "interval_seconds" : 11.991336999999989,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21.199999999999999,
+      "slow_pipeline_calls" : 3,
+      "start" : 100.18847599999572,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 135.34,
+      "worst_pipeline_ns" : 133262000
+    },
+    {
+      "above_20_ms" : 255,
+      "above_33_333333_ms" : 3,
+      "above_50_ms" : 2,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 122.1974029999983,
+      "host_cadence_fps" : 49.938954621870216,
+      "host_calls" : [
+        500,
+        1003,
+        500,
+        232,
+        3,
+        0
+      ],
+      "host_ns" : [
+        5386000,
+        8560865000,
+        6666000,
+        148579000,
+        23442000,
+        0
+      ],
+      "interval_count" : 500,
+      "interval_seconds" : 10.012224000000002,
+      "p50_ms" : 20.5,
+      "p95_ms" : 21,
+      "p99_ms" : 21.199999999999999,
+      "slow_pipeline_calls" : 0,
+      "start" : 112.17817800000194,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 587.22900000000004,
+      "worst_pipeline_ns" : 11567000
+    },
+    {
+      "above_20_ms" : 282,
+      "above_33_333333_ms" : 5,
+      "above_50_ms" : 5,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 134.19759499999782,
+      "host_cadence_fps" : 51.10063515672018,
+      "host_calls" : [
+        613,
+        1560,
+        613,
+        306,
+        28,
+        0
+      ],
+      "host_ns" : [
+        7487000,
+        9729417000,
+        8464000,
+        1089560000,
+        813677000,
+        0
+      ],
+      "interval_count" : 613,
+      "interval_seconds" : 11.995936999999993,
+      "p50_ms" : 16.899999999999999,
+      "p95_ms" : 21,
+      "p99_ms" : 21.399999999999999,
+      "slow_pipeline_calls" : 5,
+      "start" : 122.1974029999983,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 245.03899999999999,
+      "worst_pipeline_ns" : 243308000
+    },
+    {
+      "above_20_ms" : 88,
+      "above_33_333333_ms" : 4,
+      "above_50_ms" : 4,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 146.19686599999841,
+      "host_cadence_fps" : 55.52839261620565,
+      "host_calls" : [
+        667,
+        1516,
+        667,
+        526,
+        32,
+        0
+      ],
+      "host_ns" : [
+        8586000,
+        9996314000,
+        8327000,
+        793422000,
+        1123922000,
+        0
+      ],
+      "interval_count" : 667,
+      "interval_seconds" : 12.011873,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 10,
+      "start" : 134.19759599999816,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 185.56200000000001,
+      "worst_pipeline_ns" : 179688000
+    },
+    {
+      "above_20_ms" : 53,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 158.12647299999662,
+      "host_cadence_fps" : 58.889218474638369,
+      "host_calls" : [
+        702,
+        1410,
+        702,
+        613,
+        11,
+        0
+      ],
+      "host_ns" : [
+        8374000,
+        11151465000,
+        9090000,
+        84020000,
+        11934000,
+        0
+      ],
+      "interval_count" : 702,
+      "interval_seconds" : 11.920688000000002,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.800000000000001,
+      "p99_ms" : 20.899999999999999,
+      "slow_pipeline_calls" : 0,
+      "start" : 146.19686599999841,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.207000000000001,
+      "worst_pipeline_ns" : 1653000
+    },
+    {
+      "above_20_ms" : 37,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 168.1671239999996,
+      "host_cadence_fps" : 59.080933805542472,
+      "host_calls" : [
+        593,
+        1188,
+        593,
+        523,
+        2,
+        0
+      ],
+      "host_ns" : [
+        5909000,
+        9376721000,
+        7656000,
+        80480000,
+        2152000,
+        0
+      ],
+      "interval_count" : 593,
+      "interval_seconds" : 10.037078999999993,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.800000000000001,
+      "p99_ms" : 20.899999999999999,
+      "slow_pipeline_calls" : 0,
+      "start" : 158.12647399999696,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.172999999999998,
+      "worst_pipeline_ns" : 1213000
+    },
+    {
+      "above_20_ms" : 85,
+      "above_33_333333_ms" : 1,
+      "above_50_ms" : 1,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 180.19151299999794,
+      "host_cadence_fps" : 57.881993086594775,
+      "host_calls" : [
+        696,
+        1393,
+        696,
+        436,
+        4,
+        0
+      ],
+      "host_ns" : [
+        7251000,
+        11027831000,
+        8994000,
+        199108000,
+        90559000,
+        0
+      ],
+      "interval_count" : 696,
+      "interval_seconds" : 12.024464999999985,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 1,
+      "start" : 168.1671239999996,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 87.441000000000003,
+      "worst_pipeline_ns" : 86029000
+    },
+    {
+      "above_20_ms" : 66,
+      "above_33_333333_ms" : 3,
+      "above_50_ms" : 3,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 192.11108899999817,
+      "host_cadence_fps" : 57.300667087151211,
+      "host_calls" : [
+        683,
+        1394,
+        683,
+        326,
+        10,
+        0
+      ],
+      "host_ns" : [
+        7083000,
+        10608144000,
+        8580000,
+        214023000,
+        319066000,
+        0
+      ],
+      "interval_count" : 683,
+      "interval_seconds" : 11.919582,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 3,
+      "start" : 180.19151399999828,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 127.062,
+      "worst_pipeline_ns" : 125775000
+    },
+    {
+      "above_20_ms" : 100,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 202.19903599999816,
+      "host_cadence_fps" : 57.494855945151492,
+      "host_calls" : [
+        580,
+        1192,
+        580,
+        333,
+        3,
+        0
+      ],
+      "host_ns" : [
+        6344000,
+        9412601000,
+        7617000,
+        19080000,
+        3859000,
+        0
+      ],
+      "interval_count" : 580,
+      "interval_seconds" : 10.087859,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 0,
+      "start" : 192.11108999999851,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.170999999999999,
+      "worst_pipeline_ns" : 1585000
+    },
+    {
+      "above_20_ms" : 58,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 212.21562199999607,
+      "host_cadence_fps" : 58.540150265684495,
+      "host_calls" : [
+        587,
+        1175,
+        587,
+        405,
+        3,
+        0
+      ],
+      "host_ns" : [
+        5996000,
+        9398956000,
+        7517000,
+        26768000,
+        3566000,
+        0
+      ],
+      "interval_count" : 587,
+      "interval_seconds" : 10.027306000000005,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 20.899999999999999,
+      "slow_pipeline_calls" : 0,
+      "start" : 202.19903599999816,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.036000000000001,
+      "worst_pipeline_ns" : 1352000
+    },
+    {
+      "above_20_ms" : 6,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 222.22374899999704,
+      "host_cadence_fps" : 59.842652785835341,
+      "host_calls" : [
+        599,
+        1199,
+        599,
+        524,
+        11,
+        0
+      ],
+      "host_ns" : [
+        6534000,
+        9386083000,
+        7452000,
+        40196000,
+        12944000,
+        0
+      ],
+      "interval_count" : 599,
+      "interval_seconds" : 10.009582999999999,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 16.699999999999999,
+      "p99_ms" : 20.800000000000001,
+      "slow_pipeline_calls" : 0,
+      "start" : 212.21562199999607,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 20.837,
+      "worst_pipeline_ns" : 1594000
+    },
+    {
+      "above_20_ms" : 96,
+      "above_33_333333_ms" : 1,
+      "above_50_ms" : 1,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 234.06969599999866,
+      "host_cadence_fps" : 57.714482819927959,
+      "host_calls" : [
+        683,
+        1541,
+        683,
+        542,
+        6,
+        0
+      ],
+      "host_ns" : [
+        8158000,
+        10909842000,
+        8538000,
+        224241000,
+        77051000,
+        0
+      ],
+      "interval_count" : 683,
+      "interval_seconds" : 11.834117999999997,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 1,
+      "start" : 222.22374999999738,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 73.176000000000002,
+      "worst_pipeline_ns" : 71803000
+    },
+    {
+      "above_20_ms" : 162,
+      "above_33_333333_ms" : 1,
+      "above_50_ms" : 1,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 5,
+      "end" : 244.22454899999866,
+      "host_cadence_fps" : 55.444709905005375,
+      "host_calls" : [
+        563,
+        1685,
+        563,
+        382,
+        6,
+        0
+      ],
+      "host_ns" : [
+        6458000,
+        9392622000,
+        6767000,
+        96536000,
+        236986000,
+        0
+      ],
+      "interval_count" : 563,
+      "interval_seconds" : 10.154260000000003,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 2,
+      "start" : 234.06969599999866,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 118.76300000000001,
+      "worst_pipeline_ns" : 116610000
+    },
+    {
+      "above_20_ms" : 75,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 256.0371279999963,
+      "host_cadence_fps" : 58.411039857826566,
+      "host_calls" : [
+        683,
+        1402,
+        683,
+        570,
+        23,
+        0
+      ],
+      "host_ns" : [
+        7536000,
+        10647671000,
+        8639000,
+        313635000,
+        162338000,
+        0
+      ],
+      "interval_count" : 682,
+      "interval_seconds" : 11.675874999999987,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 20.899999999999999,
+      "slow_pipeline_calls" : 1,
+      "start" : 244.22454899999866,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.152000000000001,
+      "worst_pipeline_ns" : 135277000
+    },
+    {
+      "above_20_ms" : 42,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 266.11372100000153,
+      "host_cadence_fps" : 58.959407092311324,
+      "host_calls" : [
+        595,
+        1218,
+        595,
+        509,
+        7,
+        0
+      ],
+      "host_ns" : [
+        6966000,
+        9420324000,
+        7610000,
+        103977000,
+        7910000,
+        0
+      ],
+      "interval_count" : 595,
+      "interval_seconds" : 10.091688999999997,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.800000000000001,
+      "p99_ms" : 20.899999999999999,
+      "slow_pipeline_calls" : 0,
+      "start" : 256.0371279999963,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.390000000000001,
+      "worst_pipeline_ns" : 1234000
+    },
+    {
+      "above_20_ms" : 62,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 276.22197199999937,
+      "host_cadence_fps" : 58.4671689039345,
+      "host_calls" : [
+        591,
+        1182,
+        591,
+        467,
+        11,
+        0
+      ],
+      "host_ns" : [
+        6321000,
+        9496373000,
+        7546000,
+        65668000,
+        13548000,
+        0
+      ],
+      "interval_count" : 591,
+      "interval_seconds" : 10.108236999999997,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 20.899999999999999,
+      "slow_pipeline_calls" : 0,
+      "start" : 266.11372200000187,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.181000000000001,
+      "worst_pipeline_ns" : 1577000
+    },
+    {
+      "above_20_ms" : 281,
+      "above_33_333333_ms" : 1,
+      "above_50_ms" : 1,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 288.20319300000119,
+      "host_cadence_fps" : 53.565865457253629,
+      "host_calls" : [
+        641,
+        1284,
+        641,
+        330,
+        9,
+        0
+      ],
+      "host_ns" : [
+        10283000,
+        10870237000,
+        12051000,
+        211599000,
+        144053000,
+        0
+      ],
+      "interval_count" : 641,
+      "interval_seconds" : 11.966575999999995,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 21.100000000000001,
+      "p99_ms" : 21.199999999999999,
+      "slow_pipeline_calls" : 1,
+      "start" : 276.22197199999937,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 131.07599999999999,
+      "worst_pipeline_ns" : 129687000
+    },
+    {
+      "above_20_ms" : 83,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 300.1703239999988,
+      "host_cadence_fps" : 58.268267101736413,
+      "host_calls" : [
+        698,
+        1422,
+        698,
+        554,
+        4,
+        0
+      ],
+      "host_ns" : [
+        6995000,
+        11198290000,
+        9175000,
+        57117000,
+        4868000,
+        0
+      ],
+      "interval_count" : 698,
+      "interval_seconds" : 11.979075999999996,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 20.899999999999999,
+      "slow_pipeline_calls" : 0,
+      "start" : 288.20319400000153,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.175000000000001,
+      "worst_pipeline_ns" : 1400000
+    },
+    {
+      "above_20_ms" : 76,
+      "above_33_333333_ms" : 2,
+      "above_50_ms" : 2,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 310.2201320000022,
+      "host_cadence_fps" : 56.716920179691073,
+      "host_calls" : [
+        570,
+        1184,
+        570,
+        459,
+        5,
+        0
+      ],
+      "host_ns" : [
+        5408000,
+        8746591000,
+        7313000,
+        400854000,
+        269685000,
+        0
+      ],
+      "interval_count" : 570,
+      "interval_seconds" : 10.049911000000012,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 2,
+      "start" : 300.17032499999914,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 147.49199999999999,
+      "worst_pipeline_ns" : 146036000
+    },
+    {
+      "above_20_ms" : 265,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 322.02831300000253,
+      "host_cadence_fps" : 54.388236959551804,
+      "host_calls" : [
+        642,
+        1315,
+        642,
+        312,
+        8,
+        0
+      ],
+      "host_ns" : [
+        7698000,
+        10945839000,
+        8851000,
+        26202000,
+        9928000,
+        0
+      ],
+      "interval_count" : 642,
+      "interval_seconds" : 11.804023000000008,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 0,
+      "start" : 310.22013300000253,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.254000000000001,
+      "worst_pipeline_ns" : 1878000
+    },
+    {
+      "above_20_ms" : 133,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 332.06152699999802,
+      "host_cadence_fps" : 56.688438746597683,
+      "host_calls" : [
+        569,
+        1192,
+        569,
+        389,
+        3,
+        0
+      ],
+      "host_ns" : [
+        4759000,
+        9256145000,
+        7353000,
+        35352000,
+        2624000,
+        0
+      ],
+      "interval_count" : 569,
+      "interval_seconds" : 10.037320000000003,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 0,
+      "start" : 322.02831300000253,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.207999999999998,
+      "worst_pipeline_ns" : 896000
+    },
+    {
+      "above_20_ms" : 361,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 342.13186699999642,
+      "host_cadence_fps" : 51.023777677166862,
+      "host_calls" : [
+        513,
+        1026,
+        513,
+        107,
+        3,
+        0
+      ],
+      "host_ns" : [
+        5272000,
+        9310751000,
+        6944000,
+        7535000,
+        2958000,
+        0
+      ],
+      "interval_count" : 513,
+      "interval_seconds" : 10.054136000000005,
+      "p50_ms" : 20.899999999999999,
+      "p95_ms" : 21,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 0,
+      "start" : 332.06152799999836,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 21.003,
+      "worst_pipeline_ns" : 1087000
+    },
+    {
+      "above_20_ms" : 131,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 354.12461299999995,
+      "host_cadence_fps" : 57.274130973284031,
+      "host_calls" : [
+        687,
+        1432,
+        688,
+        515,
+        1,
+        0
+      ],
+      "host_ns" : [
+        5763000,
+        11050480000,
+        8799000,
+        54464000,
+        1011000,
+        0
+      ],
+      "interval_count" : 688,
+      "interval_seconds" : 12.012403999999982,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 20.899999999999999,
+      "slow_pipeline_calls" : 0,
+      "start" : 342.13186699999642,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 20.960000000000001,
+      "worst_pipeline_ns" : 1011000
+    },
+    {
+      "above_20_ms" : 48,
+      "above_33_333333_ms" : 1,
+      "above_50_ms" : 1,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 364.19836899999791,
+      "host_cadence_fps" : 58.161494287099679,
+      "host_calls" : [
+        586,
+        1173,
+        585,
+        502,
+        1,
+        0
+      ],
+      "host_ns" : [
+        6421000,
+        7382619000,
+        7908000,
+        1969662000,
+        129029000,
+        0
+      ],
+      "interval_count" : 585,
+      "interval_seconds" : 10.058200999999995,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.800000000000001,
+      "p99_ms" : 21,
+      "slow_pipeline_calls" : 1,
+      "start" : 354.12461299999995,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 130.63200000000001,
+      "worst_pipeline_ns" : 129029000
+    },
+    {
+      "above_20_ms" : 324,
+      "above_33_333333_ms" : 3,
+      "above_50_ms" : 3,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 376.21848099999625,
+      "host_cadence_fps" : 51.12581539440697,
+      "host_calls" : [
+        615,
+        2091,
+        615,
+        263,
+        57,
+        0
+      ],
+      "host_ns" : [
+        8346000,
+        10760192000,
+        7521000,
+        118404000,
+        1116290000,
+        0
+      ],
+      "interval_count" : 615,
+      "interval_seconds" : 12.029148000000003,
+      "p50_ms" : 20.800000000000001,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21.100000000000001,
+      "slow_pipeline_calls" : 10,
+      "start" : 364.19836899999791,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 225.55699999999999,
+      "worst_pipeline_ns" : 141950000
+    },
+    {
+      "above_20_ms" : 85,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 388.07824799999798,
+      "host_cadence_fps" : 58.181077388759135,
+      "host_calls" : [
+        690,
+        1412,
+        691,
+        572,
+        6,
+        0
+      ],
+      "host_ns" : [
+        9154000,
+        10464302000,
+        10345000,
+        737901000,
+        5905000,
+        0
+      ],
+      "interval_count" : 690,
+      "interval_seconds" : 11.859525999999981,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 20.899999999999999,
+      "p99_ms" : 21.199999999999999,
+      "slow_pipeline_calls" : 0,
+      "start" : 376.21848099999625,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 25.082000000000001,
+      "worst_pipeline_ns" : 1226000
+    },
+    {
+      "above_20_ms" : 1,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 400.14468699999998,
+      "host_cadence_fps" : 59.973086104021768,
+      "host_calls" : [
+        308,
+        616,
+        308,
+        308,
+        0,
+        0
+      ],
+      "host_ns" : [
+        4410000,
+        1533954000,
+        5113000,
+        3322840000,
+        0,
+        0
+      ],
+      "interval_count" : 308,
+      "interval_seconds" : 5.1356369999999991,
+      "p50_ms" : 16.699999999999999,
+      "p95_ms" : 18.600000000000001,
+      "p99_ms" : 19,
+      "slow_pipeline_calls" : 0,
+      "start" : 388.07824799999798,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : 20.228000000000002,
+      "worst_pipeline_ns" : 0
+    },
+    {
+      "above_20_ms" : 0,
+      "above_33_333333_ms" : 0,
+      "above_50_ms" : 0,
+      "discontinuities" : 0,
+      "dropped_collector_records" : 6,
+      "end" : 405.46781000000192,
+      "host_cadence_fps" : null,
+      "host_calls" : [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "host_ns" : [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "interval_count" : 0,
+      "interval_seconds" : 0,
+      "p50_ms" : null,
+      "p95_ms" : null,
+      "p99_ms" : null,
+      "slow_pipeline_calls" : 0,
+      "start" : 400.14468699999998,
+      "swapchain_height" : 1600,
+      "swapchain_width" : 2128,
+      "worst_ms" : null,
+      "worst_pipeline_ns" : 0
+    }
+  ]
+}
