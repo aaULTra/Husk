@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: M9-SPATIAL-v1 experimental MetalFX IPA built with 161 passing checks; weighted roadmap ~22% (+0.60 points); physical correctness/quality/energy gates open while iPad unavailable.
+Updated: 2026-10-25. Status: M9-SPATIAL-v1 experimental MetalFX IPA built with 161 passing checks; weighted roadmap ~22% (+0.60 points); physical correctness/quality/energy gates open; user starting the current IPA test, results pending.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -34,6 +34,12 @@ Persist each future IPA handover at docs/performance/builds/<source-sha>.md with
 Scoring model **HUSK-ROADMAP-v1**: M0 2%, M1 12%, M2 10%, M3 18%, M4 6%, M5 8%, M6 7%, M7 8%, M8 7%, M9 12%, M10 10% (total 100%). Weights reflect objective importance, scope and evidence risk rather than lines of code. Within M1–M10, score implementation/build gates at 30%, device correctness/pacing gates at 30%, and relevant benefit/energy evidence gates at 40%. M0 is documentation-specific. Formula, gates, no-benefit handling and scope rules: [progress contract](docs/performance/ROADMAP_PROGRESS.md).
 
 The first whole-milestone gate baseline was established by AUDIT-BATCH-2 at 21.17%. Update the current ledger and save an immutable snapshot with every later IPA. Earlier handovers remain historical; their subtask percentages are not whole-milestone scores. Every future build handover must contain a numeric overall percentage, component breakdown, change/first-baseline label, scoring version and remaining evidence. Never describe coding-only 100% as completion of an energy objective. Always show Duo pending separately; no iPad result validates it.
+
+### Delivery cadence — faster approach adopted
+
+Standing user instruction: consolidate feasible substantial implementation and independent options into fewer reviewable IPAs; reuse diagnostics and add them only for a specific decision or proven defect. Analyse existing captures first, request the shortest useful physical test and reuse its evidence across gates where valid. Keep comparisons to one behavioural change, preserve rollback, complete required checks, and distinguish implementation readiness from device/benefit acceptance and weighted progress. Enforcement: [AGENTS.md](AGENTS.md); delivery procedure: [IPA_HANDOVER.md](docs/performance/IPA_HANDOVER.md).
+
+The user is now starting the M9-SPATIAL-v1 IPA from source `9d298c5c7c56af87c715ba2b8ad03111a48dcbac` / [run 40244864869](https://github.com/aaULTra/Husk/actions/runs/40244864869). No results received yet. Keep this candidate and [its focused procedure](docs/performance/builds/9d298c5c7c56af87c715ba2b8ad03111a48dcbac.md) stable while testing; investigate reported exports before asking for another installation or repeat. A confirmed blocking correctness/measurement defect can justify a replacement. Independent engineering can continue without invalidating the active test.
 
 ## 3. Current implementation and evidence
 
@@ -336,3 +342,7 @@ Source `9d298c5c7c56af87c715ba2b8ad03111a48dcbac`, packaged `9d298c5c7c56af87c71
 Overall **~22%** (21.77 exact, **+0.60 percentage points** versus af11056e/21.17), HUSK-ROADMAP-v1 / whole-milestones-1. M4-only ~24%; Duo 0%. No weight, criterion or denominator changed. [Immutable ledger](docs/performance/progress/9d298c5c7c56af87c715ba2b8ad03111a48dcbac.ledger.json) and [score](docs/performance/progress/9d298c5c7c56af87c715ba2b8ad03111a48dcbac.score.json). Largest unfinished contributions: M3 13.95, Duo 10.00, M9 9.60 points. No physical/energy gate closed.
 
 No iPad action requested now. Later, one update can check baseline, enable spatial mode, collect a short visual/input/lifecycle/GPU diagnostic and restore baseline. Do not manually lower the selected output or change worker/limiter/submission at the same time. New experimental cache starts separately; compare cold with cold and warmed routes with warmed routes. Include scaler startup/work cost before claiming energy improvement. Actual temporal upscaling, GPU-driven dynamic resolution, shader preparation, Adaptive energy versus Balanced and every earlier unresolved item remain tracked. Source workspace was unavailable; tests/build ran in Apple CI and all 20 implementation files were read back from GitHub.
+
+### M0 cadence instruction / M9 test starting
+
+User adopts the faster approach permanently and says they will test the current IPA now. Save batching, existing-telemetry reuse, specific short tests, active-build continuity and separate readiness/validation reporting in AGENTS.md and IPA_HANDOVER.md. Sequence: M0 delivery discipline -> current M9/M3 correctness/GPU capture -> evidence-led next implementation batch or targeted follow-up. This documentation update changes no runtime, controls, IPA or scoring criteria. Overall remains 21.77% (~22%); all physical/benefit gates await results. Preserve prior no-improvement feedback, Adaptive energy versus Balanced, shader/non-pipeline stalls and every unfinished milestone. Do not infer a completed or successful test from the user's intention to start.

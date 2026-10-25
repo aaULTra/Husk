@@ -48,6 +48,16 @@ Always give checklist-based completion percentages for the affected milestone/ta
 
 Provide detailed, build-specific numbered user instructions: installation/restart and cache preservation, exact menu/settings/toggles, controlled conditions, scene/actions/duration, phase/exclusion markers, stop/export/share steps, exact files and observations requested, pass/fail signals and rollback/stop conditions. Request only tests this IPA needs, specify what a returned result will decide, and state explicitly when no user testing is needed. Save the handover/progress checklist with the build evidence and update PROJECT_PLAN.md. The final user message must contain the actionable checklist, not merely a link to it.
 
+## Delivery cadence and test economy — standing user requirement
+
+Prefer substantial, reviewable implementation batches over repeated small diagnostic builds. Reuse existing diagnostics. Add instrumentation only for a named missing measurement or demonstrated collector defect, and state the decision it will resolve before implementing it. Complete feasible engineering and required automated checks before requesting another installation.
+
+Independent experiments can share one IPA, but must retain separate controls, safe defaults and rollback. Keep one behavioural variable per controlled comparison; batching delivery does not permit mixing changes in a benchmark. Reuse the same capture for multiple questions when its configuration, phases and measurement coverage support them.
+
+Analyse supplied/existing exports before asking for another run. Request the shortest session that resolves a specific remaining gate, with purpose, settings, duration, files and pass/fail/rollback steps. Avoid repeated general gameplay logs. Record the device build currently being tested; preserve its test instructions and analyse its results before requesting a replacement, unless a confirmed blocking correctness/measurement defect requires one. Continue independent engineering that does not invalidate that test.
+
+Show implementation/build readiness separately from device and benefit validation and from the overall weighted score. Retain the fixed scoring model, acceptance standards, protected baseline, device separation and unfinished investigations. Faster delivery never means awarding unverified performance or energy credit.
+
 ## Coding, testing and handover
 
 Use the existing architecture and tests. Preserve API arguments, results, object lifetimes and threading guarantees. Pipeline identification must not hash raw pointers/padding as stable identity or pretend incomplete state is complete. Unsupported feedback must remain unavailable. Never fabricate pipeline objects or precompile indiscriminately.

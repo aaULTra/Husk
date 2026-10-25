@@ -27,6 +27,16 @@ Example of format only, not Husk's current score: “M3-A implementation: 3/4 ga
 
 These percentages describe checklist completion, not effort, time remaining, percentage battery improvement or percentage of maximum possible efficiency achieved. Give score changes from the previous handover when comparable. Every future IPA must additionally report a numeric **overall weighted permanent-plan completion percentage** under [HUSK-ROADMAP-v1](ROADMAP_PROGRESS.md), with its component breakdown, source/evidence date, model version and change since the prior comparable build. Use whole-milestone gate scores; the 100% implementation of a small increment must not become 100% of its parent milestone. State when the score is the first baseline or a rebaseline. Keep M4 delivery/validation separate from the future Duo; M10 has an explicit reserved weight. Define concrete gates for research decisions before scoring them. Always retain the affected-task track percentages and exact user instructions alongside the overall number.
 
+## Consolidated delivery and minimal device testing
+
+Complete a substantial, reviewable batch of feasible implementation and required automated checks before delivering another candidate. Reuse the existing telemetry; additional diagnostics need a named missing measurement/confirmed defect and a concrete decision they enable. Independent options may share one installation while preserving separate toggles/defaults/rollback and one behavioural change per comparison.
+
+Analyse existing exports before requesting more gameplay. State the minimum capture duration, the particular uncertainty, the gates the result could inform, and why existing evidence cannot answer it. Reuse one capture across questions where its conditions support that analysis. Keep correctness smoke tests distinct from sustained energy comparisons.
+
+Record the active source/artifact when the user starts testing. Keep that candidate's instructions stable and assess the returned files before asking for an update/repeat, unless a confirmed blocking correctness/measurement defect needs a replacement. Documentation-only updates must not manufacture another IPA or test request. Continue independent engineering without invalidating the active test.
+
+Report implementation readiness separately from device/benefit acceptance and the fixed weighted overall score. Consolidation does not waive correctness checks, baseline preservation or measured-benefit requirements.
+
 ## Detailed user instructions required in the delivery message
 
 Fill these with the actual build's controls and procedures; do not send the user an unfilled template or require them to infer steps from developer notes.
