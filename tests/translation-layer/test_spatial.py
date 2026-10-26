@@ -71,7 +71,7 @@ int main(void){
 ''',extra=[TL/"husk-tl-spatial.c"])
     def test_real_driver_swapchain_guards(self):
         inc=(ROOT/"patches/metalfx/HuskSpatial.inc").read_text()
-        body=inc[inc.index("static int huskSpatialPlan("):inc.index("void* huskSpatialNewImage(")]
+        body=inc[inc.index("static int huskSpatialPlan("):inc.index("/* Texture/scaler dimensions")]
         self.compile_run(r'''
 #include "husk-tl-spatial.h"
 #include <atomic>

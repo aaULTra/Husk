@@ -70,5 +70,9 @@ class AnalysisTests(unittest.TestCase):
   data={'schema_version':8,'gpu_sampling':{'valid_records':2,'dropped_export_records':1,'aggregate_records':2,'all_window_sample_clipped_union_seconds':.5},'gpu_records':[{}], 'gpu_windows':[{'valid_records':2,'sample_clipped_interval_union_seconds':.5}]}
   result=m.audit(data);self.assertEqual(result['errors'],[])
   data['gpu_windows'][0]['valid_records']=3;self.assertIn('GPU aggregate/valid record counts do not reconcile',m.audit(data)['errors'])
+ def test_schema9_clock_and_sync_do_not_become_display_or_energy_proof(self):
+  data={'schema_version':9,'presentation_clock':{'requested':True,'mapped_requests':30,'feedback_records':0},'compatibility_sync':{'requested':True,'futex_timeouts':2}}
+  result=m.audit(data);self.assertEqual(result['errors'],[]);self.assertEqual(result['presentation_clock']['mapped_requests'],30);self.assertEqual(result['compatibility_sync']['futex_timeouts'],2)
+  self.assertTrue(result['energy_benefit'].startswith('UNVERIFIED'));self.assertTrue(result['gpu']['status'].startswith('UNAVAILABLE'))
 if __name__=='__main__':unittest.main()
 

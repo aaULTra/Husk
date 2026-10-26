@@ -101,7 +101,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                     "launch_configuration": attached, "metal_capabilities": metalCapabilities,
                     "process_scope": "Husk/LiveContainer host process; not isolated guest-game utilisation"]
         metadata["cpu_thread_sampling_requested"] = cpuThreadSampling
-        tl_em_start(); tl_em_cpu_work_enable(cpuThreadSampling); tl_gput_native_start(gpuSampling)
+        tl_em_start(); tl_em_cpu_work_enable(cpuThreadSampling); tl_pt_monitor(true); tl_gput_native_start(gpuSampling)
         // Bracket a host-clock read with media-clock reads. Raw values remain
         // authoritative; this mapping supports estimated host/GPU correlation.
         metadata["gpu_clock_alignment"] = gpuClockAlignment()
@@ -366,6 +366,35 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "images_created": s.images_created, "encoded_calls": s.encoded, "failures": s.failures,
                 "texture_observations": textures, "patch": "M9-SPATIAL-v2", "energy_benefit": "UNVERIFIED"]
     }
+    private func syncReport() -> [String: Any] {
+        var s = tl_em_sync_stats(); tl_em_sync_snapshot(&s); var counts = s.counts
+        let values = withUnsafeBytes(of: &counts) { Array($0.bindMemory(to: UInt64.self)) }
+        let names = ["once_initializers", "once_contended_calls", "futex_waits", "futex_wake_calls", "futex_timeouts", "futex_spurious_host_wakes"]
+        var report: [String: Any] = ["requested": s.requested, "status": s.requested ? "MEASURED included slow-path entries/events" : "UNAVAILABLE: CPU diagnostics disabled", "plan_ids": ["M8", "M3"], "subsystem": "compatibility_sync",
+            "scope": "Included slow-path entries/events when observed; crossing-exclusion calls may appear separately. Completed once fast path deliberately uncounted; counts are not time, wasted work or energy"]
+        for (name, value) in zip(names, values) { report[name] = value }
+        return report
+    }
+    private func presentationClockReport() -> [String: Any] {
+        var s = tl_pt_stats(); tl_pt_snapshot(&s)
+        var records = Array(repeating: tl_pt_record(), count: 256)
+        let count = records.withUnsafeMutableBufferPointer { tl_pt_records($0.baseAddress, UInt32($0.count)) }
+        let rows: [[String: Any]] = records.prefix(Int(count)).map { v in
+            ["sequence": v.sequence, "present_id": v.id, "raw_native_actual_ns": v.raw_actual,
+             "estimated_guest_actual_ns": v.guest_actual, "estimated_guest_desired_ns": v.desired,
+             "estimated_guest_earliest_ns": v.earliest, "margin_duration_ns": v.margin,
+             "observed_guest_ns": v.observed_guest_ns, "observed_media_ns": v.observed_media_ns,
+             "clock_read_uncertainty_ns": v.uncertainty_ns, "phase": "unknown history occurrence; may precede observation"]
+        }
+        return ["requested": s.requested, "plan_ids": ["M4", "M6", "M3"], "subsystem": "presentation_clock",
+            "present_calls_observed": s.presents, "nonzero_timing_requests": s.timing_requests, "mapped_requests": s.mapped,
+            "expired_requests": s.expired, "far_future_requests": s.far_future, "invalid_clock_or_overflow": s.invalid_clock,
+            "unsupported_chains": s.unsupported, "guest_feedback_data_calls": s.feedback_calls, "feedback_records": s.feedback_records,
+            "record_overwrites": s.record_overwrites, "record_contention": s.record_contention,
+            "latest_clock_offset_ns": s.latest_offset_ns, "latest_read_uncertainty_ns": s.latest_uncertainty_ns,
+            "feedback_last256": rows, "status": count > 0 ? "MEASURED native feedback; ESTIMATED cross-clock values" : "UNAVAILABLE: no captured guest-retrieved presentation feedback",
+            "scope": "Passive guest data/deferred queries only; count-only calls uncounted; no history stolen. Session counters include excluded/lifecycle context and concurrent boundary reads. Driver may estimate earliest/actual time; not complete displayed-frame or energy accounting"]
+    }
     private func submitCPUReport() -> [String: Any] {
         var s = tl_em_work_stats(); tl_em_work_snapshot(&s)
         return ["requested": cpuThreadSampling, "status": s.calls > 0 ? "MEASURED: caller-thread CPU during Vulkan submission" : "UNAVAILABLE: disabled/no valid calls",
@@ -409,14 +438,14 @@ final class EfficiencyDiagnostics: ObservableObject {
         var mediaBefore = 0.0, mediaAfter = 0.0
         tl_gput_native_exclude(true, &mediaBefore, &mediaAfter)
         metadata["gpu_clock_alignment_end"] = gpuClockAlignment()
-        tl_em_stop(); tl_gput_end(); collectGPU(); drainEvents(); collectWindow()
+        tl_em_stop(); tl_pt_monitor(false); tl_gput_end(); collectGPU(); drainEvents(); collectWindow()
         if let start = excludedAt { append(exclusionRow(start, now, mediaBefore, mediaAfter), to: &exclusions, limit: 2048) }
         timer?.invalidate(); timer = nil
         observers.forEach { NotificationCenter.default.removeObserver($0) }; observers = []
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
-        stoppedReport = ["schema_version": 8, "metadata": metadata, "duration_seconds": now - origin,
-                         "summary": stats(total), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
+        stoppedReport = ["schema_version": 9, "metadata": metadata, "duration_seconds": now - origin,
+                         "summary": stats(total), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
                          "battery_included_sample_count": battery.sampleCount,
@@ -465,6 +494,8 @@ final class EfficiencyDiagnostics: ObservableObject {
                 let spatial = report["spatial_upscaling"] as? [String: Any] ?? [:]
                 let textures = spatial["texture_observations"] as? [String: Any] ?? [:]
                 let worker = report["worker_policy"] as? [String: Any] ?? [:]
+                let presentation = report["presentation_clock"] as? [String: Any] ?? [:]
+                let sync = report["compatibility_sync"] as? [String: Any] ?? [:]
                 let submitWork = report["submit_cpu_work"] as? [String: Any] ?? [:]
                 let gpu = report["gpu_sampling"] as? [String: Any] ?? [:]
                 let text = """
@@ -510,6 +541,9 @@ final class EfficiencyDiagnostics: ObservableObject {
                 GPU invalid/error/dropped/export losses: \(gpu["invalid_timestamps"] ?? 0) / \(gpu["command_buffer_errors"] ?? 0) / \(gpu["dropped_records_or_capture_attempts"] ?? 0) / \(gpu["dropped_export_records"] ?? 0)
                 CPU thread snapshots: \(rows.filter { $0["cpu_threads"] != nil }.count); submit CPU/wall ns: \(submitWork["thread_cpu_ns"] ?? 0) / \(submitWork["wall_ns"] ?? 0); \(submitWork["status"] ?? "UNAVAILABLE")
                 GPU aggregate windows/records/drops: \(gpu["aggregate_window_count"] ?? 0) / \(gpu["aggregate_records"] ?? 0) / \(gpu["dropped_aggregate_records"] ?? 0); raw cap losses remain explicit.
+                M8 compatibility sync: \(sync)
+                M4/M6 clock option/mapped/expired/future requests: \(presentation["requested"] ?? false) / \(presentation["mapped_requests"] ?? 0) / \(presentation["expired_requests"] ?? 0) / \(presentation["far_future_requests"] ?? 0)
+                Presentation feedback: \(presentation["status"] ?? "UNAVAILABLE"); source may be estimated by driver, not complete display accounting.
                 UNAVAILABLE: actual displayed frames, per-frame GPU attribution, peak footprint and aggregate cache-hit rate. Per-request driver feedback is exported only where available.
                 EXTERNAL: electrical power and numerical physical temperature. Thermal state is a classification.
                 No measured energy improvement. Monitoring overhead and device correctness need validation.

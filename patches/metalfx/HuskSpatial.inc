@@ -16,7 +16,10 @@ struct HuskSpatialImage {
     id<MTLTexture> input=nil;
     id<MTLFXSpatialScaler> scaler=nil;
     std::mutex lock;
-    bool observed=false;
+    bool observed=false,prepared=false;
+    uint32_t outputWidth=0,outputHeight=0;
+    MTLPixelFormat format=MTLPixelFormatInvalid;
+    MTLTextureUsage outputUsage=MTLTextureUsageUnknown;
     ~HuskSpatialImage(){[input release];[scaler release];--huskSpatialLive;}
 };
 static id<MTLFXSpatialScaler> huskNewScaler(id<MTLDevice> device,MTLPixelFormat format,const tl_spatial_config& c){
@@ -85,6 +88,24 @@ static int huskSpatialPlan(const VkSwapchainCreateInfoKHR* ci,tl_spatial_config*
     }
     *out=c;return 1;
 }
+/* Texture/scaler dimensions and formats are immutable after creation. Prepare
+ * the fixed input once, cache its validated contract, and keep only drawable
+ * validation/rebinding in the per-frame path. */
+static bool huskSpatialPrepareImage(HuskSpatialImage* state,const tl_spatial_config& c,MTLPixelFormat format){
+    if(!state)return false;
+    state->prepared=false;
+    if(!state->input||!state->scaler)return false;
+    auto input=state->input;auto scaler=state->scaler;
+    if(input.width!=c.input_width||input.height!=c.input_height||input.pixelFormat!=format||
+       scaler.inputWidth!=c.input_width||scaler.inputHeight!=c.input_height||
+       scaler.outputWidth!=c.output_width||scaler.outputHeight!=c.output_height||
+       scaler.colorTextureFormat!=format||scaler.outputTextureFormat!=format||
+       (input.usage&scaler.colorTextureUsage)!=scaler.colorTextureUsage)return false;
+    state->outputWidth=c.output_width;state->outputHeight=c.output_height;
+    state->format=format;state->outputUsage=scaler.outputTextureUsage;
+    scaler.colorTexture=input;scaler.inputContentWidth=c.input_width;scaler.inputContentHeight=c.input_height;
+    state->prepared=true;return true;
+}
 void* huskSpatialNewImage(id<MTLDevice> device,MTLPixelFormat format,MTLTextureUsage guestUsage,const tl_spatial_config& c){
     if(!c.enabled)return nullptr;
     auto* state=new(std::nothrow) HuskSpatialImage();
@@ -100,7 +121,7 @@ void* huskSpatialNewImage(id<MTLDevice> device,MTLPixelFormat format,MTLTextureU
         state->input=[device newTextureWithDescriptor:desc];
         state->input.label=@"Husk M9 lower-resolution input";
     }
-    if(!state->scaler||!state->input){++huskSpatialFailures;++huskSpatialResources;delete state;return nullptr;}
+    if(!huskSpatialPrepareImage(state,c,format)){++huskSpatialFailures;++huskSpatialResources;delete state;return nullptr;}
     ++huskSpatialCreated;return state;
 }
 id<MTLTexture> huskSpatialInput(void* raw){return raw?((HuskSpatialImage*)raw)->input:nil;}
@@ -109,13 +130,12 @@ bool huskSpatialEncode(void* raw,id<MTLTexture> output,id<MTLCommandBuffer> comm
     if(!state||!command||!output){++huskSpatialFailures;++huskSpatialEncodeFailures;return false;}
     std::lock_guard<std::mutex> guard(state->lock);
     id<MTLFXSpatialScaler> scaler=state->scaler;
-    if(state->input.width!=scaler.inputWidth||state->input.height!=scaler.inputHeight||
-       state->input.pixelFormat!=scaler.colorTextureFormat||
-       output.width!=scaler.outputWidth||output.height!=scaler.outputHeight||
-       output.pixelFormat!=scaler.outputTextureFormat||
-       (output.usage&scaler.outputTextureUsage)!=scaler.outputTextureUsage){++huskSpatialFailures;++huskSpatialEncodeFailures;return false;}
-    scaler.colorTexture=state->input;scaler.outputTexture=output;
-    scaler.inputContentWidth=state->input.width;scaler.inputContentHeight=state->input.height;
+    if(!state->prepared||!scaler||!state->input||
+       output.width!=state->outputWidth||output.height!=state->outputHeight||
+       output.pixelFormat!=state->format||(output.usage&state->outputUsage)!=state->outputUsage){
+        ++huskSpatialFailures;++huskSpatialEncodeFailures;return false;
+    }
+    scaler.outputTexture=output;
     [scaler encodeToCommandBuffer:command];++huskSpatialEncoded;
     if(!state->observed){
         std::lock_guard<std::mutex> observe(huskSpatialObservationLock);

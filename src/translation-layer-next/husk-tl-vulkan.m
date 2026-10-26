@@ -32,6 +32,7 @@
 #include "husk-tl-gpu-timing.h"
 #include "husk-tl-render-inventory.h"
 #include "husk-tl-spatial.h"
+#include "husk-tl-present-clock.h"
 
 void *tl_nwindow_native(void *window);
 int tl_nwindow_width(void *window);
@@ -99,6 +100,7 @@ static void vk_load(void)
     setenv("MVK_CONFIG_RESUME_LOST_DEVICE", "1", 0);
     /* GPU readback probes stall the queue. Opt in only when diagnosing a
      * blank image; normal gameplay never calls vkQueueWaitIdle for logging. */
+    tl_log_line("[M4/M6 present-clock] selected %s; 50 ms future horizon, fresh clock brackets, passive guest feedback only; pacing/energy benefit unverified", tl_pt_requested()?"clock-correct experiment":"immediate baseline");
     const char *probe = getenv("TL_VK_PROBE_FRAMES");
     V.probe_frames = probe && !strcmp(probe, "1");
     if (submission_mode == 1) setenv("MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", "0", 1);
@@ -814,33 +816,54 @@ static void pace_efficient_frame(void)
     }
 }
 
+/* Same host monotonic clock used by the Bionic clock_gettime shim. A fresh
+ * bracket avoids reusing a launch offset that drifts during long sessions. */
+static tl_pt_clock present_clock(void){
+    double before=CACurrentMediaTime();int64_t guest=monotonic_ns();double after=CACurrentMediaTime();
+    if(!(before>0&&after>=before&&after<1e9)||guest<=0)return(tl_pt_clock){0};
+    return(tl_pt_clock){(uint64_t)guest,(uint64_t)((before+after)*0.5e9),(uint64_t)((after-before)*1e9)};
+}
+static int w_vkGetPastPresentationTimingGOOGLE(void *device,uint64_t swap,uint32_t *count,tl_pt_past *rows){
+    typedef int(*fn)(void *,uint64_t,uint32_t *,tl_pt_past *);
+    static _Atomic(fn) cached;fn real=atomic_load(&cached);
+    if(!real&&V.lib){real=(fn)dlsym(V.lib,"vkGetPastPresentationTimingGOOGLE");atomic_store(&cached,real);}
+    if(!real)return -3;
+    uint32_t capacity=count?*count:0;tl_pt_clock clock={0};
+    if(rows&&(tl_pt_requested()||tl_pt_monitoring()))clock=present_clock();
+    if(rows&&count&&tl_pt_requested()&&!tl_pt_clock_valid(clock)){
+        /* Defer this query without consuming native history or exposing values
+         * in the wrong domain after a preempted/invalid clock read. */
+        int result=real(device,swap,count,NULL); /* non-draining query preserves native errors */
+        if(result>=0)*count=0;
+        tl_pt_feedback(NULL,0,clock);return result;
+    }
+    int result=real(device,swap,count,rows);
+    if(result>=0&&rows&&count&&(tl_pt_requested()||tl_pt_monitoring()))
+        tl_pt_feedback(rows,*count<capacity?*count:capacity,clock);
+    return result;
+}
+
 typedef int (*pfn_queue_present)(void *, const void *);
 static int w_vkQueuePresentKHR(void *queue, const void *info)
 {
-    static pfn_queue_present real;
-    if (!real && V.lib) real = (pfn_queue_present)dlsym(V.lib, "vkQueuePresentKHR");
+    static _Atomic(pfn_queue_present) cached;
+    pfn_queue_present real=atomic_load_explicit(&cached,memory_order_acquire);
+    if(!real&&V.lib){real=(pfn_queue_present)dlsym(V.lib,"vkQueuePresentKHR");atomic_store_explicit(&cached,real,memory_order_release);}
     unsigned long n = atomic_fetch_add(&V.frames, 1) + 1;
 #if TARGET_OS_OSX
     if (V.frame_dir[0] && n % (V.frame_every > 0 ? (unsigned)V.frame_every : 60u) == 0) capture_frame(queue, info);
 #endif
     if (V.probe_frames && (n == 3 || n == 60 || n == 400 || n == 3000)) { probe_frame(queue, info, n); log_layer_state(g_swapchain_layer, "present"); }
-    /* VK_GOOGLE_display_timing: the game may ask for each frame to appear at a time of its own choosing. MoltenVK hands that to Metal as an absolute time on the system's media
-     * clock, which is not the clock an Android game counted its nanoseconds on, so a time that was "now" to the game can be hours away to Metal and the frame is never shown.
-     * Frames are shown when they are ready instead. */
-    for (const uint8_t *c = *(const uint8_t *const *)((const uint8_t *)info + 8); c; c = *(const uint8_t *const *)(c + 8)) {
-        uint32_t st; memcpy(&st, c, 4);
-        if (st != 1000092000u) continue;                                   /* VK_STRUCTURE_TYPE_PRESENT_TIMES_INFO_GOOGLE */
-        uint32_t cnt; memcpy(&cnt, c + 16, 4);
-        uint8_t *times; memcpy(&times, c + 24, 8);
-        for (uint32_t i = 0; times && i < cnt; i++) {
-            uint64_t want; memcpy(&want, times + i * 16 + 8, 8);
-            static atomic_int said; if (want && atomic_fetch_add(&said, 1) < 6) tl_log_line("vulkan: present #%lu asked for time %llu ns (media clock now %.0f ns); shown at once", n, (unsigned long long)want, CACurrentMediaTime() * 1e9);
-            uint64_t zero = 0; memcpy(times + i * 16 + 8, &zero, 8);
-        }
+    tl_pt_copy owned;const void *forward=info;
+    tl_pt_clock clock=tl_pt_requested()?present_clock():(tl_pt_clock){0};
+    if(!tl_pt_prepare(info,&owned,clock,&forward)){
+        static atomic_uint rejected;
+        if(atomic_fetch_add(&rejected,1)<8)tl_log_line("[M4/M6 present-clock] unsupported timing chain/count; no guest mutation or driver call; result -7");
+        return -7;
     }
     bool measure = tl_ue4_sharp_graphics_enabled();
     int64_t start = measure ? monotonic_ns() : 0;
-    int r = real ? real(queue, info) : -3;
+    int r = real ? real(queue, forward) : -3;
     if (measure) record_host_timing(TIMING_PRESENT, start);
     if (r >= 0) pace_efficient_frame();
     { static atomic_int bad; if (r != VK_SUCCESS && atomic_fetch_add(&bad, 1) < 20) tl_log_line("vulkan: vkQueuePresentKHR #%lu -> %d", n, r); }
@@ -1215,6 +1238,7 @@ static const struct { const char *name; void *fn; } k_over[] = {
     { "vkEnumerateInstanceExtensionProperties", w_vkEnumerateInstanceExtensionProperties },
     { "vkCreateAndroidSurfaceKHR", w_vkCreateAndroidSurfaceKHR },
     { "vkQueuePresentKHR", w_vkQueuePresentKHR },
+    { "vkGetPastPresentationTimingGOOGLE", w_vkGetPastPresentationTimingGOOGLE },
     { "vkQueueSubmit", w_vkQueueSubmit },
     { "vkCreateImage", w_vkCreateImage },
     { "vkCmdBeginRenderPass", w_vkCmdBeginRenderPass },

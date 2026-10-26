@@ -124,6 +124,7 @@ struct TLAppSettings: Codable, Equatable {
     }
     var vulkanSubmission: VulkanSubmission = .driverDefault
     var engineOnlyLimiter = false
+    var clockPresentation = false
     var pipelineIdentification = false
     var pipelineFeedback = false
     var spatialUpscaling = false
@@ -209,6 +210,7 @@ struct TLAppSettings: Codable, Equatable {
         efficientResolution = try c.decodeIfPresent(EfficientResolution.self, forKey: .efficientResolution) ?? .automatic
         vulkanSubmission = try c.decodeIfPresent(VulkanSubmission.self, forKey: .vulkanSubmission) ?? .driverDefault
         engineOnlyLimiter = try c.decodeIfPresent(Bool.self, forKey: .engineOnlyLimiter) ?? false
+        clockPresentation = try c.decodeIfPresent(Bool.self, forKey: .clockPresentation) ?? false
         pipelineIdentification = try c.decodeIfPresent(Bool.self, forKey: .pipelineIdentification) ?? false
         pipelineFeedback = try c.decodeIfPresent(Bool.self, forKey: .pipelineFeedback) ?? false
         spatialUpscaling = try c.decodeIfPresent(Bool.self, forKey: .spatialUpscaling) ?? false
@@ -340,6 +342,8 @@ struct TLAppSettingsView: View {
                     Text("Renders fewer pixels and upscales to your selected output. Includes HUD/text. Requires supported hardware and the experimental driver; fully restart. Visual quality, stability and energy benefit need testing. Off restores the original driver and rendering.").font(.caption)
                     Toggle("Engine-only 60 FPS Limiter (Diagnostic)", isOn: $settings.engineOnlyLimiter)
                     Text("Off keeps the existing engine + host limiter. On requests engine-only pacing at 60 FPS; verify actual cadence in a short test. Thermal fallback caps remain active. Fully restart after changes.").font(.caption)
+                    Toggle("Clock-Correct Presentation (Experimental)", isOn: $settings.clockPresentation)
+                    Text("Translates requested presentation times and feedback between game and Metal clocks. Off keeps immediate presentation. Bounds future requests; no frame-rate or energy benefit proven. Test separately from engine-only, submission and worker settings; restart after changing.").font(.caption)
                     Toggle("Pipeline Identification (Diagnostic)", isOn: $settings.pipelineIdentification)
                     Toggle("Pipeline Creation Feedback (Diagnostic)", isOn: $settings.pipelineFeedback).disabled(!settings.pipelineIdentification)
                     Text("Optional driver feedback request, only where advertised; requires identification and full restart. Adds diagnostic overhead, with no guaranteed cache hits or savings.").font(.caption)

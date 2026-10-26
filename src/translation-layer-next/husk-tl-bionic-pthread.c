@@ -17,6 +17,7 @@
 #include "husk-tl-bionic.h"
 #include "husk-tl-ld.h"
 #include "husk-tl-thread-policy.h"
+#include "husk-tl-efficiency.h"
 
 #include <errno.h>
 #include <pthread.h>
@@ -343,11 +344,16 @@ static int b_sem_getvalue(void *g, int *v)
 
 static int b_once(_Atomic int *once, void (*fn)(void))
 {
+    /* Published initialization is immutable. Avoid a write/exclusive cache-line
+     * transaction on every already-completed call; acquire pairs with publish. */
+    if (atomic_load_explicit(once, memory_order_acquire) == 1) return 0;
     int expect = 0;
     if (atomic_compare_exchange_strong(once, &expect, 2)) {
+        tl_em_sync_event(TL_SYNC_ONCE_INIT);
         fn();
         atomic_store(once, 1);
     } else {
+        if(expect==2)tl_em_sync_event(TL_SYNC_ONCE_WAIT);
         while (atomic_load(once) == 2) sched_yield();
     }
     return 0;

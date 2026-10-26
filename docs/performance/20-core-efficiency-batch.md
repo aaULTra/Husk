@@ -1,0 +1,33 @@
+# CORE-BATCH-4 — translation work, presentation clocks and scaler safety
+
+2026-10-26. User requests a larger consolidated engineering batch while the 0ec6b2d worker comparison remains the active device candidate. Preserve its instructions/results; no replacement test requested now. Sequence: E-M4-006 + sustained-CPU candidate -> M8 confirmed compatibility hot-path/correctness fixes, M4/M6 isolated presentation-clock experiment, M9 scaler-specific failure/resource/lifecycle checks -> one tested candidate -> evidence-led physical acceptance. All previous experiments remain tracked.
+
+Source findings before edits: b_once performs a sequentially-consistent failed CAS even when already complete; futex timed wait changes its remaining deadline to zero after a spurious wake; FUTEX_*_BITSET masks are ignored. These are concrete mechanisms/correctness defects, not evidence they dominate M4 energy. Preserve original slow once/cancellation behaviour rather than introduce an unprofiled wait architecture.
+
+Pinned MoltenVK1.4.2 forwards desiredPresentTime directly to Metal presentAtTime. Existing Husk zeroes caller-owned times in place. A clock experiment must translate guest CLOCK_MONOTONIC to media time and reverse absolute feedback fields, keep duration fields, preserve object/sync/lifetime/results, bound scheduling horizons and never pass an hours-away timestamp. No extra queue, idle wait or collector that consumes the game's driver history. The driver history getter drains entries: use only passive observation of the guest's own query, never an independent polling reader.
+
+Implementation/build gates K1–K8 (fixed before coding):
+1. Acquire-load completed pthread_once fast path, unchanged initializer/wait semantics, observable benchmark with honest scope.
+2. Futex fixed relative/absolute deadline across spurious wakes, correct bitsets/address matching/validation; actual function concurrency and fake-clock tests.
+3. Owned bounded presentation-info/pNext/times copies for supported chains, immutable guest input, original API result/output-pointer preservation, explicit unsupported cases.
+4. Default-OFF clock-correct presentation option; fresh bracketed clock mapping, bounded future horizon/expired fallback and reversed absolute feedback; durations unchanged. Existing limiter/FIFO/submission/scheduling defaults retained.
+5. Bounded optional compatibility/presentation diagnostics tied to existing test sessions, honest missing/loss/scope labels; no per-frame file logging or unbounded capture.
+6. Scaler-specific owned-resource, multi-image/configuration, validation/failure, serial encode and destruction/reconfiguration tests using actual component code and deterministic test doubles; portable/Apple ABI guards.
+7. Required regression checks, exact pinned driver build, clean app compilation and IPA package.
+8. Durable source/benchmark/build/evidence/progress record; active 0ec6b2d device test stays stable and results analysed before replacement testing.
+
+Physical D1–D4: compatibility correctness; optional clock-mode cadence/feedback; scaler real lifecycle/colour/input/audio; overhead/exclusions/long-run export. Benefit E1–E3: relevant repeatable host/work effect, smoothness/quality maintained, matched sustained energy/temperature result. All initially pending; lower-level benchmark is not a whole-game power result. Never claim tests force E-cores, prewarm unknown shaders or prove lower heat.
+
+Use known Vulkan LP64 layouts pinned against Vulkan-Headers v1.4.321 and supported MoltenVK present-chain nodes. Refuse unknown prefixes safely instead of guessing structure sizes; preserve any untouched tail. Keep temporal scaling, dynamic resolution, full pipeline replay/prewarming, driver upgrade and unrelated worker changes outside this batch. All remain in the master plan.
+
+
+Additional scaler implementation: prepare/validate immutable input dimensions/format/usage and scaler dimensions once per image; bind fixed input and content dimensions once; cache the validated output contract. Keep variable drawable validation/output binding and serial encode in the frame path. Actual-code Apple doubles check input setup occurs once over1000 encodes, resource release/configuration guards and invalid drawable/input rejection. This removes repeated setup calls, not a proven explanation for the observed CPU delta or heat.
+
+[Fixed/dynamic resolution decision DYNAMIC-1](21-fixed-and-dynamic-resolution-decision.md) completes the independent M9-I6 investigation: current sampled buffers are not an authoritative scene/frame control signal and live images prevent safe mid-frame reconfiguration. Keep manual choices; defer automatic changes with explicit reopening conditions. Dynamic rendering and temporal scaling remain unimplemented, not silently abandoned.
+
+[Actual-body once benchmark](runs/CORE-BATCH-4.once-benchmark.json), reproducible via scripts/benchmark_once.py. Linux synthetic2million calls/thread, five repeats: single-thread median CPU5.804ms ->2.672ms; four-thread shared completed control134.486ms ->8.039ms. Establishes reduced repeated atomic work in this workload only; not M4 game FPS, energy or physical-temperature evidence. Guest once/futex cost attribution remains open in M8-I4. Existing slow once/cancellation behaviour retained rather than a wholesale unprofiled wait rewrite.
+
+ABI/source references: MoltenVK1.4.2 pin db66022459ffb663aa2b50f6b018bc2e124f5edf, MVKImage.mm presentCAMetalDrawable and MVKQueue.mm present metadata copy; MVKSwapchain.mm getter drains native history, so the new adapter observes only guest queries. Vulkan-Headers v1.4.321/public vulkan_core.h defines the supported LP64 layouts. The connector could not return that large header, so the pinned public header was fetched directly for ABI review. No driver version upgrade or copied native-history polling introduced.
+
+
+Local complete named suites:196 tests,190 pass and6 Apple-only deferred to CI, including actual scaler lifetime/reuse doubles. Native ownership/clock/futex concurrency checks and all protected regressions pass locally. Source header/ABI/supported-chain audit and source-backed timeline review justify an isolated M6 synchronisation candidate; no physical pacing or power acceptance. Required final Apple build remains pending.

@@ -38,6 +38,7 @@ class VulkanTimingTests(unittest.TestCase):
 #include "husk-tl-thread-policy.h"
 #include "husk-tl-driver-profile.h"
 #include "husk-tl-efficiency.h"
+#include "husk-tl-present-clock.h"
 #include "husk-tl-pipeline-diagnostics.h"
 #include "husk-tl-pipeline-feedback.h"
 #undef TARGET_OS_IOS
@@ -60,7 +61,8 @@ static int test_nanosleep(const struct timespec *delay, struct timespec *remaini
     return 0;
 }
 #define nanosleep test_nanosleep
-static double CACurrentMediaTime(void) { return 1; }
+static bool invalid_media;
+static double CACurrentMediaTime(void) { return invalid_media?0:1; }
 void tl_log_line(const char *fmt, ...) { (void)fmt; }
 void tl_gput_native_forget(void *d) { (void)d; }
 static void probe_frame(void *q, const void *i, unsigned long n) { (void)q; (void)i; (void)n; }
@@ -115,10 +117,19 @@ static int host_compute(void *device, uint64_t cache, uint32_t count, const void
 static int host_merge(void *d, uint64_t c, uint32_t n, const uint64_t *s) { (void)d;(void)c;(void)n;(void)s;return native_status; }
 static void host_destroy_cache(void *d, uint64_t c, const void *a) { (void)d;(void)c;(void)a; }
 static void host_destroy_device(void *d, const void *a) { (void)d;(void)a; }
+static unsigned past_count_calls,past_data_calls;
+static int host_past(void*d,uint64_t swap,uint32_t*count,tl_pt_past*rows){
+ if(d!=(void*)7||swap!=37||!count)forwarding_failures++;
+ if(rows)past_data_calls++;else past_count_calls++;
+ if(native_status<0)return native_status;
+ if(rows&&*count){rows[0]=(tl_pt_past){7,1005000000,1006000000,1004000000,123};*count=1;}else *count=1;
+ return native_status;
+}
 static void *fake_dlsym(void *lib, const char *name) {
     (void)lib;
     if (!strcmp(name,"vkAcquireNextImageKHR")) return (void *)host_acquire;
     if (!strcmp(name,"vkQueueSubmit")) return (void *)host_submit;
+    if (!strcmp(name,"vkGetPastPresentationTimingGOOGLE")) return (void *)host_past;
     if (!strcmp(name,"vkQueuePresentKHR")) return (void *)host_present;
     if (!strcmp(name,"vkCreatePipelineCache")) return (void *)host_cache_create;
     if (!strcmp(name,"vkGetPipelineCacheData")) return (void *)host_cache_data;
@@ -194,6 +205,21 @@ int exercise_cache(int status) {
     w_vkDestroyDevice((void *)7,(void *)31);
     return 0;
 }
+int exercise_bad_feedback_clock(int status){
+ invalid_media=true;native_status=status;past_count_calls=past_data_calls=0;husk_ue4_set_clock_presentation(true);
+ uint32_t count=1;tl_pt_past row={.id=999};int result=w_vkGetPastPresentationTimingGOOGLE((void*)7,37,&count,&row);
+ invalid_media=false;husk_ue4_set_clock_presentation(false);
+ return result==status&&past_count_calls==1&&!past_data_calls&&row.id==999&&(status<0||!count)?0:1;
+}
+int exercise_past_clock(int mode,int status){
+ husk_ue4_set_clock_presentation(mode);native_status=status;forwarding_failures=0;fake_clock=10000000000LL;
+ tl_pt_past row={0};uint32_t count=1;int result=w_vkGetPastPresentationTimingGOOGLE((void*)7,37,&count,&row);
+ husk_ue4_set_clock_presentation(false);
+ if(result!=status||forwarding_failures)return 1;
+ if(status>=0&&(row.id!=7||row.margin!=123||count!=1))return 2;
+ if(status>=0&&((mode&&row.actual<2000000000ULL)||(!mode&&row.actual!=1006000000)))return 3;
+ return 0;
+}
 int exercise(int enabled, int efficient, int fps, int status) {
     husk_ue4_set_sharp_graphics(enabled);
     husk_ue4_set_efficiency(efficient, fps);
@@ -251,7 +277,7 @@ int exercise_efficiency_observer(void) {
         (root / "timing.c").write_text(harness)
         tl = ROOT / "src/translation-layer-next"
         subprocess.run([os.environ.get("CC", "cc"), "-std=c11", "-Wall", "-Wextra", "-Werror", "-shared", "-fPIC",
-                        "-I", str(tl), str(root / "timing.c"), str(tl / "husk-tl-ue4-graphics.c"), str(tl / "husk-tl-pipeline-store.c"), str(tl / "husk-tl-thread-policy.c"), str(tl / "husk-tl-driver-profile.c"), str(tl / "husk-tl-efficiency.c"), str(tl / "husk-tl-pipeline-diagnostics.c"), str(tl / "husk-tl-pipeline-feedback.c"), "-pthread",
+                        "-I", str(tl), str(root / "timing.c"), str(tl / "husk-tl-ue4-graphics.c"), str(tl / "husk-tl-pipeline-store.c"), str(tl / "husk-tl-thread-policy.c"), str(tl / "husk-tl-driver-profile.c"), str(tl / "husk-tl-efficiency.c"), str(tl / "husk-tl-present-clock.c"), str(tl / "husk-tl-pipeline-diagnostics.c"), str(tl / "husk-tl-pipeline-feedback.c"), "-pthread",
                         "-o", str(root / "timing.so")], check=True)
         cls.lib = ctypes.CDLL(str(root / "timing.so"))
         cls.lib.exercise.argtypes = [ctypes.c_int] * 4
@@ -264,6 +290,13 @@ int exercise_efficiency_observer(void) {
     def test_engine_only_comparison_bypasses_host_sleep_on_actual_present_wrapper(self):
         self.assertGreater(self.lib.exercise_fast_limiter(0),0)
         self.assertEqual(self.lib.exercise_fast_limiter(1),0)
+
+    def test_bad_feedback_clock_defers_without_draining_and_preserves_native_error(self):
+        for result in (0,-4):self.assertEqual(self.lib.exercise_bad_feedback_clock(result),0)
+
+    def test_actual_feedback_wrapper_maps_absolute_clock_and_preserves_result_margin(self):
+        for mode in (0,1):
+            for result in (0,5,-4):self.assertEqual(self.lib.exercise_past_clock(mode,result),0)
 
     def test_enabled_efficiency_observer_collects_without_changing_forwarding_or_sleep(self):
         self.assertEqual(self.lib.exercise_efficiency_observer(), 0)

@@ -41,4 +41,8 @@ void tl_em_cpu_work_enable(bool enabled);
 bool tl_em_work_begin(tl_em_work_ticket *ticket);
 void tl_em_work_end(tl_em_work_ticket ticket);
 void tl_em_work_snapshot(tl_em_work_stats *out);
+enum {TL_SYNC_ONCE_INIT,TL_SYNC_ONCE_WAIT,TL_SYNC_FUTEX_WAIT,TL_SYNC_FUTEX_WAKE,TL_SYNC_FUTEX_TIMEOUT,TL_SYNC_FUTEX_SPURIOUS,TL_SYNC_COUNT};
+typedef struct {bool requested;uint64_t counts[TL_SYNC_COUNT];} tl_em_sync_stats;
+void tl_em_sync_event(unsigned kind);
+void tl_em_sync_snapshot(tl_em_sync_stats *out);
 #endif

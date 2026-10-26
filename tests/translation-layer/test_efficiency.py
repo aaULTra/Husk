@@ -126,4 +126,14 @@ class EfficiencyTests(unittest.TestCase):
         self.lib.tl_em_start();self.lib.tl_em_work_end(ticket);self.lib.tl_em_work_snapshot(C.byref(stats))
         self.assertEqual(stats.calls,0);self.assertEqual(stats.dropped,1)
 
+    def test_compatibility_counters_are_cpu_opt_in_and_exclusion_scoped(self):
+        class SyncStats(C.Structure):
+            _fields_=[('requested',C.c_bool),('counts',C.c_uint64*6)]
+        self.lib.tl_em_sync_snapshot.argtypes=[C.POINTER(SyncStats)]
+        stats=SyncStats();self.lib.tl_em_sync_event(2);self.lib.tl_em_sync_snapshot(C.byref(stats))
+        self.assertFalse(stats.requested);self.assertEqual(list(stats.counts),[0]*6)
+        self.lib.tl_em_cpu_work_enable(True);self.lib.tl_em_sync_event(2);self.lib.tl_em_sync_event(5)
+        self.lib.tl_em_exclude(True);self.lib.tl_em_sync_event(2);self.lib.tl_em_stop();self.lib.tl_em_sync_event(5)
+        self.lib.tl_em_sync_snapshot(C.byref(stats));self.assertEqual(list(stats.counts),[0,0,1,0,0,1])
+
 if __name__=='__main__':unittest.main()

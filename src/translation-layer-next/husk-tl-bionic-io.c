@@ -1545,7 +1545,7 @@ static int b_raise(int sig) { note_signal("raise", sig); int d = tl_signal_to_da
  * FUTEX_WAIT has been woken for *its* word. So each waiter queues itself with its address and its
  * own condition variable, and a wake picks the matching ones, oldest first.
  */
-typedef struct fut_waiter { uint32_t *addr; bool woken; pthread_cond_t cv; struct fut_waiter *next; } fut_waiter;
+typedef struct fut_waiter { uint32_t *addr; uint32_t bitset; bool woken; pthread_cond_t cv; struct fut_waiter *next; } fut_waiter;
 static struct { pthread_mutex_t m; fut_waiter *head, *tail; } g_fut[FUT_BUCKETS] = {
 #define B { PTHREAD_MUTEX_INITIALIZER, NULL, NULL }
 #define B8 B,B,B,B,B,B,B,B
@@ -1569,17 +1569,23 @@ static void fut_unlink(size_t h, fut_waiter *w)
 
 static long futex_call(uint32_t *addr, int op, uint32_t val, const struct timespec *to, uint32_t bitset_val)
 {
-    (void)bitset_val;
     int cmd = op & 127;
+    if(cmd!=0&&cmd!=1&&cmd!=9&&cmd!=10)return -38;
+    if (!addr) return -14;
+    if ((uintptr_t)addr & 3u) return -22;
+    if ((cmd==9 || cmd==10) && !bitset_val) return -22;
+    uint32_t mask=(cmd==9 || cmd==10)?bitset_val:UINT32_MAX;
     if (g_futex_trace < 0) g_futex_trace = getenv("TL_FUTEX_TRACE") ? 1 : 0;
     size_t h = ((uintptr_t)addr >> 2) % FUT_BUCKETS;
     if (cmd == 1 || cmd == 10) {                                  /* FUTEX_WAKE / WAKE_BITSET */
+        if ((int32_t)val < 0) return -22;
+        tl_em_sync_event(TL_SYNC_FUTEX_WAKE);
         long woken = 0;
         pthread_mutex_lock(&g_fut[h].m);
         fut_waiter *w = g_fut[h].head, *next;
         for (; w && woken < (long)(int32_t)val; w = next) {
             next = w->next;
-            if (w->addr != addr) continue;
+            if (w->addr != addr || !(w->bitset & mask)) continue;
             fut_unlink(h, w);
             w->woken = true;
             pthread_cond_signal(&w->cv);
@@ -1590,28 +1596,43 @@ static long futex_call(uint32_t *addr, int op, uint32_t val, const struct timesp
         return woken;
     }
     if (cmd == 0 || cmd == 9) {                                   /* FUTEX_WAIT / WAIT_BITSET */
+        if (to && (to->tv_sec < 0 || to->tv_nsec < 0 || to->tv_nsec >= 1000000000L)) return -22;
         pthread_mutex_lock(&g_fut[h].m);
         if (__atomic_load_n(addr, __ATOMIC_SEQ_CST) != val) { pthread_mutex_unlock(&g_fut[h].m); return -11; }
-        fut_waiter me = { .addr = addr, .woken = false, .cv = PTHREAD_COND_INITIALIZER, .next = NULL };
+        tl_em_sync_event(TL_SYNC_FUTEX_WAIT);
+        fut_waiter me = { .addr = addr, .bitset = mask, .woken = false, .cv = PTHREAD_COND_INITIALIZER, .next = NULL };
         if (g_fut[h].tail) g_fut[h].tail->next = &me; else g_fut[h].head = &me;
         g_fut[h].tail = &me;
         if (g_futex_trace) { char nm[32] = ""; pthread_getname_np(pthread_self(), nm, sizeof(nm)); tl_log_line("futex[%s]: WAIT addr=%p val=%#x", nm, (void *)addr, val); }
         long r = 0;
-        struct timespec rel = {0};
-        if (to) {
-            rel = *to;
-            if (cmd == 9) {                                       /* absolute: CLOCK_MONOTONIC unless the realtime flag is set */
-                struct timespec now;
-                clock_gettime((op & 256) ? CLOCK_REALTIME : CLOCK_MONOTONIC, &now);
-                rel.tv_sec = to->tv_sec - now.tv_sec; rel.tv_nsec = to->tv_nsec - now.tv_nsec;
-                if (rel.tv_nsec < 0) { rel.tv_sec--; rel.tv_nsec += 1000000000L; }
-                if (rel.tv_sec < 0) { rel.tv_sec = 0; rel.tv_nsec = 0; }
+        /* Keep one deadline. A spurious host wake must not turn a still-pending
+         * guest wait into an immediate timeout or restart its original budget. */
+        bool realtime=cmd==9 && (op&256);
+        clockid_t clock=realtime?CLOCK_REALTIME:CLOCK_MONOTONIC;
+        struct timespec deadline={0};
+        if(to){
+            deadline=*to;
+            if(cmd==0){
+                struct timespec now;clock_gettime(CLOCK_MONOTONIC,&now);
+                if(deadline.tv_sec > INT64_MAX-now.tv_sec-1){deadline.tv_sec=INT64_MAX;deadline.tv_nsec=999999999;}
+                else {deadline.tv_sec+=now.tv_sec;deadline.tv_nsec+=now.tv_nsec;
+                    if(deadline.tv_nsec>=1000000000L){deadline.tv_sec++;deadline.tv_nsec-=1000000000L;}}
             }
         }
         while (!me.woken) {
             if (!to) { pthread_cond_wait(&me.cv, &g_fut[h].m); continue; }
-            if (pthread_cond_timedwait_relative_np(&me.cv, &g_fut[h].m, &rel) == ETIMEDOUT && !me.woken) { fut_unlink(h, &me); r = -110; break; }
-            if (!me.woken) { rel.tv_sec = 0; rel.tv_nsec = 0; }   /* a spurious wake with a deadline: do not wait again past it */
+            int result;
+            if(realtime)result=pthread_cond_timedwait(&me.cv,&g_fut[h].m,&deadline);
+            else {
+                struct timespec now,remaining;clock_gettime(clock,&now);
+                remaining.tv_sec=deadline.tv_sec-now.tv_sec;remaining.tv_nsec=deadline.tv_nsec-now.tv_nsec;
+                if(remaining.tv_nsec<0){remaining.tv_sec--;remaining.tv_nsec+=1000000000L;}
+                if(remaining.tv_sec<0 || (!remaining.tv_sec&&!remaining.tv_nsec))result=ETIMEDOUT;
+                else result=pthread_cond_timedwait_relative_np(&me.cv,&g_fut[h].m,&remaining);
+            }
+            if(result==ETIMEDOUT&&!me.woken){tl_em_sync_event(TL_SYNC_FUTEX_TIMEOUT);fut_unlink(h,&me);r=-110;break;}
+            if(!result&&!me.woken)tl_em_sync_event(TL_SYNC_FUTEX_SPURIOUS);
+            if(result && result!=EINTR && !me.woken){fut_unlink(h,&me);r=-tl_errno_to_guest(result);break;}
         }
         pthread_mutex_unlock(&g_fut[h].m);
         pthread_cond_destroy(&me.cv);

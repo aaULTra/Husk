@@ -119,7 +119,7 @@ def thread_cpu_audit(data):
 
 
 def audit(data):
-    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8):
+    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8, 9):
         raise ValueError('Unsupported diagnostic schema; preserve source for a version-aware audit')
     summary, metadata = data.get('summary', {}), data.get('metadata', {})
     windows, samples = data.get('windows', []), data.get('samples', [])
@@ -202,6 +202,7 @@ def audit(data):
                        'rollbacks': worker.get('rollback_requests_since_launch'), 'waiting_reason': worker.get('waiting_reason'),
                        'normal_utility_last_observations': len(utility), 'core_residency': 'UNAVAILABLE',
                        'scope': 'Last observations, not live thread count or verified placement'},
+            'presentation_clock': data.get('presentation_clock', {}), 'compatibility_sync': data.get('compatibility_sync', {}),
             'thread_cpu': thread_cpu_audit(data), 'submit_cpu_work': data.get('submit_cpu_work', {}),
             'gpu_windows': data.get('gpu_windows', []),
             'spatial_upscaling': data.get('spatial_upscaling', {}),

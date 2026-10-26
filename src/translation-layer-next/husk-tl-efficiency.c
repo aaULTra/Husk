@@ -26,6 +26,7 @@ static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
 static atomic_bool enabled, frame_excluded,cpu_work_enabled;
 static tl_em_work_stats submit_work;
 static atomic_uint_fast64_t work_drops;
+static atomic_uint_fast64_t sync_counts[TL_SYNC_COUNT];
 static atomic_uint_fast64_t dropped_host, dropped_events, dropped_frames, lost_ns, lost_max;
 static atomic_uint_fast64_t session, epoch, guest_yields;
 /* Present producers never take the reporting mutex or build a histogram.
@@ -55,6 +56,7 @@ static bool enter(atomic_uint_fast64_t *loss) {
 static void drain_frames(void);
 void tl_em_start(void) {
     pthread_mutex_lock(&mu);memset(&submit_work,0,sizeof(submit_work));atomic_store(&work_drops,0);
+    for(unsigned i=0;i<TL_SYNC_COUNT;i++)atomic_store(&sync_counts[i],0);
     memset(&total_stats, 0, sizeof(total_stats)); memset(&window_stats, 0, sizeof(window_stats));
     head = length = 0; excluded = true;
     atomic_store(&enabled, false); atomic_fetch_add(&session, 1); atomic_fetch_add(&epoch, 1);
@@ -149,7 +151,7 @@ void tl_em_host(unsigned stage, uint64_t ns) {
 }
 void tl_em_log(const char *line) {
     if (!atomic_load(&enabled) || !line) return;
-    if (strncmp(line, "thread-policy", 13) && strncmp(line, "ue4 cache store:", 16) &&
+    if (strncmp(line, "[M4/M6 present-clock]", 21) && strncmp(line, "thread-policy", 13) && strncmp(line, "ue4 cache store:", 16) &&
         strncmp(line, "ue4 cache:", 10) && strncmp(line, "ue4 pipeline", 12) &&
         strncmp(line, "ue4 submission:", 15) && strncmp(line, "ue4 timing:", 11) && strncmp(line, "vulkan: vkCreateSwapchain", 25) && strncmp(line, "vulkan: sizing", 14)) return;
     if (!enter(&dropped_events)) return;
@@ -256,4 +258,13 @@ uint32_t tl_em_thread_sample(tl_em_thread *out,uint32_t capacity,tl_em_thread_st
  (void)out;(void)capacity;
 #endif
  s.returned=returned;if(stats)*stats=s;return returned;
+}
+
+void tl_em_sync_event(unsigned kind){
+ if(kind<TL_SYNC_COUNT&&atomic_load_explicit(&cpu_work_enabled,memory_order_relaxed)&&atomic_load(&enabled)&&!atomic_load(&frame_excluded))atomic_fetch_add_explicit(&sync_counts[kind],1,memory_order_relaxed);
+}
+void tl_em_sync_snapshot(tl_em_sync_stats *out){
+ if(!out)return;
+ memset(out,0,sizeof(*out));out->requested=atomic_load(&cpu_work_enabled);
+ for(unsigned i=0;i<TL_SYNC_COUNT;i++)out->counts[i]=atomic_load(&sync_counts[i]);
 }

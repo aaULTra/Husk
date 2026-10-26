@@ -48,6 +48,9 @@ check((event["occurred_t"] as? Double) == 5.25)
 check((event["recorded_t"] as? Double) == 10)
 check((event["outcome"] as? String) == "api_success")
 check((event["benefit_validation"] as? String) == "unverified")
+let clockEvent = EfficiencyMath.eventFields(type: "runtime", detail: "[M4/M6 present-clock] unsupported timing chain; result -7", recorded: 110, origin: 100)
+check((clockEvent["plan_ids"] as? [String]) == ["M4", "M6", "M3"])
+check((clockEvent["outcome"] as? String) == "api_failure")
 func gpu(_ a: Double, _ b: Double, _ lo: Double, _ hi: Double) -> [String: Any] {
     ["gpu_start_media_seconds": a, "gpu_end_media_seconds": b, "sample_start_media_seconds": lo, "sample_end_media_seconds": hi]
 }
