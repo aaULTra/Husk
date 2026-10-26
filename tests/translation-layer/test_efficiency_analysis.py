@@ -18,7 +18,8 @@ class AnalysisTests(unittest.TestCase):
   self.assertIn('Window/summary mismatch: interval_count',m.audit(d)['errors'])
  def test_adaptive_selection_is_not_admission_or_core_placement(self):
   d={'schema_version':4,'worker_policy':{'active_mode':3,'admissions_since_launch':0,'waiting_reason':'frame cadence'}}
-  a=m.audit(d);self.assertIn('no admitted trial',a['warnings'][0]);self.assertEqual(a['worker']['core_residency'],'UNAVAILABLE')
+  for mode in [3,4]:
+   d['worker_policy']['active_mode']=mode;a=m.audit(d);self.assertIn('no admitted trial',a['warnings'][0]);self.assertEqual(a['worker']['core_residency'],'UNAVAILABLE')
  def test_metadata_differences_and_matching_conditions_still_do_not_prove_improvement(self):
   a=m.audit({'schema_version':4,'metadata':{'launch_configuration':{'worker_policy':2}}});b=copy.deepcopy(a);b['configuration']['worker_policy']=3
   c=m.compare(a,b);self.assertEqual(c['changed_fields'],['configuration.worker_policy']);self.assertEqual(c['energy_improvement'],'UNVERIFIED')

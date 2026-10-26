@@ -75,7 +75,8 @@
             "evidence": [
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
-              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md"
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
+              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md"
             ],
             "remaining": null
           }
@@ -243,7 +244,8 @@
             "evidence": [
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
-              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md"
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
+              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md"
             ],
             "remaining": null
           },
@@ -255,7 +257,8 @@
               "scripts/analyse_efficiency.py",
               "tests/translation-layer/test_efficiency_analysis.py",
               "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md",
-              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md"
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
+              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md"
             ],
             "remaining": null
           },
@@ -274,9 +277,11 @@
             "status": "passed",
             "evidence": [
               "docs/performance/runs/E-M4-005.md",
-              "docs/performance/runs/E-M4-005.audit.json"
+              "docs/performance/runs/E-M4-005.audit.json",
+              "docs/performance/runs/E-M4-006.md",
+              "docs/performance/runs/E-M4-006.audit.json"
             ],
-            "remaining": "Verified for B sampled game-queue timestamps and exported panel exclusions only. A single-anchor mapping ambiguity remains; broad lifecycle/overhead/energy acceptance is separate."
+            "remaining": "Verified for E-M4-005 B bounded conditions and E-M4-006 direct media-clock panel/lifecycle exclusions on retained records; raw export truncation/later coverage and broad overhead/energy attribution remain separate."
           },
           {
             "id": "M3-D2",
@@ -589,7 +594,8 @@
             "status": "passed",
             "evidence": [
               "docs/08-adaptive-worker-and-upscaling.md",
-              "docs/performance/13-cyport-source-review.md"
+              "docs/performance/13-cyport-source-review.md",
+              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md"
             ],
             "remaining": null
           }
@@ -797,9 +803,10 @@
             "status": "pending",
             "evidence": [
               "docs/performance/17-metalfx-spatial-prototype.md",
-              "docs/performance/runs/E-M4-005.md"
+              "docs/performance/runs/E-M4-005.md",
+              "docs/performance/runs/E-M4-006.md"
             ],
-            "remaining": "Guest 1696x1280 and scaler 2128x1600 path established; useful internal scene identity/resolution not independently verified, inventory saturated."
+            "remaining": "E-M4-006 actual scaler textures1696x1280->2128x1600 and associated HDR/depth/render-area/post-process commands now observed. Independent per-pass scene identity/executed pixel contribution remains unproved; no whole gate awarded from requested dimensions alone."
           },
           {
             "id": "M9-D2",
@@ -827,9 +834,10 @@
             "status": "pending",
             "evidence": [
               "docs/performance/17-metalfx-spatial-prototype.md",
-              "docs/performance/runs/E-M4-005.md"
+              "docs/performance/runs/E-M4-005.md",
+              "docs/performance/runs/E-M4-006.md"
             ],
-            "remaining": "Default-off prototype now built; Resize/pause/resume/device-loss/baseline restoration checks requires physical matched evidence."
+            "remaining": "E-M4-006 OFF launch and lifecycle recreate2128x1600 confirmed. Full ON resize/pause/resume/device-loss/visual-input-audio restoration coverage remains pending."
           }
         ],
         "E": [

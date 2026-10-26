@@ -179,7 +179,7 @@ def audit(data):
     worker = data.get('worker_policy', {})
     utility = [w for w in worker.get('last_observed_workers', [])
                if w.get('role') == 1 and w.get('query_result') == 0 and w.get('after_qos') == 0x11]
-    if worker.get('active_mode') == 3 and worker.get('admissions_since_launch', 0) == 0:
+    if worker.get('active_mode') in (3, 4) and worker.get('admissions_since_launch', 0) == 0:
         warnings.append('Adaptive selected but no admitted trial observed; energy comparison has no admitted treatment')
     elif worker.get('active_mode') == 2:
         warnings.append('Balanced run; additional Adaptive normal-worker caps were not requested')
