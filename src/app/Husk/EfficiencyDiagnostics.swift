@@ -440,7 +440,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 M2 driver feedback request active/devices/injected: \(feedback["active"] ?? false) / \(feedback["enabled_devices"] ?? 0) / \(feedback["injected_pipeline_infos"] ?? 0)
                 Stage cache feedback is separate from full pipeline reuse; no guaranteed compilation avoidance.
                 M9 render inventory active/images/legacy areas: \(inventory["active"] ?? false) / \(inventory["observed_image_creations"] ?? 0) / \(inventory["observed_legacy_render_areas"] ?? 0)
-                Inventory capacity/contention losses: \(inventory["dropped_capacity"] ?? 0) / \(inventory["dropped_contention"] ?? 0); hash probes \(inventory["hash_probes"] ?? 0)
+                Inventory capacity/contention losses: \(inventory["dropped_capacity"] ?? 0) / \(inventory["dropped_contention"] ?? 0); hash probes \(inventory["hash_lookup_probes"] ?? 0)
                 Render inventory is partial requested state; internal scene resolution remains unverified.
                 M9 spatial configured: \(spatial["configured"] ?? false); input \(spatial["input_width"] ?? 0) × \(spatial["input_height"] ?? 0) -> output \(spatial["output_width"] ?? 0) × \(spatial["output_height"] ?? 0)
                 M9 texture observation: \(textures["status"] ?? "UNAVAILABLE"); input \(textures["input_width"] ?? 0) × \(textures["input_height"] ?? 0) -> output \(textures["output_width"] ?? 0) × \(textures["output_height"] ?? 0)
