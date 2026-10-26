@@ -1,6 +1,6 @@
 # Husk performance evidence register
 
-Updated: 2026-10-25. Source of priorities: [PROJECT_PLAN.md](../../PROJECT_PLAN.md).
+Updated: 2026-10-26. Source of priorities: [PROJECT_PLAN.md](../../PROJECT_PLAN.md).
 
 ## Provenance and limitations
 
@@ -160,3 +160,10 @@ This is compilation/contract evidence, not actual M4 upscaled pixels, safe lifec
 [Full four-file review, provenance, raw reports and lossless JSON archives](runs/E-M4-005.md). 9d298c5c-dirty, M4/OS27.2, 1696×1280 guest input ->2128×1600 configured/validated scaler output; 18046/10455 encodes, zero scaler failures; 59.728/59.544 host FPS. Both are GPU/inventory diagnostic runs, not energy A/B. User reports restart before B and later corrects visual concern to probably same/no issue noticed. Preserve earlier uncertainty as history, not a confirmed regression.
 
 M3-D1 bounded B queue/timestamp/exclusion evidence and M9-D3 subjective ordinary-play gate pass for the named conditions. [Evidence ledger](progress/E-M4-005.ledger.json)/[score](progress/E-M4-005.score.json): overall24.02% (~24%), +2.25 points; M4-only~27%, Duo0%. No energy credit. Both shader-associated and unresolved/cumulative-burst stalls remain; worst B411.843/410.309ms. Inventory saturation hides scene-size records; raw clock mapping has a small A boundary ambiguity; new offline audit/11 tests preserve/correct estimates without changing the IPA. Actual internal scene dimensions, matched quality/GPU/energy, lifecycle and Adaptive savings remain unverified.
+
+
+## QUALITY-BATCH-2 — implementation evidence, no new device result
+
+M9/M1/M3 follow-through from [E-M4-005](runs/E-M4-005.md), [design/gates](18-quality-resolution-and-clock-batch.md). New input-budget controls, direct boundary texture observations, reserved hash inventory and direct GPU-clock exclusion brackets/end anchor. [Linux synthetic inventory benchmark](runs/QUALITY-BATCH-2.inventory-benchmark.json) with [reproducible harness](runs/QUALITY-BATCH-2.inventory-benchmark.py) supports reduced saturated diagnostic lookup work only; not an iPad gameplay, energy or temperature result. Source/build/artifact and exact paired short ON/OFF procedure: [build handover](builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md). [Apple run 40291603363](https://github.com/aaULTra/Husk/actions/runs/40291603363) passed **169 checks**, separate pinned driver compilation and all three custom export checks, iOS app compilation and IPA packaging. [Download IPA artifact](https://github.com/aaULTra/Husk/actions/runs/40291603363/artifacts/12637221044); archive SHA256 `91b5c93cc48b590d979519608db9fc99210c86e9bae828115ed5990fafe71e0b`, expires 2026-11-02. Upstream MoltenVK 1.4.2 / `db66022459ffb663aa2b50f6b018bc2e124f5edf`; integration digest `7dfada085211e83ca1630ab8803f170f7caeb192ff4d85938fdf4f4d733b7e77`. Source and 21 changed files were verified against GitHub. Intermediate ac144ec4/run 40291412856 also passed, but use this final source/artifact with the report counter correction.
+
+Weighted score24.02% (~24%), +2.25 points versus last delivered IPA and unchanged since E-M4-005 review. Scoring HUSK-ROADMAP-v1 / whole-milestones-1; [snapshot](progress/70de1bb9f27d99fa168ba583a306f8579d5115b4.score.json). No new device/benefit gate passes by compilation. Preserve prior warmth/no-improvement feedback and all unfinished experiments, especially Adaptive energy versus Balanced, shader reuse/preparation, separate pacing and independent Duo.

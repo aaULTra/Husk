@@ -74,7 +74,8 @@
             "status": "passed",
             "evidence": [
               "docs/performance/EVIDENCE.md",
-              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md"
             ],
             "remaining": null
           }
@@ -241,7 +242,8 @@
             "status": "passed",
             "evidence": [
               "docs/performance/EVIDENCE.md",
-              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md"
             ],
             "remaining": null
           },
@@ -252,7 +254,8 @@
             "evidence": [
               "scripts/analyse_efficiency.py",
               "tests/translation-layer/test_efficiency_analysis.py",
-              "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md"
+              "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md",
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md"
             ],
             "remaining": null
           },
@@ -756,7 +759,8 @@
             "status": "passed",
             "evidence": [
               "docs/performance/builds/1950280348c4030aaecadf17d3a68444b6381f86.md",
-              "docs/performance/EVIDENCE.md"
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md"
             ],
             "remaining": null
           },
@@ -766,7 +770,8 @@
             "status": "passed",
             "evidence": [
               "docs/performance/17-metalfx-spatial-prototype.md",
-              "docs/performance/builds/9d298c5c7c56af87c715ba2b8ad03111a48dcbac.md"
+              "docs/performance/builds/9d298c5c7c56af87c715ba2b8ad03111a48dcbac.md",
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md"
             ],
             "remaining": "Implementation/build gate only: actual useful scene input, correctness, colour, lifetime/lifecycle and benefit remain in M9-D/E and legacy M9-A R3/R4."
           },
@@ -775,7 +780,7 @@
             "criterion": "Reversible controls and scaler-specific correctness/build/lifecycle checks",
             "status": "pending",
             "evidence": [],
-            "remaining": "Controls/build implemented; broader scaler-specific failure/resource/lifecycle checks remain open."
+            "remaining": "Reversible controls/input budgets, direct boundary observations, ABI/failure checks and Apple build complete; broader scaler resource/failure/lifecycle checks remain open. QUALITY-BATCH-2 is not a full I5 pass."
           },
           {
             "id": "M9-I6",

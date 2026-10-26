@@ -1,0 +1,23 @@
+{
+  "old": {
+    "process_cpu_seconds": [
+      0.081725504,
+      0.082404422,
+      0.09596777,
+      0.082556679,
+      0.083027234
+    ],
+    "median_seconds": 0.082556679
+  },
+  "new": {
+    "process_cpu_seconds": [
+      0.021933701,
+      0.022412402,
+      0.020580087,
+      0.02035402,
+      0.020129215
+    ],
+    "median_seconds": 0.020580087
+  },
+  "scope": "Linux synthetic 500000 saturated asset misses, five repeats per version, -O2. Different retained quotas. Diagnostic search cost only; not iPad gameplay, GPU, energy or thermal evidence."
+}
