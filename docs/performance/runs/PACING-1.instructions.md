@@ -1,5 +1,7 @@
 # PACING-1 — selected next test on the parked CORE-BATCH-4 IPA
 
+Result received/reviewed: [E-M4-007](E-M4-007.md), report5 usual/report6 engine-only. No demonstrated benefit; restore Engine-onlyOFF/CPU diagnosticsOFF/restart. No repeat test requested. The steps below remain the original protocol record.
+
 2026-10-26. User explicitly asks how to test the parked IPA. This selects a new physical procedure and supersedes the previous instruction to keep031d9d2 parked. Existing0ec6b2d results/instructions remain retained; any already recorded pair should be sent without repeating. No returned new-build result is assumed and no gate/score changes.
 
 Source031d9d2698f2fbd0439547b2febd45a9c7c2e5b5, packaged-dirty; [download](https://github.com/aaULTra/Husk/actions/runs/40326838216/artifacts/12653115808).196 Apple checks/driver/app/IPA passed. Artifact ZIP SHA256900959a4c941eda1a43130fd040681cd7ccec390dc745f4d760faf9dacc0c752; expires2026-11-02. [Full source-specific handover](../builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md).

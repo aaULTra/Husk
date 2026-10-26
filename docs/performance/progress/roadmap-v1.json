@@ -111,8 +111,10 @@
             "id": "M1-D4",
             "criterion": "CPU/memory/battery readings calibrated and long-session coverage validated",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Battery freshness, sample scope and coverage require controlled validation"
+            "evidence": [
+              "docs/performance/runs/E-M4-007.md"
+            ],
+            "remaining": "E-M4-007 loss-free frame/host/event export; CPU thread reads succeed. Battery flat/single5point API step and no independent CPU/memory calibration keep this gate open."
           }
         ],
         "E": [
@@ -287,8 +289,10 @@
             "id": "M3-D2",
             "criterion": "Representative CPU/GPU/presentation attribution with coverage limits",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Two bounded GPU datasets available; representative deeper attribution, per-frame limits and instrumentation cost still need matched/trace evidence."
+            "evidence": [
+              "docs/performance/runs/E-M4-007.md"
+            ],
+            "remaining": "E-M4-007 adds direct process-thread/submit CPU vs wall and limited native presentation feedback. GPU sampling disabled; representative CPU/GPU/presentation attribution and coverage still incomplete."
           },
           {
             "id": "M3-D3",
@@ -364,16 +368,20 @@
           {
             "id": "M4-D1",
             "criterion": "Matched dual/engine-only runs with cap verified",
-            "status": "pending",
-            "evidence": [],
-            "remaining": "Independent A/B pending"
+            "status": "inconclusive",
+            "evidence": [
+              "docs/performance/runs/E-M4-007.md"
+            ],
+            "remaining": "E-M4-007 confirms same031d9d2/only engine-only launch change, actual engine60/host60->0 and sleep0; unequal durations and unconfirmed route/cache/starting warmth prevent controlled-match acceptance."
           },
           {
             "id": "M4-D2",
             "criterion": "Display/host pacing and p95/p99/late events assessed",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Physical comparison pending"
+            "evidence": [
+              "docs/performance/runs/E-M4-007.md"
+            ],
+            "remaining": "E-M4-007 host distributions and last256 native-feedback subset assessed: p95/p99 unchanged; native20.83ms survives host-off. Full relevant display/coverage attribution remains unverified."
           },
           {
             "id": "M4-D3",
@@ -387,16 +395,20 @@
           {
             "id": "M4-E1",
             "criterion": "Meaningful pacing or CPU-work improvement without regression",
-            "status": "pending",
-            "evidence": [],
-            "remaining": "Unverified hypothesis"
+            "status": "inconclusive",
+            "evidence": [
+              "docs/performance/runs/E-M4-007.md"
+            ],
+            "remaining": "E-M4-007 demonstrates no pacing/CPU improvement in this pair; p95/p99 unchanged, no causal regression claim from unequal/uncontrolled sessions. Retain usual limiter, no benefit credit."
           },
           {
             "id": "M4-E2",
             "criterion": "Net energy effect measured under matched conditions",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Unmeasured"
+            "evidence": [
+              "docs/performance/runs/E-M4-007.md"
+            ],
+            "remaining": "E-M4-007 flat40% versus one40->35% API step is not a measured sustained energy effect; no watts or numerical temperature."
           }
         ]
       }
@@ -692,9 +704,10 @@
             "status": "pending",
             "evidence": [
               "docs/performance/runs/CORE-BATCH-4.once-benchmark.json",
-              "docs/performance/20-core-efficiency-batch.md"
+              "docs/performance/20-core-efficiency-batch.md",
+              "docs/performance/runs/E-M4-007.md"
             ],
-            "remaining": "Completed-once synthetic CPU mechanism measured and futex correctness fixed; representative guest JNI/Bionic/futex cost profiling remains pending. No whole-game energy evidence."
+            "remaining": "E-M4-007 raw-futex/slow-once counters zero during included sessions; completed-once fast path uncounted. Ordinary TaskGraphNP ~3% matched-thread CPU. Representative compatibility cost/energy remains unverified."
           },
           {
             "id": "M8-I5",
@@ -963,5 +976,5 @@
     }
   ],
   "source_sha": "031d9d2698f2fbd0439547b2febd45a9c7c2e5b5",
-  "evidence_id": "CORE-BATCH-4; code/research only; latest physical E-M4-006"
+  "evidence_id": "E-M4-007; PACING-1 no benefit demonstrated; conditional gates unearned"
 }

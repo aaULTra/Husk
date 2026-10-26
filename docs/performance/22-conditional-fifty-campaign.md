@@ -1,6 +1,6 @@
 # VALIDATE-50-v1 — consolidated candidate and conditional acceptance campaign
 
-Latest user steering: [PACING-1](runs/PACING-1.instructions.md) selects031d9d2 usual-versus-engine-only testing now. This supersedes the keep-parked/old-active instructions at this campaign’s original definition; prior files and immutable scenario snapshots remain retained. Actual/conditional scores are unchanged.
+Latest evidence: [E-M4-007/PACING-1](runs/E-M4-007.md) is reviewed: engine-only treatment verified,but no demonstrated pacing/CPU/energy improvement. Retain usual limiter; no repeat requested. The50.17% scenario remains unearned and is not validated by successful launch/capture. This supersedes the keep-parked/old-active instructions at this campaign’s original definition; prior files and immutable scenario snapshots remain retained. Actual/conditional scores are unchanged.
 
 2026-10-26. User authorises preparing a substantial build whose successful tests could take the permanent plan to50%, while withholding final acceptance until actual performance/efficiency evidence exists. This is a concrete gate-based scenario, not a forecast, promise of cooling, new score or revision of the fixed weights.
 

@@ -1,0 +1,22 @@
+{
+  "A": {
+    "source_json": "1-diagnostics-5.json",
+    "source_report": "3-report-5.md",
+    "label": "usual dual limiter; user says report5 without engine-only",
+    "raw_bytes": 1041369,
+    "raw_sha256": "79d2e5ab050d41aac600aa27562cd8ea0f1fa2d11b8517a4f9122a3e2f20ece9",
+    "gzip_bytes": 61032,
+    "gzip_sha256": "8c34eeb5c594d312f4e7bee38d3668a73275817e14efbdec0393d7e3cff5e8dd",
+    "report_sha256": "15349cf156036f4630f850c7e0ecb1299f7fb326d7cd954b41587ccbe7eaf106"
+  },
+  "B": {
+    "source_json": "2-diagnostics-6.json",
+    "source_report": "4-report-6.md",
+    "label": "engine-only enabled; JSON and report6 confirm",
+    "raw_bytes": 735929,
+    "raw_sha256": "783607f5b55bbb3986a03ba5041c4e5f250d9322717b02ca6d724cc7c8af80fa",
+    "gzip_bytes": 46838,
+    "gzip_sha256": "4c366adcd70479d92568138e55260cf554801a844b25639d7448d47c79c1dcd9",
+    "report_sha256": "f1bb7d58448825fff8905f174e95360abc487ddff7170377ee1260c7c016b3f6"
+  }
+}
