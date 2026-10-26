@@ -397,6 +397,9 @@ final class EfficiencyDiagnostics: ObservableObject {
         guard tl_vk_archive_begin_prepare() else { inspectNativeArchive(); return }
         nativePreparing = true; archiveMessage = "Game paused while captured native pipelines are prepared. One compiler call cannot be interrupted."
         let started = now, before = nativeArchiveReport()
+        let preparationIdentity = metadata.filter { ["session_id", "build_sha", "device_identifier", "os"].contains($0.key) }
+        let preparationConfiguration = attached
+        let preparationDriver = spatialReport()["driver_build"] ?? "UNAVAILABLE"
         var cpu = tl_em_process(); tl_em_process_sample(false, &cpu); let cpuBefore = cpu.cpu_seconds
         husk_unity_set_paused(true)
         DispatchQueue.global(qos: .utility).async {
@@ -407,7 +410,9 @@ final class EfficiencyDiagnostics: ObservableObject {
                 let deltaCPU: Double? = cpuBefore >= 0 && afterCPU.cpu_seconds >= cpuBefore ? afterCPU.cpu_seconds - cpuBefore : nil
                 let receipt: [String: Any] = ["schema_version": 1, "type": "paused_native_pipeline_preparation", "game_pause_requested": true, "no_gpu_idle_wait": true,
                     "plan_ids": ["M2", "M5", "M3"], "build_sha": Bundle.main.object(forInfoDictionaryKey: "HuskBuildCommit") as? String ?? "UNAVAILABLE",
-                    "utc": ISO8601DateFormatter().string(from: Date()), "configuration": self.attached,
+                    "utc": ISO8601DateFormatter().string(from: Date()), "configuration": preparationConfiguration,
+                    "preceding_session_metadata": preparationIdentity, "driver_build": preparationDriver,
+                    "started_monotonic_seconds": started, "ended_monotonic_seconds": started + elapsed,
                     "result": result, "measured_host_wall_seconds": elapsed,
                     "estimated_process_cpu_seconds": deltaCPU.map { $0 as Any } ?? NSNull(),
                     "before": before, "after": self.nativeArchiveReport(),

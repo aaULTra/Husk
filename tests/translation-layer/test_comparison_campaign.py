@@ -62,6 +62,27 @@ class CampaignTests(unittest.TestCase):
         self.assertEqual(self.compare()['changed_launch_fields'], ['engine_only_limiter'])
         self.assertEqual([self.a, self.b], before)
 
+    def test_native_archive_pair_needs_same_driver_and_actual_restore_attachment(self):
+        self.b['metadata']['launch_configuration']['engine_only_limiter'] = False
+        for d, mode in [(self.a, 1), (self.b, 2)]:
+            d['metadata']['launch_configuration']['native_pipeline_archive_mode'] = mode
+            d['spatial_upscaling'] = {'driver_build': {'native_archive_abi': 1, 'patch': 'same'}}
+        self.assertTrue(self.compare('native-archive')['blockers'])
+        self.b['native_pipeline_archive'] = dict(requested=True, supported=True, restored_bytes=12000, archive_attachments=4)
+        self.assertEqual(self.compare('native-archive')['blockers'], [])
+        self.b['spatial_upscaling']['driver_build']['patch'] = 'different'
+        self.assertTrue(any('manifest' in x for x in self.compare('native-archive')['blockers']))
+
+    def test_feedback_clock_pair_needs_independent_runtime_treatment_and_observation(self):
+        self.b['metadata']['launch_configuration']['engine_only_limiter'] = False
+        self.a['metadata']['launch_configuration']['feedback_clock_correction'] = False
+        self.b['metadata']['launch_configuration']['feedback_clock_correction'] = True
+        self.assertTrue(self.compare('feedback-clock')['blockers'])
+        self.b['presentation_clock'] = dict(feedback_only_requested=True, requested=False, feedback_records=20)
+        self.assertEqual(self.compare('feedback-clock')['blockers'], [])
+        self.b['presentation_clock']['invalid_clock_or_overflow'] = 1
+        self.assertTrue(self.compare('feedback-clock')['blockers'])
+
     def test_build_device_os_duplicate_and_missing_identity_block(self):
         for key, value in [('build_sha', 'other'), ('device_identifier', 'phone'), ('os', '28'), ('session_id', 'A'), ('build_sha', 'UNAVAILABLE')]:
             with self.subTest(key=key, value=value):

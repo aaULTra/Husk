@@ -344,11 +344,11 @@ struct TLAppSettingsView: View {
                         }
                         Text("80% keeps the tested prototype. Larger inputs retain more original detail but may cost more GPU work. Your selected output stays unchanged; restart after changing.").font(.caption)
                     }
-                    Text("Renders fewer pixels and upscales to your selected output. Includes HUD/text. Requires supported hardware and the experimental driver; fully restart. Visual quality, stability and energy benefit need testing. Off restores the original driver and rendering.").font(.caption)
+                    Text("Renders fewer pixels and upscales to your selected output. Includes HUD/text. Requires supported hardware and the experimental driver; fully restart. Visual quality, stability and energy benefit need testing. Off restores original rendering. The original driver is selected when MetalFX and Native Pipeline Cache are both off.").font(.caption)
                     Toggle("Engine-only 60 FPS Limiter (Diagnostic)", isOn: $settings.engineOnlyLimiter)
                     Text("Off keeps the existing engine + host limiter. On requests engine-only pacing at 60 FPS; verify actual cadence in a short test. Thermal fallback caps remain active. Fully restart after changes.").font(.caption)
                     Picker("Native Pipeline Cache (Experimental)", selection: $settings.nativePipelineArchiveMode) {
-                        Text("Off · Original Driver").tag(0)
+                        Text("Off").tag(0)
                         Text("Driver Only · Comparison").tag(1)
                         Text("Archive Enabled").tag(2)
                     }

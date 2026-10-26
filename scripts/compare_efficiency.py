@@ -110,7 +110,8 @@ def run_metrics(data, analysed):
             'worst_pipeline_ms': summary['worst_pipeline_ns'] / 1e6 if finite(summary.get('worst_pipeline_ns')) else None,
             'cpu_scope': 'Process CPU, 100% = one logical CPU; not electrical power',
             'gpu': analysed['gpu'], 'battery': analysed['battery'],
-            'submit_cpu_work': analysed['submit_cpu_work'], 'top_threads': analysed['thread_cpu']['top_threads']}
+            'submit_cpu_work': analysed['submit_cpu_work'], 'top_threads': analysed['thread_cpu']['top_threads'],
+            'native_pipeline_archive': analysed['native_pipeline_archive']}
 
 
 def compare_pair(left, right, recipe, context=None):
@@ -208,6 +209,26 @@ def compare_pair(left, right, recipe, context=None):
         if (s.get('output_width'), s.get('output_height')) != (2128, 1600):
             blockers.append('Candidate does not retain selected spatial output')
         warnings.append('Scaler dimensions/encode counts alone do not establish useful scene identity, colour/lifetime, quality or GPU/energy benefit')
+    if recipe == 'native-archive':
+        archive = right.get('native_pipeline_archive', {})
+        if archive.get('requested') is not True or archive.get('supported') is not True:
+            blockers.append('Candidate native archive activation/support not established')
+        if not finite(archive.get('restored_bytes')) or archive['restored_bytes'] <= 0:
+            blockers.append('Candidate has no persisted native archive restore evidence')
+        if not finite(archive.get('archive_attachments')) or archive['archive_attachments'] <= 0:
+            blockers.append('Candidate has no native archive attachment evidence')
+        builds = [d.get('spatial_upscaling', {}).get('driver_build') for d in (left, right)]
+        if not all(isinstance(b, dict) and b.get('native_archive_abi') == 1 for b in builds) or builds[0] != builds[1]:
+            blockers.append('Same native experimental driver manifest not established')
+        warnings.append('Native attachments/bytes are not cache hits; include separately audited preparation receipt and loading costs in net acceptance')
+    if recipe == 'feedback-clock':
+        clock = right.get('presentation_clock', {})
+        if clock.get('feedback_only_requested') is not True or clock.get('requested') is not False:
+            blockers.append('Independent feedback-only runtime treatment not established')
+        if not finite(clock.get('feedback_records')) or clock['feedback_records'] <= 0:
+            blockers.append('Candidate has no observed presentation feedback to correct')
+        if clock.get('invalid_clock_or_overflow') or clock.get('unsupported_chains'):
+            blockers.append('Candidate presentation clock/chain errors recorded')
     context = context or {}
     gaps = []
     for key in CONTEXT_FIELDS:
