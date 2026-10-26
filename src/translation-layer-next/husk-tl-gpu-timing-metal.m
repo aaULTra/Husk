@@ -30,7 +30,13 @@ static void observe(id buffer,id queue){
     tl_gput_ticket ticket;
     if(!tl_gput_capture(CACurrentMediaTime(),tag.identity,&ticket))return;
     [buffer addCompletedHandler:^(id<MTLCommandBuffer> cb){
-        tl_gput_complete(ticket,cb.GPUStartTime,cb.GPUEndTime,CACurrentMediaTime(),cb.status==MTLCommandBufferStatusCompleted);
+        NSString *label=[cb respondsToSelector:@selector(label)]?cb.label:nil;
+        uint32_t kind=TL_GPUT_UNKNOWN;
+        if([label hasPrefix:@"vkAcquireNextImage"])kind=TL_GPUT_ACQUIRE;
+        else if([label hasPrefix:@"vkQueueSubmit"]||[label hasPrefix:@"vkBeginCommandBuffer"])kind=TL_GPUT_SUBMIT;
+        else if([label hasPrefix:@"vkQueuePresent"])kind=TL_GPUT_PRESENT;
+        else if(label.length)kind=TL_GPUT_OTHER;
+        tl_gput_complete_kind(ticket,cb.GPUStartTime,cb.GPUEndTime,CACurrentMediaTime(),cb.status==MTLCommandBufferStatusCompleted,kind);
     }];
 }
 /* Called off the rendering path during session start or rare queue discovery. */

@@ -18,6 +18,7 @@ class MetalAdapterTests(unittest.TestCase):
 @property double GPUStartTime;
 @property double GPUEndTime;
 @property MTLCommandBufferStatus status;
+@property(copy) NSString *label;
 -(void)addCompletedHandler:(void (^)(id))handler;
 @end
 @implementation TestBuffer
@@ -38,7 +39,8 @@ int main(){@autoreleasepool{
  tl_gput_native_start(true);tl_gput_exclude(false);
  TestBuffer *a=[game commandBufferWithDescriptor:@2];TestBuffer *b=[host commandBufferWithDescriptor:@3];
  assert(a.handler&&!b.handler&&game.calls==2&&host.calls==1);
- a.GPUStartTime=CACurrentMediaTime();a.GPUEndTime=a.GPUStartTime+0.001;a.status=MTLCommandBufferStatusCompleted;a.handler(a);
+ a.GPUStartTime=CACurrentMediaTime();a.GPUEndTime=a.GPUStartTime+0.001;a.status=MTLCommandBufferStatusCompleted;a.label=@"vkQueuePresentKHR MTLCommandBuffer on Queue 0-0";a.handler(a);
+ tl_gput_record record;assert(tl_gput_pop(&record)&&record.kind==TL_GPUT_PRESENT);
  tl_gput_stats s;tl_gput_snapshot(&s);assert(s.completed==1&&s.registered_queues==1&&s.hooked_queues==1);
  double before=0,after=0;tl_gput_native_exclude(true,&before,&after);assert(before>0&&after>=before);
  TestBuffer *excluded=[game commandBufferWithDescriptor:@5];assert(!excluded.handler);

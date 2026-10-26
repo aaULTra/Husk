@@ -74,5 +74,14 @@ class AnalysisTests(unittest.TestCase):
   data={'schema_version':9,'presentation_clock':{'requested':True,'mapped_requests':30,'feedback_records':0},'compatibility_sync':{'requested':True,'futex_timeouts':2}}
   result=m.audit(data);self.assertEqual(result['errors'],[]);self.assertEqual(result['presentation_clock']['mapped_requests'],30);self.assertEqual(result['compatibility_sync']['futex_timeouts'],2)
   self.assertTrue(result['energy_benefit'].startswith('UNVERIFIED'));self.assertTrue(result['gpu']['status'].startswith('UNAVAILABLE'))
+ def test_explicit_mach_identity_join_does_not_reuse_observer_namespace(self):
+  d={"samples":[{"t":0,"excluded":False,"cpu_threads":{"mach_result":0,"threads":[{"thread_id":9,"name":"","user_seconds":0,"system_seconds":0}]}},{"t":10,"excluded":False,"cpu_threads":{"mach_result":0,"threads":[{"thread_id":9,"name":"","user_seconds":1,"system_seconds":0}]}}],"worker_policy":{"last_observed_workers":[{"observer_thread_id":9,"mach_thread_id":0,"name":"main"}]}}
+  self.assertNotIn('last_guest_policy_observation',m.thread_cpu_audit(d)['top_threads'][0])
+  d['worker_policy']['last_observed_workers'][0]['mach_thread_id']=9
+  self.assertEqual(m.thread_cpu_audit(d)['top_threads'][0]['last_guest_policy_observation']['name'],'main')
+ def test_schema10_native_archive_remains_mechanism_not_energy(self):
+  r=m.audit({'schema_version':10,'native_pipeline_archive':{'archive_attachments':10,'prepared':2}})
+  self.assertEqual(r['native_pipeline_archive']['prepared'],2)
+  self.assertIn('UNVERIFIED',r['energy_benefit'])
 if __name__=='__main__':unittest.main()
 

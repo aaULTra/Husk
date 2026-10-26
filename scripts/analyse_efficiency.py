@@ -111,6 +111,9 @@ def thread_cpu_audit(data):
                         value['cpu_seconds'] += delta
                         value['observed_seconds'] += dt
         previous = (sample['t'], rows)
+    policy = {r['mach_thread_id']: r for r in data.get('worker_policy', {}).get('last_observed_workers', []) if r.get('mach_thread_id')}
+    for key, row in costs.items():
+        if key in policy:row['last_guest_policy_observation'] = policy[key]
     rows = sorted(costs.values(), key=lambda r: r['cpu_seconds'], reverse=True)
     for row in rows:
         row['cpu_percent_one_core'] = row['cpu_seconds'] / row['observed_seconds'] * 100
@@ -119,7 +122,7 @@ def thread_cpu_audit(data):
 
 
 def audit(data):
-    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8, 9):
+    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
         raise ValueError('Unsupported diagnostic schema; preserve source for a version-aware audit')
     summary, metadata = data.get('summary', {}), data.get('metadata', {})
     windows, samples = data.get('windows', []), data.get('samples', [])
@@ -202,6 +205,7 @@ def audit(data):
                        'rollbacks': worker.get('rollback_requests_since_launch'), 'waiting_reason': worker.get('waiting_reason'),
                        'normal_utility_last_observations': len(utility), 'core_residency': 'UNAVAILABLE',
                        'scope': 'Last observations, not live thread count or verified placement'},
+            'native_pipeline_archive': data.get('native_pipeline_archive', {}),
             'presentation_clock': data.get('presentation_clock', {}), 'compatibility_sync': data.get('compatibility_sync', {}),
             'thread_cpu': thread_cpu_audit(data), 'submit_cpu_work': data.get('submit_cpu_work', {}),
             'gpu_windows': data.get('gpu_windows', []),

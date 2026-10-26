@@ -151,7 +151,7 @@ void tl_em_host(unsigned stage, uint64_t ns) {
 }
 void tl_em_log(const char *line) {
     if (!atomic_load(&enabled) || !line) return;
-    if (strncmp(line, "[M4/M6 present-clock]", 21) && strncmp(line, "thread-policy", 13) && strncmp(line, "ue4 cache store:", 16) &&
+    if (strncmp(line, "[M2/M5 native-archive]", 22) && strncmp(line, "[M4/M6 present-clock]", 21) && strncmp(line, "thread-policy", 13) && strncmp(line, "ue4 cache store:", 16) &&
         strncmp(line, "ue4 cache:", 10) && strncmp(line, "ue4 pipeline", 12) &&
         strncmp(line, "ue4 submission:", 15) && strncmp(line, "ue4 timing:", 11) && strncmp(line, "vulkan: vkCreateSwapchain", 25) && strncmp(line, "vulkan: sizing", 14)) return;
     if (!enter(&dropped_events)) return;

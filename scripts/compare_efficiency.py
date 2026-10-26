@@ -15,6 +15,8 @@ RECIPES = {
     'engine-only': ('engine_only_limiter', False, True, ['M4']),
     'async': ('submission_mode', 0, 1, ['M6']),
     'spatial': ('metalfx_spatial_requested', False, True, ['M9', 'M3']),
+    'native-archive': ('native_pipeline_archive_mode', 1, 2, ['M2', 'M5']),
+    'feedback-clock': ('feedback_clock_correction', False, True, ['M4', 'M6']),
     'presentation-clock': ('clock_correct_presentation', False, True, ['M4', 'M6']),
 }
 REQUIRED_CONFIG = ('engine', 'game', 'launch_width', 'launch_height', 'sharp_graphics',
@@ -140,7 +142,8 @@ def compare_pair(left, right, recipe, context=None):
         if key != field:
             blockers.append('Additional changed control: ' + key)
     defaults = {'worker_policy': 2, 'submission_mode': 0, 'engine_only_limiter': False,
-                'clock_correct_presentation': False, 'metalfx_spatial_requested': False}
+                'clock_correct_presentation': False, 'metalfx_spatial_requested': False,
+                'feedback_clock_correction': False, 'native_pipeline_archive_mode': 0}
     for index, (data, analysed, config) in enumerate(zip((left, right), analyses, configs)):
         side = 'baseline' if index == 0 else 'candidate'
         blockers.extend(side + ': ' + e for e in analysed['errors'])

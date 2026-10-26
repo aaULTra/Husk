@@ -61,6 +61,14 @@ int exercise(int mode){
  }
  return 999;
 }
+int exercise_kind(void){
+ for(unsigned kind=0;kind<7;kind++){
+  tl_gput_begin(true,100);tl_gput_exclude(false);tl_gput_ticket t;tl_gput_record r;
+  if(!tl_gput_capture(100.1,1,&t))return 1;
+  tl_gput_complete_kind(t,100.1,100.2,100.3,true,kind);
+  if(!tl_gput_pop(&r)||r.kind!=(kind<=TL_GPUT_OTHER?kind:TL_GPUT_UNKNOWN))return 2;
+ }return 0;
+}
 ''')
   lib=p/'test.so';subprocess.run([os.environ.get('CC','cc'),'-std=c11','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(ROOT/'src/translation-layer-next'),str(p/'test.c'),'-lm','-o',str(lib)],check=True)
   cls.lib=ctypes.CDLL(str(lib))
@@ -73,4 +81,5 @@ int exercise(int mode){
  def test_completion_never_waits_on_consumer_mutex(self):self.assertEqual(self.lib.exercise(6),0)
  def test_stop_rejects_new_and_late_completions(self):self.assertEqual(self.lib.exercise(7),0)
  def test_record_capacity_is_bounded_and_loss_disclosed(self):self.assertEqual(self.lib.exercise(8),0)
+ def test_kind_is_bounded_and_retained_without_expanding_sampling(self):self.assertEqual(self.lib.exercise_kind(),0)
 if __name__=='__main__':unittest.main()

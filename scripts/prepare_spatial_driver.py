@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exact source-pinned transforms; refuse drift rather than guessing offsets."""
 from pathlib import Path
-import hashlib,json,shutil,subprocess,sys
+import hashlib,json,shutil,subprocess,sys,re
 PIN="db66022459ffb663aa2b50f6b018bc2e124f5edf"
 ROOT=Path(__file__).resolve().parents[1]
 REPLACEMENTS={
@@ -81,6 +81,17 @@ def prepare(src):
             if content.count(before)!=1:raise SystemExit("Pinned source/patch drift: "+name)
             content=content.replace(before,after)
         changed[gpu/name]=content
+    pipeline=gpu/"MVKPipeline.mm"
+    content=pipeline.read_text()
+    if content.count("using namespace std;")!=1:raise SystemExit("Pinned source/patch drift: pipeline include")
+    content=content.replace("using namespace std;",'using namespace std;\n#include "HuskArchive.inc"')
+    transforms=[
+      (r'\[mtlDev newRenderPipelineStateWithDescriptor: mtlRPLDesc\s+completionHandler: (\^\(id<MTLRenderPipelineState> ps, NSError\* error\) \{.*?\})\];',r'huskArchiveNewRender(mtlDev, mtlRPLDesc, \1);'),
+      (r'\[mtlDev newComputePipelineStateWithDescriptor: plDesc\s+options: MTLPipelineOptionNone\s+completionHandler: (\^\(id<MTLComputePipelineState> ps, MTLComputePipelineReflection\*, NSError\* error\) \{.*?\})\];',r'huskArchiveNewCompute(mtlDev, plDesc, MTLPipelineOptionNone, \1);')]
+    for before,after in transforms:
+        content,n=re.subn(before,after,content,flags=re.S)
+        if n!=1:raise SystemExit("Pinned source/patch drift: native pipeline compiler")
+    changed[pipeline]=content
     project=src/"MoltenVK/MoltenVK.xcodeproj/project.pbxproj"
     original=project.read_text()
     if '"-all_load",' not in original:raise SystemExit("Missing framework link anchor")
@@ -89,10 +100,13 @@ def prepare(src):
     for path,content in changed.items():path.write_text(content)
     for name in ["HuskSpatial.inc","HuskSpatialDriver.h"]:shutil.copy2(ROOT/"patches/metalfx"/name,gpu/name)
     shutil.copy2(ROOT/"src/translation-layer-next/husk-tl-spatial.h",gpu/"HuskSpatialABI.h")
-    inputs=[Path(__file__),ROOT/"patches/metalfx/HuskSpatial.inc",ROOT/"patches/metalfx/HuskSpatialDriver.h",ROOT/"src/translation-layer-next/husk-tl-spatial.h"]
+    inputs=[Path(__file__),ROOT/"patches/metalfx/HuskSpatial.inc",ROOT/"patches/metalfx/HuskSpatialDriver.h",ROOT/"src/translation-layer-next/husk-tl-spatial.h",ROOT/"patches/metalfx/HuskArchive.inc",ROOT/"src/translation-layer-next/husk-tl-native-archive.h"]
     digest=hashlib.sha256()
     for path in inputs:digest.update(path.read_bytes())
-    manifest={"schema":1,"upstream_commit":PIN,"upstream_version":"1.4.2","husk_spatial_patch_sha256":digest.hexdigest(),"feature":"M9-SPATIAL-v2","default_enabled":False}
+    archive=(ROOT/"patches/metalfx/HuskArchive.inc").read_text()
+    (gpu/"HuskArchive.inc").write_text('#define HUSK_ARCHIVE_PATCH_ID "'+digest.hexdigest()+'"\n'+archive)
+    shutil.copy2(ROOT/"src/translation-layer-next/husk-tl-native-archive.h",gpu/"HuskArchiveABI.h")
+    manifest={"schema":1,"upstream_commit":PIN,"upstream_version":"1.4.2","husk_spatial_patch_sha256":digest.hexdigest(),"husk_native_pipeline_patch_sha256":digest.hexdigest(),"native_archive_abi":1,"feature":"M9-SPATIAL-v2+M5-NATIVE-ARCHIVE-v1","default_enabled":False}
     (src/"HuskSpatialBuild.json").write_text(json.dumps(manifest,indent=2)+"\n")
     print(json.dumps(manifest))
 if __name__=="__main__":prepare(Path(sys.argv[1]).resolve())

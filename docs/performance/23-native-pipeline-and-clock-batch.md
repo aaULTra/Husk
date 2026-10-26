@@ -1,0 +1,21 @@
+# NATIVE-BATCH-5 — native Metal pipeline persistence and clock correctness
+
+2026-10-26. User explicitly requests a larger implementation batch before a compact installable candidate. E-M4-007 disproves the extra host limiter as a sufficient explanation; keep it OFF/default dual baseline. Source-pinned MoltenVK1.4.2 MVKPipeline.mm invokes Metal compilation without attaching a persistent MTLBinaryArchive. Persistent Vulkan cache acceptance therefore does not imply native pipeline reuse. Native binary archives can reuse complete Metal pipeline states; this does not eliminate all MSL front-end/library work or first-ever compilation and is not an assumed sustained energy saving.
+
+Sequence: E-M4-007 CPU/wait/native-feedback evidence -> M2/M5 targeted native-state cache/preparation + independent M4/M6 feedback-clock correction -> M3 useful CPU/GPU attribution -> one validated candidate -> physical/benefit acceptance. No architectural translation rewrite, driver-version upgrade, automatic quality cut, new worker policy or indiscriminate precompile. Preserve V4/2128x1600/Sharp Efficient/60/Balanced/Driver Default/original-driver/cache/thermal rollback.
+
+Fixed implementation/build gates N1–N9:
+1. Default-OFF independent native archive control; exact pinned separate driver and supported/unsupported ABI; original driver/cache intact.
+2. Capture complete driver-owned native render/compute descriptors only after successful slow native pipeline compilation, <=8 retained; no incomplete Vulkan replay key or raw pointer serialization.
+3. Explicit noninteractive preparation: pause game, prepare bounded captured native functions, serialize archive; no queue-idle GPU wait and no synchronous gameplay warm-up. One API preparation call cannot be preempted; game remains paused until it finishes.
+4. Device/OS/patch namespace, bounded file, exclusive writer/atomic replacement, immutable active read archive, failure fallback, retained native-object lifetime and teardown-safe preparation. No archive presence=cache hit claim.
+5. Optional feedback-only guest-clock correction independent of timed presentation; immediate/dual/FIFO defaults retained. Full bidirectional timed mode still separate.
+6. Actual Mach thread identity in rare worker observations, explicit namespace, no guessed hot-thread role/core placement.
+7. Existing bounded GPU sampler distinguishes labelled submit/present/acquire command buffers, unknown stays unknown, overlaps/partial coverage remain explicit; no new sampling budget/heavy profiler default.
+8. Suppress misleading short single-battery-step extrapolation in human summary, retain raw levels/arithmetic with provenance and explicit conservative policy.
+9. Relevant actual-code/ownership/failure/concurrency/ABI/clock tests, clean pinned driver/app build and IPA, complete permanent-plan/source/progress handover.
+
+Physical D1–D5: archive capability/capture/preparation/restart; no graphics/input/audio/lifecycle/device-loss regression; feedback-only frame/correctness; CPU/GPU identity/role/export/overhead; repeat same expensive first/repeat/restart event with matched cache state. Benefit E1–E3: reduced representative long native/pipeline/gameplay stalls including preparation cost; smoothness/quality maintained; matched sustained energy/temperature result. All pending. Implementation is not accepted benefit. Existing strict Adaptive/relative worker,MetalFX,async,limiter,shader identity,dynamic/temporal and Duo work remain tracked.
+
+
+Pre-build checks: complete named suites227 tests,220 pass locally,7 Apple-only deferred,including actual native descriptor/archive persistence/fallback/ownership and async-completion doubles. Pinned MVKPipeline.mm render/compute transforms were independently applied to the exact upstream source successfully. No Apple result or physical benefit assumed. Archive file64MiB limit and directory4-archive/128MiB eviction apply only to owned cache names under an exclusive directory writer lock. A preparation receipt records full-process CPU/wall/native stats,even though ordinary gameplay monitoring is stopped. Same-driver mode1 versus enabled mode2 supports an isolated archive comparison; original driver remains mode0/default.

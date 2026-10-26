@@ -39,6 +39,7 @@ class VulkanTimingTests(unittest.TestCase):
 #include "husk-tl-driver-profile.h"
 #include "husk-tl-efficiency.h"
 #include "husk-tl-present-clock.h"
+#include "husk-tl-native-archive.h"
 #include "husk-tl-pipeline-diagnostics.h"
 #include "husk-tl-pipeline-feedback.h"
 #undef TARGET_OS_IOS
@@ -277,7 +278,7 @@ int exercise_efficiency_observer(void) {
         (root / "timing.c").write_text(harness)
         tl = ROOT / "src/translation-layer-next"
         subprocess.run([os.environ.get("CC", "cc"), "-std=c11", "-Wall", "-Wextra", "-Werror", "-shared", "-fPIC",
-                        "-I", str(tl), str(root / "timing.c"), str(tl / "husk-tl-ue4-graphics.c"), str(tl / "husk-tl-pipeline-store.c"), str(tl / "husk-tl-thread-policy.c"), str(tl / "husk-tl-driver-profile.c"), str(tl / "husk-tl-efficiency.c"), str(tl / "husk-tl-present-clock.c"), str(tl / "husk-tl-pipeline-diagnostics.c"), str(tl / "husk-tl-pipeline-feedback.c"), "-pthread",
+                        "-I", str(tl), str(root / "timing.c"), str(tl / "husk-tl-ue4-graphics.c"), str(tl / "husk-tl-pipeline-store.c"), str(tl / "husk-tl-thread-policy.c"), str(tl / "husk-tl-driver-profile.c"), str(tl / "husk-tl-efficiency.c"), str(tl / "husk-tl-present-clock.c"), str(tl / "husk-tl-native-archive.c"), str(tl / "husk-tl-pipeline-diagnostics.c"), str(tl / "husk-tl-pipeline-feedback.c"), "-pthread",
                         "-o", str(root / "timing.so")], check=True)
         cls.lib = ctypes.CDLL(str(root / "timing.so"))
         cls.lib.exercise.argtypes = [ctypes.c_int] * 4

@@ -6,7 +6,7 @@
 /* Sample only known game queues: one media-clock second every ten seconds.
  * These are command-buffer timestamps, not per-frame or device utilisation. */
 typedef struct { uint64_t session, epoch, queue; double begin, end; } tl_gput_ticket;
-typedef struct { double gpu_start, gpu_end, completed, sample_start, sample_end; uint64_t queue; } tl_gput_record;
+typedef struct { double gpu_start, gpu_end, completed, sample_start, sample_end; uint64_t queue; uint32_t kind; } tl_gput_record;
 typedef struct {
     uint64_t attached, completed, invalid, errors, outside, dropped, pending, stale;
     uint32_t registered_queues, hooked_queues, hook_failures;
@@ -18,6 +18,8 @@ void tl_gput_exclude(bool excluded);
 void tl_gput_end(void);
 bool tl_gput_active(void);
 bool tl_gput_capture(double media_time, uint64_t queue, tl_gput_ticket *out);
+enum {TL_GPUT_UNKNOWN,TL_GPUT_ACQUIRE,TL_GPUT_SUBMIT,TL_GPUT_PRESENT,TL_GPUT_OTHER};
+void tl_gput_complete_kind(tl_gput_ticket ticket,double start,double end,double completed,bool success,uint32_t kind);
 void tl_gput_complete(tl_gput_ticket ticket, double start, double end, double completed, bool success);
 bool tl_gput_pop(tl_gput_record *out);
 void tl_gput_snapshot(tl_gput_stats *out);

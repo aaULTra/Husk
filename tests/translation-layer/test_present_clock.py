@@ -52,6 +52,14 @@ int unsupported_case(int which){
  if(which==4)times.times=NULL;
  tl_pt_copy copy;const void*forward;return !tl_pt_prepare(&info,&copy,clock_pair,&forward)&&value.time==clock_pair.guest_ns+1?0:1;
 }
+int feedback_only_case(void){
+ husk_ue4_set_clock_presentation(false);husk_ue4_set_feedback_clock(true);
+ tl_pt_past row={7,1000000000001,1000000000002,1000000000000,123};tl_pt_feedback(&row,1,clock_pair);
+ if(row.actual!=5000000000002||row.margin!=123||!tl_pt_feedback_requested()||tl_pt_requested())return 1;
+ tl_pt_time time={7,clock_pair.guest_ns+1};tl_pt_times times={1000092000,NULL,1,&time};tl_pt_info info={.next=&times,.count=1};tl_pt_copy copy;const void*forward;
+ int result=!tl_pt_prepare(&info,&copy,clock_pair,&forward)||copy.times[0].time!=0||time.time!=clock_pair.guest_ns+1;
+ husk_ue4_set_feedback_clock(false);return result;
+}
 int feedback_case(int mode){
  tl_pt_monitor(true);husk_ue4_set_clock_presentation(mode);tl_pt_past row={7,1000000000001,1000000000002,1000000000000,123};tl_pt_past original=row;
  tl_pt_feedback(&row,1,clock_pair);tl_pt_record record;tl_pt_stats s;tl_pt_snapshot(&s);
@@ -76,6 +84,7 @@ int overflow_case(void){
 }
 '''
   (p/'test.c').write_text(source);subprocess.run([os.environ.get('CC','cc'),'-std=c11','-O2','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(ROOT/'src/translation-layer-next'),str(p/'test.c'),'-o',str(p/'test.so')],check=True);cls.lib=ctypes.CDLL(str(p/'test.so'))
+ def test_feedback_only_corrects_domain_without_scheduling_presents(self):self.assertEqual(self.lib.feedback_only_case(),0)
  def test_default_keeps_immediate_behavior_without_guest_writes(self):self.assertEqual(self.lib.immutable_case(0),0)
  def test_mapped_mode_preserves_readonly_prefix_tail_ids_and_output_pointers(self):self.assertEqual(self.lib.immutable_case(1),0)
  def test_horizon_expired_and_clock_uncertainty(self):

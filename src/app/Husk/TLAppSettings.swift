@@ -125,6 +125,8 @@ struct TLAppSettings: Codable, Equatable {
     var vulkanSubmission: VulkanSubmission = .driverDefault
     var engineOnlyLimiter = false
     var clockPresentation = false
+    var feedbackClockCorrection = false
+    var nativePipelineArchiveMode = 0
     var pipelineIdentification = false
     var pipelineFeedback = false
     var spatialUpscaling = false
@@ -211,6 +213,9 @@ struct TLAppSettings: Codable, Equatable {
         vulkanSubmission = try c.decodeIfPresent(VulkanSubmission.self, forKey: .vulkanSubmission) ?? .driverDefault
         engineOnlyLimiter = try c.decodeIfPresent(Bool.self, forKey: .engineOnlyLimiter) ?? false
         clockPresentation = try c.decodeIfPresent(Bool.self, forKey: .clockPresentation) ?? false
+        feedbackClockCorrection = try c.decodeIfPresent(Bool.self, forKey: .feedbackClockCorrection) ?? false
+        let archiveMode = try c.decodeIfPresent(Int.self, forKey: .nativePipelineArchiveMode) ?? 0
+        nativePipelineArchiveMode = [0,1,2].contains(archiveMode) ? archiveMode : 0
         pipelineIdentification = try c.decodeIfPresent(Bool.self, forKey: .pipelineIdentification) ?? false
         pipelineFeedback = try c.decodeIfPresent(Bool.self, forKey: .pipelineFeedback) ?? false
         spatialUpscaling = try c.decodeIfPresent(Bool.self, forKey: .spatialUpscaling) ?? false
@@ -342,6 +347,14 @@ struct TLAppSettingsView: View {
                     Text("Renders fewer pixels and upscales to your selected output. Includes HUD/text. Requires supported hardware and the experimental driver; fully restart. Visual quality, stability and energy benefit need testing. Off restores the original driver and rendering.").font(.caption)
                     Toggle("Engine-only 60 FPS Limiter (Diagnostic)", isOn: $settings.engineOnlyLimiter)
                     Text("Off keeps the existing engine + host limiter. On requests engine-only pacing at 60 FPS; verify actual cadence in a short test. Thermal fallback caps remain active. Fully restart after changes.").font(.caption)
+                    Picker("Native Pipeline Cache (Experimental)", selection: $settings.nativePipelineArchiveMode) {
+                        Text("Off · Original Driver").tag(0)
+                        Text("Driver Only · Comparison").tag(1)
+                        Text("Archive Enabled").tag(2)
+                    }
+                    Text("Archive mode captures up to eight slow native pipeline requests. Prepare them explicitly in Efficiency Test while the game pauses; later launches can reuse the saved archive. Preparation costs CPU/time. Driver Only uses the same experimental driver without the archive for comparison. Restart after changing.").font(.caption)
+                    Toggle("Guest-Clock Feedback Only (Experimental)", isOn: $settings.feedbackClockCorrection)
+                    Text("Corrects the clock domain of presentation feedback consumed by the game. Keeps immediate presentation; does not enable future scheduling. Benefit needs testing. Restart after changing.").font(.caption)
                     Toggle("Clock-Correct Presentation (Experimental)", isOn: $settings.clockPresentation)
                     Text("Translates requested presentation times and feedback between game and Metal clocks. Off keeps immediate presentation. Bounds future requests; no frame-rate or energy benefit proven. Test separately from engine-only, submission and worker settings; restart after changing.").font(.caption)
                     Toggle("Pipeline Identification (Diagnostic)", isOn: $settings.pipelineIdentification)

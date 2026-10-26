@@ -1,3 +1,4 @@
+#include "husk-tl-native-archive.h"
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #define _DARWIN_C_SOURCE
 #include "husk-tl-unity-app.h"
@@ -655,6 +656,7 @@ void husk_unity_perf_snapshot(husk_unity_perf *out)
 void husk_unity_touch(int phase, int id, float x, float y)
 {
     if (atomic_load(&A.state) != HUSK_UNITY_RUNNING) return;
+    if(!paused&&A.engine==ENGINE_UE4&&tl_vk_archive_preparing())return;
     if (A.engine == ENGINE_JAVA) tl_javaapp_touch(phase, id, x, y);
     else if (A.engine == ENGINE_GAMEMAKER) tl_gm_touch(phase, id, x, y);
     else if (A.engine == ENGINE_FLUTTER) tl_flutter_touch(phase, id, x, y);
@@ -668,6 +670,7 @@ void husk_unity_touch(int phase, int id, float x, float y)
 void husk_unity_set_paused(bool paused)
 {
     if (atomic_load(&A.state) != HUSK_UNITY_RUNNING) return;
+    if(!paused&&A.engine==ENGINE_UE4&&tl_vk_archive_preparing())return;
     if (A.engine == ENGINE_JAVA) { tl_javaapp_set_paused(paused); tl_audio_set_paused(paused); }
     else if (A.engine == ENGINE_GAMEMAKER) { tl_gm_set_paused(paused); tl_audio_set_paused(paused); }
     else if (A.engine == ENGINE_FLUTTER) { tl_flutter_set_paused(paused); tl_audio_set_paused(paused); }

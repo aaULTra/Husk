@@ -59,6 +59,9 @@ static void observe_worker(const char *name, unsigned role, unsigned mode, unsig
         *v=(tl_worker_observation){.identity=observation_identity,.observed_monotonic=t.tv_sec+t.tv_nsec/1e9,
              .role=role,.mode=mode,.revision=rev,.before_qos=before,.after_qos=after,
              .query_result=query_result,.set_result=set_result,.changed=changed};
+#ifdef __APPLE__
+        if(pthread_threadid_np(NULL,&v->mach_thread_id)!=0)v->mach_thread_id=0;
+#endif
         snprintf(v->name,sizeof(v->name),"%s",name);
     }else atomic_fetch_add(&observation_drops,1);
     pthread_mutex_unlock(&observation_mu);

@@ -26,7 +26,7 @@ bool tl_thread_policy_trial_active(void);
 int tl_thread_policy_role(const char *name);
 /* Bounded last-observed records, not live threads, core residency or CPU energy. */
 typedef struct {
- uint64_t identity; double observed_monotonic;
+ uint64_t identity,mach_thread_id; double observed_monotonic;
  uint32_t role, mode, revision, before_qos, after_qos;
  int query_result, set_result; bool changed;
  char name[64];

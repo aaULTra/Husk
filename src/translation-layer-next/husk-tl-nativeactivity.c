@@ -22,6 +22,7 @@
 #include "husk-tl-render-inventory.h"
 #include "husk-tl-pipeline-feedback.h"
 #include "husk-tl-spatial.h"
+#include "husk-tl-native-archive.h"
 #include "husk-tl-jni.h"
 #include "husk-tl-internal.h"
 #include "husk-tl-ld.h"
@@ -371,6 +372,9 @@ bool tl_na_start(const tl_ga_config *cfg)
         snprintf(cache_dir, sizeof(cache_dir), "%s/%s", N.internal_dir, tl_vk_spatial_active() ? "husk-pipeline-cache-spatial-v1" : "husk-pipeline-cache-v1");
         tl_pc_configure(cache_dir);
     }
+    char archive_dir[1024];
+    int archive_len=snprintf(archive_dir,sizeof(archive_dir),"%s/husk-native-pipeline-archive-v1",N.internal_dir);
+    if(archive_len>0&&archive_len<(int)sizeof(archive_dir))tl_vk_archive_configure(project,archive_dir);
     if (!tl_ue4_graphics_prepare(N.internal_dir, N.ext_dir, project))
         tl_log_line("ue4: graphics config could not be prepared completely; launch arguments will still be supplied");
     else

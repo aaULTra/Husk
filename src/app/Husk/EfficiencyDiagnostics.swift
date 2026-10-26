@@ -35,6 +35,8 @@ final class EfficiencyDiagnostics: ObservableObject {
         var intervals: [(Double, Double)] = []
         var count = 0
         var duration = 0.0
+        var roleCounts: [String: Int] = [:]
+        var roleDurations: [String: Double] = [:]
     }
     private var gpuWindows: [Double: GPUWindow] = [:]
     private var gpuAggregateDrops = 0
@@ -44,6 +46,9 @@ final class EfficiencyDiagnostics: ObservableObject {
     private var lastBattery: (Double, Int)?
     private var battery = EfficiencyMath.Battery()
     private var environment: [String: Any] = [:]
+    @Published private(set) var nativePreparing = false
+    @Published private(set) var archiveMessage = "Native archive is off or not yet inspected"
+    @Published private(set) var archiveFiles: [URL] = []
     private var stoppedReport: [String: Any]?
 
     private var now: Double { tl_em_clock() }
@@ -66,7 +71,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     func setInterrupted(_ value: Bool) { interrupted = value; refreshExclusion() }
 
     func start() {
-        guard !running, !exporting else { return }
+        guard !running, !exporting, !nativePreparing else { return }
         samples = []; windows = []; events = []; exclusions = []; files = []; dropped = 0
         gpuRows = []; gpuExportDrops = 0; gpuWindows = [:]; gpuAggregateDrops = 0; lastThreadAt = now - 10
         stoppedReport = nil; canExport = false; origin = now; windowAt = origin; lastCPUAt = origin; lastCPU = -1
@@ -188,15 +193,18 @@ final class EfficiencyDiagnostics: ObservableObject {
     private func collectGPU() {
         var record = tl_gput_record()
         while tl_gput_pop(&record) {
+            let role = ["unknown", "acquire", "submit", "present", "other"][min(Int(record.kind), 4)]
             if gpuWindows[record.sample_start] != nil || gpuWindows.count < 512 {
                 let window = gpuWindows[record.sample_start] ?? GPUWindow()
                 let lo = max(record.gpu_start, record.sample_start), hi = min(record.gpu_end, record.sample_end)
                 if hi > lo { window.intervals.append((lo, hi)) }
                 window.count += 1; window.duration += record.gpu_end - record.gpu_start
+                window.roleCounts[role, default: 0] += 1
+                window.roleDurations[role, default: 0] += record.gpu_end - record.gpu_start
                 gpuWindows[record.sample_start] = window
             } else { gpuAggregateDrops += 1 }
             if gpuRows.count >= 16384 { gpuExportDrops += 1; continue }
-            gpuRows.append(["gpu_start_media_seconds": record.gpu_start, "gpu_end_media_seconds": record.gpu_end,
+            gpuRows.append(["command_buffer_role": role, "gpu_start_media_seconds": record.gpu_start, "gpu_end_media_seconds": record.gpu_end,
                             "completed_media_seconds": record.completed, "completion_after_gpu_end_seconds": max(0, record.completed - record.gpu_end),
                             "sample_start_media_seconds": record.sample_start, "sample_end_media_seconds": record.sample_end,
                             "queue_id": record.queue, "phase_at_collection": phase,
@@ -209,6 +217,7 @@ final class EfficiencyDiagnostics: ObservableObject {
             ["sample_start_media_seconds": start, "sample_end_media_seconds": start + 1,
              "valid_records": w.count, "buffer_duration_sum_seconds": w.duration,
              "sample_clipped_interval_union_seconds": EfficiencyMath.intervalUnion(w.intervals),
+             "command_buffer_role_counts": w.roleCounts, "role_overlapping_gpu_duration_seconds": w.roleDurations,
              "scope": "All drained valid records in this bounded window, including those beyond raw export cap; partial coverage, overlapping buffer durations, not per-frame GPU or watts"]
         }
     }
@@ -366,6 +375,55 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "images_created": s.images_created, "encoded_calls": s.encoded, "failures": s.failures,
                 "texture_observations": textures, "patch": "M9-SPATIAL-v2", "energy_benefit": "UNVERIFIED"]
     }
+    private func nativeArchiveReport() -> [String: Any] {
+        var a = tl_na_stats(); tl_vk_archive_snapshot(&a)
+        return ["plan_ids": ["M2", "M5", "M3"], "requested": a.requested != 0,
+            "supported": a.supported != 0, "preparing": a.preparing != 0, "pending": a.pending,
+            "captured": a.descriptors_captured, "dropped": a.descriptors_dropped,
+            "archive_attachments": a.archive_attachments, "archive_fallbacks": a.archive_fallbacks,
+            "prepare_calls": a.prepare_calls, "prepared": a.prepared, "prepare_failures": a.prepare_failures,
+            "restored_bytes": a.restored_bytes, "saved_bytes": a.saved_bytes,
+            "read_failures": a.read_failures, "write_failures": a.write_failures, "prepare_ns": a.prepare_ns, "evicted_files": a.evicted_files, "evicted_bytes": a.evicted_bytes,
+            "status": a.supported != 0 ? "MEASURED native archive mechanism counters" : "UNAVAILABLE: disabled, unavailable driver, or first native-pipeline support probe pending",
+            "scope": "Since native driver configuration; up to8 retained slow native requests. Complete native descriptor copies, not Vulkan replay. Attachments/bytes are not verified hits. Preparation CPU/energy is additional; include its receipt. Library/front-end compilation can remain.",
+            "energy_benefit": "UNVERIFIED"]
+    }
+    func inspectNativeArchive() {
+        var a = tl_na_stats(); tl_vk_archive_snapshot(&a)
+        archiveMessage = a.supported != 0 ? "Captured pending: \(a.pending); restored: \(a.restored_bytes) bytes; archive reuse benefit unverified" : "Archive unavailable/off, or no native pipeline support probe yet. Enable Archive mode and restart first."
+    }
+    func prepareNativeArchive() {
+        guard !running, !exporting, !nativePreparing, gameVisible, UIApplication.shared.applicationState == .active else { return }
+        guard tl_vk_archive_begin_prepare() else { inspectNativeArchive(); return }
+        nativePreparing = true; archiveMessage = "Game paused while captured native pipelines are prepared. One compiler call cannot be interrupted."
+        let started = now, before = nativeArchiveReport()
+        var cpu = tl_em_process(); tl_em_process_sample(false, &cpu); let cpuBefore = cpu.cpu_seconds
+        husk_unity_set_paused(true)
+        DispatchQueue.global(qos: .utility).async {
+            let result = tl_vk_archive_prepare()
+            DispatchQueue.main.async {
+                let elapsed = self.now - started
+                var afterCPU = tl_em_process(); tl_em_process_sample(false, &afterCPU)
+                let deltaCPU: Double? = cpuBefore >= 0 && afterCPU.cpu_seconds >= cpuBefore ? afterCPU.cpu_seconds - cpuBefore : nil
+                let receipt: [String: Any] = ["schema_version": 1, "type": "paused_native_pipeline_preparation", "game_pause_requested": true, "no_gpu_idle_wait": true,
+                    "plan_ids": ["M2", "M5", "M3"], "build_sha": Bundle.main.object(forInfoDictionaryKey: "HuskBuildCommit") as? String ?? "UNAVAILABLE",
+                    "utc": ISO8601DateFormatter().string(from: Date()), "configuration": self.attached,
+                    "result": result, "measured_host_wall_seconds": elapsed,
+                    "estimated_process_cpu_seconds": deltaCPU.map { $0 as Any } ?? NSNull(),
+                    "before": before, "after": self.nativeArchiveReport(),
+                    "scope": "Explicit extra preparation, game paused. Process CPU includes host and excludes compiler/system processes; wall includes callback scheduling. Pause requested, not a GPU-idle measurement. No measured watts/temperature/hits or energy saving. Include receipt in total-session comparisons."]
+                do {
+                    let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("PipelinePreparation")
+                    try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+                    let file = dir.appendingPathComponent(UUID().uuidString + ".json")
+                    try EfficiencyMath.json(receipt).write(to: file, options: .atomic); self.archiveFiles = [file]
+                    self.archiveMessage = "Preparation result \(result). Receipt saved in Files > Husk > PipelinePreparation. Return to gameplay or share the receipt; benefit unverified."
+                } catch { self.archiveMessage = "Preparation result \(result); receipt export failed: \(error.localizedDescription)" }
+                self.nativePreparing = false
+                if self.gameVisible && UIApplication.shared.applicationState == .active { husk_unity_set_paused(false) }
+            }
+        }
+    }
     private func syncReport() -> [String: Any] {
         var s = tl_em_sync_stats(); tl_em_sync_snapshot(&s); var counts = s.counts
         let values = withUnsafeBytes(of: &counts) { Array($0.bindMemory(to: UInt64.self)) }
@@ -386,7 +444,7 @@ final class EfficiencyDiagnostics: ObservableObject {
              "observed_guest_ns": v.observed_guest_ns, "observed_media_ns": v.observed_media_ns,
              "clock_read_uncertainty_ns": v.uncertainty_ns, "phase": "unknown history occurrence; may precede observation"]
         }
-        return ["requested": s.requested, "plan_ids": ["M4", "M6", "M3"], "subsystem": "presentation_clock",
+        return ["requested": s.requested, "feedback_only_requested": s.feedback_only, "plan_ids": ["M4", "M6", "M3"], "subsystem": "presentation_clock",
             "present_calls_observed": s.presents, "nonzero_timing_requests": s.timing_requests, "mapped_requests": s.mapped,
             "expired_requests": s.expired, "far_future_requests": s.far_future, "invalid_clock_or_overflow": s.invalid_clock,
             "unsupported_chains": s.unsupported, "guest_feedback_data_calls": s.feedback_calls, "feedback_records": s.feedback_records,
@@ -444,10 +502,13 @@ final class EfficiencyDiagnostics: ObservableObject {
         observers.forEach { NotificationCenter.default.removeObserver($0) }; observers = []
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
-        stoppedReport = ["schema_version": 9, "metadata": metadata, "duration_seconds": now - origin,
-                         "summary": stats(total), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
+        stoppedReport = ["schema_version": 10, "metadata": metadata, "duration_seconds": now - origin,
+                         "summary": stats(total), "native_pipeline_archive": nativeArchiveReport(), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
+                         "battery_arithmetic_rate_pp_per_hour": battery.arithmeticRate.map { $0 as Any } ?? NSNull(),
+                         "battery_decrease_steps": battery.decreases,
+                         "battery_rate_display_policy": "Conservative: >=900 included battery-observation seconds and >=2 decreasing API transitions; still coarse, not electrical power",
                          "battery_included_sample_count": battery.sampleCount,
                          "battery_observed_drain_percentage_points": battery.drain,
                          "battery_first_included_fraction": battery.firstLevel.map { $0 as Any } ?? NSNull(),
@@ -561,6 +622,7 @@ struct EfficiencyDiagnosticsView: View {
     @ObservedObject private var monitor = EfficiencyDiagnostics.shared
     @Environment(\.dismiss) private var dismiss
     @State private var sharing = false
+    @State private var archiveSharing = false
     var body: some View {
         NavigationView {
             Form {
@@ -570,7 +632,7 @@ struct EfficiencyDiagnosticsView: View {
                     Text("Optional: samples completed game command buffers for 1 second every 10 seconds. Adds instrumentation; leave OFF for normal energy comparisons. No graphics change.")
                     Toggle("Sample CPU threads and submit work (Diagnostic)", isOn: $monitor.cpuThreadSampling).disabled(monitor.running || monitor.exporting)
                     Text("Optional thread CPU counters about every 10 seconds and caller CPU/wall time around submissions. Identifies CPU work, not core placement or watts. Adds overhead; OFF for clean energy comparisons.")
-                    Button("Start lightweight test") { monitor.start() }.disabled(monitor.running || monitor.exporting)
+                    Button("Start lightweight test") { monitor.start() }.disabled(monitor.running || monitor.exporting || monitor.nativePreparing)
                     Picker("Phase marker", selection: Binding(get: { monitor.phase }, set: { monitor.markPhase($0) })) {
                         ForEach(["Unmarked", "Loading", "Menu", "Gameplay", "First-use effect", "Repeated effect"], id: \.self) { Text($0).tag($0) }
                     }.disabled(!monitor.running)
@@ -581,16 +643,26 @@ struct EfficiencyDiagnosticsView: View {
                     Button("Share exported files") { sharing = true }.disabled(monitor.files.isEmpty)
                 } header: { Text("Performance & Efficiency Diagnostics") }
                 Section {
+                    Text(monitor.archiveMessage)
+                    Button("Inspect captured native pipelines") { monitor.inspectNativeArchive() }.disabled(monitor.nativePreparing)
+                    Button("Pause game and prepare captured pipelines") { monitor.prepareNativeArchive() }
+                        .disabled(monitor.running || monitor.exporting || monitor.nativePreparing)
+                    Button("Share preparation receipt") { archiveSharing = true }.disabled(monitor.archiveFiles.isEmpty || monitor.nativePreparing)
+                    Text("Archive mode must be enabled before launch. Only up to eight observed slow native requests are prepared. This costs CPU/time while the game pauses and cannot remove the same first-ever hitch. No power saving is assumed.")
+                } header: { Text("Native Pipeline Preparation · Experimental") }
+                Section {
                     Text("Return to gameplay after starting. This panel, background time and detached game views are excluded. Mark other interruptions explicitly. Tests remain in memory until stopped/exported; export before closing Husk.")
                     Text("Lightweight monitoring changes no graphics settings. Detailed Driver Profiling remains a separate option requiring restart; leave it off for energy comparisons.")
                     Text("CPU is process-scoped. Thermal state is not temperature. Sampled GPU timing is optional and may be unavailable. Electrical power requires external instrumentation. Monitoring overhead has not yet been measured on device.")
                 }
             }
             .navigationTitle("Efficiency Test")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.disabled(monitor.nativePreparing) } }
         }
-        .onAppear { monitor.panel(true) }.onDisappear { monitor.panel(false) }
+        .interactiveDismissDisabled(monitor.nativePreparing)
+        .onAppear { monitor.panel(true); monitor.inspectNativeArchive() }.onDisappear { monitor.panel(false) }
         .sheet(isPresented: $sharing) { EfficiencyShare(items: monitor.files) }
+        .sheet(isPresented: $archiveSharing) { EfficiencyShare(items: monitor.archiveFiles) }
     }
 }
 private struct EfficiencyShare: UIViewControllerRepresentable {

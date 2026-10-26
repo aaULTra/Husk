@@ -7,7 +7,7 @@
 #define TIMES 1000092000u
 _Static_assert(sizeof(tl_pt_info)==64&&offsetof(tl_pt_info,next)==8&&offsetof(tl_pt_info,count)==32,"VkPresentInfoKHR LP64 ABI");
 _Static_assert(sizeof(tl_pt_times)==32&&sizeof(tl_pt_time)==16&&sizeof(tl_pt_past)==40,"VK_GOOGLE_display_timing LP64 ABI");
-static atomic_bool requested,monitoring;
+static atomic_bool requested,monitoring,feedback_only;
 enum{PRESENTS,REQUESTS,MAPPED,EXPIRED,FUTURE,CLOCK_BAD,UNSUPPORTED,FEEDBACK_CALLS,FEEDBACK_ROWS,OVERWRITES,CONTENTION,COUNTERS};
 static atomic_uint_fast64_t counters[COUNTERS];
 static atomic_int_fast64_t latest_offset;
@@ -16,6 +16,8 @@ static pthread_mutex_t history_mu=PTHREAD_MUTEX_INITIALIZER;
 static tl_pt_record history[256];static uint32_t head,length;static uint64_t sequence;
 static void note(unsigned kind,uint64_t n){if(atomic_load_explicit(&monitoring,memory_order_relaxed))atomic_fetch_add_explicit(&counters[kind],n,memory_order_relaxed);}
 void husk_ue4_set_clock_presentation(bool value){atomic_store(&requested,value);}
+void husk_ue4_set_feedback_clock(bool value){atomic_store(&feedback_only,value);}
+bool tl_pt_feedback_requested(void){return atomic_load(&requested)||atomic_load(&feedback_only);}
 bool tl_pt_requested(void){return atomic_load_explicit(&requested,memory_order_relaxed);}
 bool tl_pt_monitoring(void){return atomic_load_explicit(&monitoring,memory_order_relaxed);}
 bool tl_pt_clock_valid(tl_pt_clock c){return c.guest_ns>0&&c.media_ns>0&&c.guest_ns<INT64_MAX&&c.media_ns<INT64_MAX&&c.uncertainty_ns<=1000000;}
@@ -85,7 +87,7 @@ static uint64_t to_guest(uint64_t value,tl_pt_clock c){
 }
 void tl_pt_feedback(tl_pt_past *rows,uint32_t count,tl_pt_clock c){
  note(FEEDBACK_CALLS,1);observe_clock(c);
- bool valid=tl_pt_clock_valid(c),convert=tl_pt_requested();
+ bool valid=tl_pt_clock_valid(c),convert=tl_pt_feedback_requested();
  if(!valid){note(CLOCK_BAD,1);return;}
  if(!rows)return;
  for(unsigned i=0;i<count;i++){
@@ -102,7 +104,7 @@ void tl_pt_feedback(tl_pt_past *rows,uint32_t count,tl_pt_clock c){
 }
 void tl_pt_snapshot(tl_pt_stats *out){
  if(!out)return;
- *out=(tl_pt_stats){.requested=tl_pt_requested(),.monitoring=atomic_load(&monitoring),
+ *out=(tl_pt_stats){.requested=tl_pt_requested(),.feedback_only=atomic_load(&feedback_only),.monitoring=atomic_load(&monitoring),
  .presents=atomic_load(&counters[PRESENTS]),.timing_requests=atomic_load(&counters[REQUESTS]),.mapped=atomic_load(&counters[MAPPED]),
  .expired=atomic_load(&counters[EXPIRED]),.far_future=atomic_load(&counters[FUTURE]),.invalid_clock=atomic_load(&counters[CLOCK_BAD]),
  .unsupported=atomic_load(&counters[UNSUPPORTED]),.feedback_calls=atomic_load(&counters[FEEDBACK_CALLS]),.feedback_records=atomic_load(&counters[FEEDBACK_ROWS]),

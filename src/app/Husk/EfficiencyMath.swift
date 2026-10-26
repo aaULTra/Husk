@@ -11,12 +11,13 @@ enum EfficiencyMath {
     struct Battery {
         private var anchor: (Double, Double)?
         private(set) var drain = 0.0, seconds = 0.0
-        private(set) var sampleCount = 0, increases = 0
+        private(set) var sampleCount = 0, increases = 0, decreases = 0
         private(set) var firstLevel: Double?, lastLevel: Double?
         var status: String {
             if seconds <= 0 { return "UNAVAILABLE: no valid included unplugged interval" }
             if increases > 0 { return "INCONCLUSIVE: reported level increased in unplugged samples" }
             if drain == 0 { return "UNRESOLVED: no reported battery decrease; not zero energy" }
+            if seconds < 900 || decreases < 2 { return "INSUFFICIENT: short/single-step battery observation; raw levels retained, no hourly projection" }
             return "ESTIMATED: coarse percentage-point drain; not measured power"
         }
         mutating func resetAnchor() { anchor = nil }
@@ -26,11 +27,12 @@ enum EfficiencyMath {
             if firstLevel == nil { firstLevel = level }; lastLevel = level
             if let (_, before) = anchor, level > before { increases += 1 }
             if let (at, before) = anchor, time > at, level <= before {
-                drain += (before - level) * 100; seconds += time - at
+                if level < before { decreases += 1 }; drain += (before - level) * 100; seconds += time - at
             }
             anchor = (time, level)
         }
-        var rate: Double? { seconds > 0 && drain > 0 && increases == 0 ? drain * 3600 / seconds : nil }
+        var arithmeticRate: Double? { seconds > 0 && drain > 0 && increases == 0 ? drain * 3600 / seconds : nil }
+        var rate: Double? { seconds >= 900 && decreases >= 2 ? arithmeticRate : nil }
     }
     static func eventFields(type: String, detail: String, recorded: Double, origin: Double) -> [String: Any] {
         var ids = ["M1", "MEAS-01"], subsystem = "monitor", outcome = "observed"
@@ -38,6 +40,7 @@ enum EfficiencyMath {
         else if detail.hasPrefix("ue4 cache") { ids = ["M2", "CACHE-01"]; subsystem = "cache" }
         else if detail.hasPrefix("thread-policy") { ids = ["M7", "WORK-01", "WORK-02"]; subsystem = "worker_policy" }
         else if detail.hasPrefix("ue4 timing") { ids = ["M4", "BUG-02"]; subsystem = "frame_pacing" }
+        else if detail.hasPrefix("[M2/M5 native-archive]") { ids = ["M2", "M5", "M3"]; subsystem = "native_pipeline_archive" }
         else if detail.hasPrefix("[M4/M6 present-clock]") { ids = ["M4", "M6", "M3"]; subsystem = "presentation_clock" }
         else if detail.hasPrefix("ue4 submission") { ids = ["M6", "SUBMIT-01"]; subsystem = "submission" }
         else if (detail.hasPrefix("vulkan: vkCreateSwapchain") || detail.hasPrefix("vulkan: sizing")) { ids = ["M6", "BASE-01"]; subsystem = "presentation" }

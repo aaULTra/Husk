@@ -13,11 +13,13 @@ typedef struct {tl_pt_info info;tl_pt_node nodes[16];tl_pt_time times[8];} tl_pt
 typedef struct {uint32_t id;uint64_t desired,actual,earliest,margin;} tl_pt_past;
 typedef struct {uint64_t sequence,raw_actual,guest_actual,desired,earliest,margin,observed_guest_ns,observed_media_ns,uncertainty_ns;uint32_t id;} tl_pt_record;
 typedef struct {
- bool requested,monitoring;
+ bool requested,monitoring,feedback_only;
  uint64_t presents,timing_requests,mapped,expired,far_future,invalid_clock,unsupported,feedback_calls,feedback_records,record_overwrites,record_contention;
  int64_t latest_offset_ns;uint64_t latest_uncertainty_ns;
 } tl_pt_stats;
 void husk_ue4_set_clock_presentation(bool enabled);
+void husk_ue4_set_feedback_clock(bool enabled);
+bool tl_pt_feedback_requested(void);
 bool tl_pt_requested(void);
 bool tl_pt_monitoring(void);
 bool tl_pt_clock_valid(tl_pt_clock clock);

@@ -22,6 +22,7 @@ class DriverProfileTests(unittest.TestCase):
 #include <stdarg.h>
 #include <stdio.h>
 #include "husk-tl-driver-profile.c"
+static void tl_npa_device(void *device){(void)device;}
 static char output[32768];
 static unsigned used, api_calls, event_count;
 static size_t reported_size;

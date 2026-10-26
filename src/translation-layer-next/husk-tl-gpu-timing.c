@@ -46,7 +46,7 @@ bool tl_gput_capture(double now, uint64_t queue, tl_gput_ticket *out) {
     }
     pthread_mutex_unlock(&mu);return ok;
 }
-void tl_gput_complete(tl_gput_ticket t,double start,double end,double completed,bool success){
+void tl_gput_complete_kind(tl_gput_ticket t,double start,double end,double completed,bool success,uint32_t kind){
     /* Completion handlers never wait for the consumer. A contended completion
      * is disclosed as lost; pending then conservatively includes unresolved work. */
     if(t.session!=atomic_load(&published_generation))return;
@@ -58,8 +58,9 @@ void tl_gput_complete(tl_gput_ticket t,double start,double end,double completed,
     else if(!isfinite(start)||!isfinite(end)||!isfinite(completed)||start<=0||end<=start||end>completed+0.05||start<t.begin-10){stats.invalid++;}
     else if(end<=t.begin||start>=t.end){stats.outside++;}
     else if(length==RECORDS){atomic_fetch_add(&dropped,1);}
-    else {records[(head+length++)%RECORDS]=(tl_gput_record){start,end,completed,t.begin,t.end,t.queue};stats.completed++;}
+    else {records[(head+length++)%RECORDS]=(tl_gput_record){start,end,completed,t.begin,t.end,t.queue,kind<=TL_GPUT_OTHER?kind:TL_GPUT_UNKNOWN};stats.completed++;}
     pthread_mutex_unlock(&mu);
 }
+void tl_gput_complete(tl_gput_ticket t,double start,double end,double completed,bool success){tl_gput_complete_kind(t,start,end,completed,success,TL_GPUT_UNKNOWN);}
 bool tl_gput_pop(tl_gput_record *out){pthread_mutex_lock(&mu);bool ok=length>0;if(ok){*out=records[head];head=(head+1)%RECORDS;length--;}pthread_mutex_unlock(&mu);return ok;}
 void tl_gput_snapshot(tl_gput_stats *out){pthread_mutex_lock(&mu);*out=stats;out->dropped=atomic_load(&dropped);pthread_mutex_unlock(&mu);}

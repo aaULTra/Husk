@@ -32,6 +32,7 @@
 #include "husk-tl-gpu-timing.h"
 #include "husk-tl-render-inventory.h"
 #include "husk-tl-spatial.h"
+#include "husk-tl-native-archive.h"
 #include "husk-tl-present-clock.h"
 
 void *tl_nwindow_native(void *window);
@@ -101,6 +102,7 @@ static void vk_load(void)
     /* GPU readback probes stall the queue. Opt in only when diagnosing a
      * blank image; normal gameplay never calls vkQueueWaitIdle for logging. */
     tl_log_line("[M4/M6 present-clock] selected %s; 50 ms future horizon, fresh clock brackets, passive guest feedback only; pacing/energy benefit unverified", tl_pt_requested()?"clock-correct experiment":"immediate baseline");
+    tl_log_line("[M4/M6 present-clock] feedback-only correction %s; immediate presentation retained when timed mode is off",tl_pt_feedback_requested()?"requested":"off");
     const char *probe = getenv("TL_VK_PROBE_FRAMES");
     V.probe_frames = probe && !strcmp(probe, "1");
     if (submission_mode == 1) setenv("MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", "0", 1);
@@ -126,6 +128,12 @@ static void vk_load(void)
         .merge = V.lib ? (void *)dlsym(V.lib, "vkMergePipelineCaches") : NULL,
         .destroy = V.lib ? (void *)dlsym(V.lib, "vkDestroyPipelineCache") : NULL
     });
+    tl_npa_set_api((tl_npa_api){
+        .configure=V.lib?(void*)dlsym(V.lib,"vkHuskArchiveConfigure"):NULL,
+        .snapshot=V.lib?(void*)dlsym(V.lib,"vkHuskArchiveSnapshot"):NULL,
+        .prepare=V.lib?(void*)dlsym(V.lib,"vkHuskArchivePrepare"):NULL,
+        .forget=V.lib?(void*)dlsym(V.lib,"vkHuskArchiveForget"):NULL
+    });
     V.gipa = V.lib ? (pfn_gipa)dlsym(V.lib, "vkGetInstanceProcAddr") : NULL;
     /* Stable first five fields of the versioned public MoltenVK configuration
      * ABI (verified against bundled 1.4.2). Short reads return VK_INCOMPLETE. */
@@ -140,6 +148,9 @@ static void vk_load(void)
     tl_log_line("vulkan: %s", V.gipa ? (V.have_path ? V.path : "MoltenVK linked into the process") : "MoltenVK not found");
 }
 static bool vk_ready(void) { pthread_once(&V.once, vk_load); return V.gipa != NULL; }
+void tl_vk_archive_configure(const char *project,const char *directory){
+    if(tl_npa_requested()&&vk_ready())tl_npa_configure(project,directory,tl_ue4_sharp_graphics_enabled());
+}
 bool tl_vk_available(void) { return V.have_path && vk_ready(); }
 void tl_vk_spatial_snapshot(tl_spatial_stats *out){
     if(!out)return;
@@ -686,6 +697,7 @@ static void w_vkDestroyPipelineCache(void *device, uint64_t cache, const void *a
 }
 static void w_vkDestroyDevice(void *device, const void *alloc)
 {
+    tl_npa_forget(device);
     tl_dp_forget(device);
     tl_pi_forget_device(device);
     tl_pf_forget_device(device);
@@ -829,8 +841,8 @@ static int w_vkGetPastPresentationTimingGOOGLE(void *device,uint64_t swap,uint32
     if(!real&&V.lib){real=(fn)dlsym(V.lib,"vkGetPastPresentationTimingGOOGLE");atomic_store(&cached,real);}
     if(!real)return -3;
     uint32_t capacity=count?*count:0;tl_pt_clock clock={0};
-    if(rows&&(tl_pt_requested()||tl_pt_monitoring()))clock=present_clock();
-    if(rows&&count&&tl_pt_requested()&&!tl_pt_clock_valid(clock)){
+    if(rows&&(tl_pt_feedback_requested()||tl_pt_monitoring()))clock=present_clock();
+    if(rows&&count&&tl_pt_feedback_requested()&&!tl_pt_clock_valid(clock)){
         /* Defer this query without consuming native history or exposing values
          * in the wrong domain after a preempted/invalid clock read. */
         int result=real(device,swap,count,NULL); /* non-draining query preserves native errors */
@@ -838,7 +850,7 @@ static int w_vkGetPastPresentationTimingGOOGLE(void *device,uint64_t swap,uint32
         tl_pt_feedback(NULL,0,clock);return result;
     }
     int result=real(device,swap,count,rows);
-    if(result>=0&&rows&&count&&(tl_pt_requested()||tl_pt_monitoring()))
+    if(result>=0&&rows&&count&&(tl_pt_feedback_requested()||tl_pt_monitoring()))
         tl_pt_feedback(rows,*count<capacity?*count:capacity,clock);
     return result;
 }
@@ -1159,6 +1171,7 @@ static int w_vkCreateDevice(void *pd, const vk_device_ci *ci, const void *alloc,
         int result = tl_pf_create_device(pd, ci, alloc, out, g_real_create_device, g_real_enum_dev_ext);
         if (result == VK_SUCCESS && out && *out) {
             tl_dp_device(*out);
+        tl_npa_device(*out);
             typedef void (*properties_fn)(void *, void *);
             properties_fn properties = V.lib ? (properties_fn)dlsym(V.lib, "vkGetPhysicalDeviceProperties") : NULL;
             if (properties) {
@@ -1211,6 +1224,7 @@ static int w_vkCreateDevice(void *pd, const vk_device_ci *ci, const void *alloc,
     tl_log_line("vulkan: vkCreateDevice(%u extensions) -> %d", ci->extCount, r);
     if (r == VK_SUCCESS && out && *out) {
         tl_dp_device(*out);
+        tl_npa_device(*out);
         make_null_buffer(pd, *out);
     }
     return r;

@@ -11,7 +11,7 @@ if [ ! -d "$SRC/.git" ]; then
 fi
 test "$(git -C "$SRC" rev-parse HEAD)" = "$PIN"
 # Clean only this dedicated disposable build tree to make reruns deterministic.
-git -C "$SRC" restore MoltenVK/MoltenVK/GPUObjects/MVKImage.h MoltenVK/MoltenVK/GPUObjects/MVKImage.mm MoltenVK/MoltenVK/GPUObjects/MVKSwapchain.h MoltenVK/MoltenVK/GPUObjects/MVKSwapchain.mm MoltenVK/MoltenVK.xcodeproj/project.pbxproj
+git -C "$SRC" restore MoltenVK/MoltenVK/GPUObjects/MVKPipeline.mm MoltenVK/MoltenVK/GPUObjects/MVKImage.h MoltenVK/MoltenVK/GPUObjects/MVKImage.mm MoltenVK/MoltenVK/GPUObjects/MVKSwapchain.h MoltenVK/MoltenVK/GPUObjects/MVKSwapchain.mm MoltenVK/MoltenVK.xcodeproj/project.pbxproj
 python3 "$HUSK_ROOT/scripts/prepare_spatial_driver.py" "$SRC"
 cd "$SRC"
 SPVC_REV="$(cat ExternalRevisions/SPIRV-Cross_repo_revision)"
@@ -41,6 +41,9 @@ cp "$SRC/HuskSpatialBuild.json" "$OUT/"
 nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialConfigure$'
 nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialSnapshot$'
 nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialObservations$'
+for symbol in Configure Snapshot Prepare Forget; do
+    nm -gU "$OUT/HuskMoltenVK" | grep -E "_vkHuskArchive${symbol}$"
+done
 test -s "$HUSK_ROOT/build/ios-arm64/lib/MoltenVK.framework/MoltenVK"
 echo "M9-SPATIAL separate driver built; original donor framework preserved"
 
