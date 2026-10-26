@@ -29,6 +29,15 @@ final class EfficiencyDiagnostics: ObservableObject {
     private var panelVisible = false
     @Published var phase = "Unmarked"
     @Published var gpuSampling = false
+    @Published var cpuThreadSampling = false
+    private var lastThreadAt = -10.0
+    private final class GPUWindow {
+        var intervals: [(Double, Double)] = []
+        var count = 0
+        var duration = 0.0
+    }
+    private var gpuWindows: [Double: GPUWindow] = [:]
+    private var gpuAggregateDrops = 0
     private var gpuRows: [[String: Any]] = []
     private var gpuExportDrops = 0
     private var attached: [String: Any] = [:]
@@ -59,7 +68,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     func start() {
         guard !running, !exporting else { return }
         samples = []; windows = []; events = []; exclusions = []; files = []; dropped = 0
-        gpuRows = []; gpuExportDrops = 0
+        gpuRows = []; gpuExportDrops = 0; gpuWindows = [:]; gpuAggregateDrops = 0; lastThreadAt = now - 10
         stoppedReport = nil; canExport = false; origin = now; windowAt = origin; lastCPUAt = origin; lastCPU = -1
         lastMemoryAt = origin - 10; lastBatteryAt = origin - 30; excludedAt = nil; excludedReason = ""; gpuExcludedStart = nil
         lastBattery = nil; battery = EfficiencyMath.Battery(); environment = [:]
@@ -91,7 +100,8 @@ final class EfficiencyDiagnostics: ObservableObject {
                     "build_date": Bundle.main.object(forInfoDictionaryKey: "HuskBuildDate") as? String ?? "UNAVAILABLE",
                     "launch_configuration": attached, "metal_capabilities": metalCapabilities,
                     "process_scope": "Husk/LiveContainer host process; not isolated guest-game utilisation"]
-        tl_em_start(); tl_gput_native_start(gpuSampling)
+        metadata["cpu_thread_sampling_requested"] = cpuThreadSampling
+        tl_em_start(); tl_em_cpu_work_enable(cpuThreadSampling); tl_gput_native_start(gpuSampling)
         // Bracket a host-clock read with media-clock reads. Raw values remain
         // authoritative; this mapping supports estimated host/GPU correlation.
         metadata["gpu_clock_alignment"] = gpuClockAlignment()
@@ -178,6 +188,13 @@ final class EfficiencyDiagnostics: ObservableObject {
     private func collectGPU() {
         var record = tl_gput_record()
         while tl_gput_pop(&record) {
+            if gpuWindows[record.sample_start] != nil || gpuWindows.count < 512 {
+                let window = gpuWindows[record.sample_start] ?? GPUWindow()
+                let lo = max(record.gpu_start, record.sample_start), hi = min(record.gpu_end, record.sample_end)
+                if hi > lo { window.intervals.append((lo, hi)) }
+                window.count += 1; window.duration += record.gpu_end - record.gpu_start
+                gpuWindows[record.sample_start] = window
+            } else { gpuAggregateDrops += 1 }
             if gpuRows.count >= 16384 { gpuExportDrops += 1; continue }
             gpuRows.append(["gpu_start_media_seconds": record.gpu_start, "gpu_end_media_seconds": record.gpu_end,
                             "completed_media_seconds": record.completed, "completion_after_gpu_end_seconds": max(0, record.completed - record.gpu_end),
@@ -185,6 +202,14 @@ final class EfficiencyDiagnostics: ObservableObject {
                             "queue_id": record.queue, "phase_at_collection": phase,
                             "recorded_t": now - origin, "plan_ids": ["M3", "GPU-01"],
                             "subsystem": "gpu_execution", "benefit_validation": "unverified"])
+        }
+    }
+    private func gpuWindowReport() -> [[String: Any]] {
+        gpuWindows.sorted { $0.key < $1.key }.map { start, w in
+            ["sample_start_media_seconds": start, "sample_end_media_seconds": start + 1,
+             "valid_records": w.count, "buffer_duration_sum_seconds": w.duration,
+             "sample_clipped_interval_union_seconds": EfficiencyMath.intervalUnion(w.intervals),
+             "scope": "All drained valid records in this bounded window, including those beyond raw export cap; partial coverage, overlapping buffer durations, not per-frame GPU or watts"]
         }
     }
     private func gpuReport() -> [String: Any] {
@@ -202,6 +227,9 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "observed_interval_union_seconds": EfficiencyMath.gpuIntervalUnion(gpuRows),
                 "scope": "Known MoltenVK game queues; factory-created buffers only; sample-bound clipped union is partial, not utilisation or per-frame GPU time",
                 "clock": "Metal GPU timestamps and sample bounds use media clock; report event t uses a separate monotonic origin",
+                "aggregate_records": gpuWindows.values.reduce(0) { $0 + $1.count },
+                "aggregate_window_count": gpuWindows.count, "dropped_aggregate_records": gpuAggregateDrops,
+                "all_window_sample_clipped_union_seconds": gpuWindows.values.reduce(0.0) { $0 + EfficiencyMath.intervalUnion($1.intervals) },
                 "overhead_validation": "pending", "plan_ids": ["M3", "GPU-01"]]
     }
     private func workerReport(includeObservations: Bool = true) -> [String: Any] {
@@ -226,6 +254,9 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "rollback_requests_since_launch": s.rollback_requests, "caps_applied_since_launch": s.caps_applied,
                 "restores_applied_since_launch": s.restores_applied, "query_failures_since_launch": s.query_failures,
                 "set_failures_since_launch": s.set_failures, "dropped_observations_since_launch": s.dropped_observations,
+                "relative_trial": s.relative_trial, "admission_baseline_fps": s.baseline_fps,
+                "admission_baseline_p95_ms": s.baseline_p95_ms,
+                "relative_guard_limits": "20s stable >=55 FPS / p95<=21.5ms; rollback >2% FPS loss or >0.5ms p95 growth, 6 >22ms frames, >50ms frame; unchanged thermal/pipeline guards",
                 "stable_seconds": s.stable_seconds, "cooldown_remaining_seconds": s.cooldown_remaining_seconds,
                 "waiting_reason": reason, "last_observed_workers": observations,
                 "scope": "Last self-checkpoint observations since activation; not live threads, core residency, effective QoS overrides or per-worker energy",
@@ -241,6 +272,23 @@ final class EfficiencyDiagnostics: ObservableObject {
         row["process_cpu_percent_one_core"] = EfficiencyMath.cpuPercent(
             previous: lastCPU, current: p.cpu_seconds, elapsed: t - lastCPUAt,
             included: excludedReason.isEmpty).map { $0 as Any } ?? NSNull()
+        if cpuThreadSampling && t - lastThreadAt >= 10 {
+            let threadReadStarted = now
+            var records = Array(repeating: tl_em_thread(), count: 128), details = tl_em_thread_stats()
+            let count = records.withUnsafeMutableBufferPointer { tl_em_thread_sample($0.baseAddress, UInt32($0.count), &details) }
+            let threads: [[String: Any]] = records.prefix(Int(count)).map { value in
+                var record = value
+                let name = withUnsafePointer(to: &record.name) { $0.withMemoryRebound(to: CChar.self, capacity: 64) { String(cString: $0) } }
+                return ["thread_id": record.identity, "name": name, "user_seconds": record.user_seconds,
+                        "system_seconds": record.system_seconds, "run_state": record.run_state]
+            }
+            row["cpu_threads"] = ["status": details.result == 0 ? "MEASURED: cumulative process-thread counters" : "UNAVAILABLE: thread enumeration failed",
+                "threads": threads, "enumerated": details.enumerated, "scanned": details.scanned,
+                "returned": details.returned, "failures": details.failures, "truncated": details.truncated,
+                "mach_result": details.result, "read_duration_seconds": now - threadReadStarted, "plan_ids": ["M3", "M7", "M8"],
+                "scope": "At most 128 returned / 256 scanned, about 10s; includes host threads, no P/E placement, electrical power or exited-thread accounting"]
+            lastThreadAt = t
+        }
         lastCPU = excludedReason.isEmpty ? p.cpu_seconds : -1; lastCPUAt = t
         if memory {
             row["footprint_bytes"] = p.footprint_bytes >= 0 ? p.footprint_bytes : NSNull()
@@ -318,6 +366,12 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "images_created": s.images_created, "encoded_calls": s.encoded, "failures": s.failures,
                 "texture_observations": textures, "patch": "M9-SPATIAL-v2", "energy_benefit": "UNVERIFIED"]
     }
+    private func submitCPUReport() -> [String: Any] {
+        var s = tl_em_work_stats(); tl_em_work_snapshot(&s)
+        return ["requested": cpuThreadSampling, "status": s.calls > 0 ? "MEASURED: caller-thread CPU during Vulkan submission" : "UNAVAILABLE: disabled/no valid calls",
+                "calls": s.calls, "thread_cpu_ns": s.cpu_ns, "wall_ns": s.wall_ns, "dropped_records": s.dropped,
+                "scope": "Sampled included submit calls; wall can wait/overlap, caller CPU excludes async encoding on other threads; no GPU time or power", "plan_ids": ["M3", "M6", "M8"]]
+    }
     private func pipelineFeedbackReport() -> [String: Any] {
         var s = tl_pf_stats(); tl_pf_snapshot(&s)
         return ["requested": s.requested, "active": s.active, "enabled_devices": s.enabled_devices,
@@ -361,8 +415,8 @@ final class EfficiencyDiagnostics: ObservableObject {
         observers.forEach { NotificationCenter.default.removeObserver($0) }; observers = []
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
-        stoppedReport = ["schema_version": 7, "metadata": metadata, "duration_seconds": now - origin,
-                         "summary": stats(total), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
+        stoppedReport = ["schema_version": 8, "metadata": metadata, "duration_seconds": now - origin,
+                         "summary": stats(total), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
                          "battery_included_sample_count": battery.sampleCount,
@@ -411,6 +465,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 let spatial = report["spatial_upscaling"] as? [String: Any] ?? [:]
                 let textures = spatial["texture_observations"] as? [String: Any] ?? [:]
                 let worker = report["worker_policy"] as? [String: Any] ?? [:]
+                let submitWork = report["submit_cpu_work"] as? [String: Any] ?? [:]
                 let gpu = report["gpu_sampling"] as? [String: Any] ?? [:]
                 let text = """
                 # Husk efficiency test
@@ -453,6 +508,8 @@ final class EfficiencyDiagnostics: ObservableObject {
                 GPU valid records / unresolved handlers: \(gpu["valid_records"] ?? 0) / \(gpu["unresolved_handlers_at_snapshot"] ?? 0)
                 Observed sample-clipped GPU interval union: \(gpu["observed_interval_union_seconds"] ?? 0) seconds (partial coverage; not utilisation)
                 GPU invalid/error/dropped/export losses: \(gpu["invalid_timestamps"] ?? 0) / \(gpu["command_buffer_errors"] ?? 0) / \(gpu["dropped_records_or_capture_attempts"] ?? 0) / \(gpu["dropped_export_records"] ?? 0)
+                CPU thread snapshots: \(rows.filter { $0["cpu_threads"] != nil }.count); submit CPU/wall ns: \(submitWork["thread_cpu_ns"] ?? 0) / \(submitWork["wall_ns"] ?? 0); \(submitWork["status"] ?? "UNAVAILABLE")
+                GPU aggregate windows/records/drops: \(gpu["aggregate_window_count"] ?? 0) / \(gpu["aggregate_records"] ?? 0) / \(gpu["dropped_aggregate_records"] ?? 0); raw cap losses remain explicit.
                 UNAVAILABLE: actual displayed frames, per-frame GPU attribution, peak footprint and aggregate cache-hit rate. Per-request driver feedback is exported only where available.
                 EXTERNAL: electrical power and numerical physical temperature. Thermal state is a classification.
                 No measured energy improvement. Monitoring overhead and device correctness need validation.
@@ -477,6 +534,8 @@ struct EfficiencyDiagnosticsView: View {
                     Text(monitor.message)
                     Toggle("Sample game GPU execution (Diagnostic)", isOn: $monitor.gpuSampling).disabled(monitor.running || monitor.exporting)
                     Text("Optional: samples completed game command buffers for 1 second every 10 seconds. Adds instrumentation; leave OFF for normal energy comparisons. No graphics change.")
+                    Toggle("Sample CPU threads and submit work (Diagnostic)", isOn: $monitor.cpuThreadSampling).disabled(monitor.running || monitor.exporting)
+                    Text("Optional thread CPU counters about every 10 seconds and caller CPU/wall time around submissions. Identifies CPU work, not core placement or watts. Adds overhead; OFF for clean energy comparisons.")
                     Button("Start lightweight test") { monitor.start() }.disabled(monitor.running || monitor.exporting)
                     Picker("Phase marker", selection: Binding(get: { monitor.phase }, set: { monitor.markPhase($0) })) {
                         ForEach(["Unmarked", "Loading", "Menu", "Gameplay", "First-use effect", "Repeated effect"], id: \.self) { Text($0).tag($0) }

@@ -267,7 +267,7 @@ void exercise_naming(int path, const char *name, int failure) {
             self.assertEqual((self.lib.current_qos(), self.lib.write_count()), (qos, 0))
 
     def test_default_and_observe_modes_do_not_change_qos(self):
-        for mode in (0, 1, -1, 4):
+        for mode in (0, 1, -1, 9):
             self.reset(mode=mode); self.name(b'TaskGraphBP 0')
             self.assertEqual((self.lib.current_qos(), self.lib.write_count()), (HIGH, 0))
         self.reset(mode=1); self.name(b'TaskGraphNP 0')
@@ -346,5 +346,46 @@ void exercise_naming(int path, const char *name, int failure) {
             self.reset()
             self.lib.exercise_naming(path, b'TaskGraphNP 0', 34)
             self.assertEqual((self.lib.current_qos(), self.lib.write_count()), (HIGH, 0))
+
+    def test_relative_trial_admits_current_cadence_and_caps_only_extra_workers(self):
+        self.reset(qos=NORMAL,mode=4);self.lib.husk_ue4_set_worker_capacity(10)
+        self.name(b'TaskGraphNP 2')
+        self.sample(10, fps=56, p95=20.9);self.sample(20, fps=56.5, p95=20.9)
+        self.assertTrue(self.lib.tl_thread_policy_trial_active());self.lib.tl_thread_policy_checkpoint()
+        self.assertEqual(self.lib.current_qos(),UTILITY)
+        self.name(b'TaskGraphNP 0');self.assertEqual(self.lib.current_qos(),NORMAL)
+        self.name(b'RenderThread');self.assertEqual(self.lib.current_qos(),NORMAL)
+
+    def test_relative_trial_fps_and_p95_regressions_restore_baseline(self):
+        for fps,p95 in [(54,20.9),(56,21.5)]:
+            self.reset(qos=NORMAL,mode=4);self.lib.husk_ue4_set_worker_capacity(10);self.name(b'TaskGraphNP 2')
+            self.sample(10,fps=56,p95=20.9);self.sample(20,fps=56,p95=20.9);self.lib.tl_thread_policy_checkpoint()
+            self.assertEqual(self.lib.current_qos(),UTILITY)
+            self.sample(30,fps=fps,p95=p95);self.assertFalse(self.lib.tl_thread_policy_trial_active())
+            self.lib.tl_thread_policy_checkpoint();self.assertEqual(self.lib.current_qos(),NORMAL)
+            self.sample(40,fps=56,p95=20.9);self.sample(50,fps=56,p95=20.9)
+            self.assertFalse(self.lib.tl_thread_policy_trial_active())
+
+    def test_relative_trial_rejects_unstable_baseline_low_power_and_pipeline_pressure(self):
+        self.reset(mode=4)
+        for i,fps in enumerate([55,58,55,58]):self.sample((i+1)*10,fps=fps,p95=20.9)
+        self.assertFalse(self.lib.tl_thread_policy_trial_active())
+        self.reset(mode=4);self.sample(10,fps=56,p95=20.9,low=True);self.sample(20,fps=56,p95=20.9,low=True)
+        self.assertFalse(self.lib.tl_thread_policy_trial_active())
+
+    def test_relative_trial_pipeline_thermal_and_pause_guards(self):
+        for options in [{'pipeline_max_ms':3},{'pipeline_ms':51},{'thermal':1},{'inflight':1},{'low':True}]:
+            self.reset(mode=4);self.sample(10,fps=56,p95=20.9);self.sample(20,fps=56,p95=20.9)
+            self.assertTrue(self.lib.tl_thread_policy_trial_active());self.sample(30,fps=56,p95=20.9,**options)
+            self.assertFalse(self.lib.tl_thread_policy_trial_active())
+        self.reset(mode=4);self.sample(10,fps=56,p95=20.9);self.sample(20,fps=56,p95=20.9)
+        self.lib.tl_thread_policy_suspend();self.assertFalse(self.lib.tl_thread_policy_trial_active())
+
+    def test_relative_fast_guard_accepts_existing_21ms_then_rejects_six_23ms(self):
+        self.reset(mode=4);self.sample(10,fps=56,p95=20.9);self.sample(20,fps=56,p95=20.9)
+        for i in range(12):self.lib.tl_thread_policy_frame(21000000000+i*21000000,21000000)
+        self.assertTrue(self.lib.tl_thread_policy_trial_active())
+        for i in range(6):self.lib.tl_thread_policy_frame(22000000000+i*23000000,23000000)
+        self.assertFalse(self.lib.tl_thread_policy_trial_active())
 
 if __name__ == '__main__': unittest.main()

@@ -11,6 +11,7 @@
 #include <mach/mach.h>
 #include <mach/task_info.h>
 #include <mach/mach_time.h>
+#include <mach/thread_info.h>
 #if TARGET_OS_IOS
 #include <os/proc.h>
 #endif
@@ -22,7 +23,9 @@
 typedef struct { tl_em_stats s; uint64_t bins[BINS]; } aggregate;
 static aggregate total_stats, window_stats;
 static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
-static atomic_bool enabled, frame_excluded;
+static atomic_bool enabled, frame_excluded,cpu_work_enabled;
+static tl_em_work_stats submit_work;
+static atomic_uint_fast64_t work_drops;
 static atomic_uint_fast64_t dropped_host, dropped_events, dropped_frames, lost_ns, lost_max;
 static atomic_uint_fast64_t session, epoch, guest_yields;
 /* Present producers never take the reporting mutex or build a histogram.
@@ -51,7 +54,7 @@ static bool enter(atomic_uint_fast64_t *loss) {
 }
 static void drain_frames(void);
 void tl_em_start(void) {
-    pthread_mutex_lock(&mu);
+    pthread_mutex_lock(&mu);memset(&submit_work,0,sizeof(submit_work));atomic_store(&work_drops,0);
     memset(&total_stats, 0, sizeof(total_stats)); memset(&window_stats, 0, sizeof(window_stats));
     head = length = 0; excluded = true;
     atomic_store(&enabled, false); atomic_fetch_add(&session, 1); atomic_fetch_add(&epoch, 1);
@@ -209,4 +212,48 @@ void tl_em_process_sample(bool memory, tl_em_process *out) {
 #endif
     }
 #endif
+}
+
+void tl_em_cpu_work_enable(bool value){atomic_store(&cpu_work_enabled,value);}
+static uint64_t cpu_work_clock(void){struct timespec t;if(clock_gettime(CLOCK_THREAD_CPUTIME_ID,&t))return 0;return(uint64_t)t.tv_sec*1000000000ULL+t.tv_nsec;}
+bool tl_em_work_begin(tl_em_work_ticket *out){
+ if(!out||!atomic_load_explicit(&cpu_work_enabled,memory_order_relaxed)||!atomic_load(&enabled)||atomic_load(&frame_excluded))return false;
+ *out=(tl_em_work_ticket){.session=atomic_load(&session),.epoch=atomic_load(&epoch),.cpu_ns=cpu_work_clock(),.wall_ns=(uint64_t)(tl_em_clock()*1e9)};
+ return out->cpu_ns!=0;
+}
+void tl_em_work_end(tl_em_work_ticket t){
+ uint64_t cpu=cpu_work_clock(),wall=(uint64_t)(tl_em_clock()*1e9);
+ if(pthread_mutex_trylock(&mu)){atomic_fetch_add(&work_drops,1);return;}
+ if(!atomic_load(&enabled)||atomic_load(&frame_excluded)||t.session!=atomic_load(&session)||t.epoch!=atomic_load(&epoch)||!t.cpu_ns||cpu<t.cpu_ns||wall<t.wall_ns)atomic_fetch_add(&work_drops,1);
+ else {submit_work.calls++;submit_work.cpu_ns+=cpu-t.cpu_ns;submit_work.wall_ns+=wall-t.wall_ns;}
+ pthread_mutex_unlock(&mu);
+}
+void tl_em_work_snapshot(tl_em_work_stats *out){if(!out)return;pthread_mutex_lock(&mu);*out=submit_work;out->dropped=atomic_load(&work_drops);pthread_mutex_unlock(&mu);}
+uint32_t tl_em_thread_sample(tl_em_thread *out,uint32_t capacity,tl_em_thread_stats *stats){
+ tl_em_thread_stats s={.result=-1};uint32_t returned=0;
+#ifdef __APPLE__
+ if(!out||!capacity){if(stats)*stats=s;return 0;}
+ thread_act_array_t threads=NULL;mach_msg_type_number_t count=0;
+ s.result=task_threads(mach_task_self(),&threads,&count);
+ if(s.result!=KERN_SUCCESS){if(stats)*stats=s;return 0;}
+ s.enumerated=count;s.scanned=count<256?count:256;s.truncated=count>s.scanned;
+ for(uint32_t i=0;i<count;i++){
+  if(i<s.scanned&&returned<capacity){
+   thread_basic_info_data_t info;thread_identifier_info_data_t identity;
+   mach_msg_type_number_t n=THREAD_BASIC_INFO_COUNT;int status=thread_info(threads[i],THREAD_BASIC_INFO,(thread_info_t)&info,&n);
+   n=THREAD_IDENTIFIER_INFO_COUNT;int id_status=thread_info(threads[i],THREAD_IDENTIFIER_INFO,(thread_info_t)&identity,&n);
+   if(status==KERN_SUCCESS&&id_status==KERN_SUCCESS){
+    tl_em_thread *row=&out[returned++];memset(row,0,sizeof(*row));row->identity=identity.thread_id;
+    row->user_seconds=info.user_time.seconds+info.user_time.microseconds/1e6;row->system_seconds=info.system_time.seconds+info.system_time.microseconds/1e6;row->run_state=info.run_state;
+    thread_extended_info_data_t ext;n=THREAD_EXTENDED_INFO_COUNT;
+    if(thread_info(threads[i],THREAD_EXTENDED_INFO,(thread_info_t)&ext,&n)==KERN_SUCCESS){memcpy(row->name,ext.pth_name,sizeof(row->name)-1);}
+   }else s.failures++;
+  }else if(i<s.scanned)s.truncated=true;
+  mach_port_deallocate(mach_task_self(),threads[i]);
+ }
+ vm_deallocate(mach_task_self(),(vm_address_t)threads,(vm_size_t)count*sizeof(*threads));
+#else
+ (void)out;(void)capacity;
+#endif
+ s.returned=returned;if(stats)*stats=s;return returned;
 }

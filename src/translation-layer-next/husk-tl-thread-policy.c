@@ -29,6 +29,9 @@ static int64_t stable_ns, cooldown_until, last_sample;
 static int previous_power = -1;
 static const char *last_reason;
 static int64_t reason_at;
+static double baseline_fps,baseline_p95,baseline_low,baseline_high;
+static bool trial_mode(int mode){return mode==3||mode==4;}
+static void reset_baseline(void){baseline_fps=baseline_p95=baseline_low=baseline_high=0;}
 
 #define WORKER_RECORDS 64
 static pthread_mutex_t observation_mu = PTHREAD_MUTEX_INITIALIZER;
@@ -75,10 +78,11 @@ void tl_thread_policy_summary(tl_worker_summary *out) {
     out->admissions=atomic_load(&admissions);out->rollback_requests=atomic_load(&rollbacks);
     out->caps_applied=atomic_load(&caps);out->restores_applied=atomic_load(&restores);
     out->query_failures=atomic_load(&query_failures);out->set_failures=atomic_load(&set_failures);
-    out->dropped_observations=atomic_load(&observation_drops);out->stable_seconds=stable_ns/1e9;
+    out->dropped_observations=atomic_load(&observation_drops);out->baseline_fps=baseline_fps;out->baseline_p95_ms=baseline_p95;out->relative_trial=out->active_mode==4;
+    out->stable_seconds=stable_ns/1e9;
     struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);double now=t.tv_sec+t.tv_nsec/1e9;
     out->cooldown_remaining_seconds=cooldown_until/1e9>now?cooldown_until/1e9-now:0;
-    const char *reason=out->active_mode!=3?"Adaptive not selected":out->trial_requested?"trial requested; check worker observations":last_reason?last_reason:"waiting for cadence sample";
+    const char *reason=!trial_mode(out->active_mode)?"Adaptive not selected":out->trial_requested?"trial requested; check worker observations":last_reason?last_reason:"waiting for cadence sample";
     snprintf(out->waiting_reason,sizeof(out->waiting_reason),"%s",reason);
     pthread_mutex_unlock(&controller_mu);
 }
@@ -102,16 +106,16 @@ static void set_trial(bool enabled, const char *reason)
 }
 void tl_thread_policy_suspend(void)
 {
-    if (atomic_load(&active_mode) != 3) return;
+    if (!trial_mode(atomic_load(&active_mode))) return;
     pthread_mutex_lock(&controller_mu);
-    set_trial(false, "pause or power/thermal change"); stable_ns = last_sample = 0; last_reason = NULL;
+    set_trial(false, "pause or power/thermal change"); stable_ns = last_sample = 0; reset_baseline(); last_reason = NULL;
     pthread_mutex_unlock(&controller_mu);
 }
 void tl_thread_policy_frame(int64_t now, int64_t interval_ns)
 {
     static _Thread_local unsigned misses;
-    if (atomic_load(&active_mode) != 3 || !atomic_load(&trial_active)) { misses = 0; return; }
-    if (interval_ns <= 20500000LL) { misses = 0; return; }
+    if (!trial_mode(atomic_load(&active_mode)) || !atomic_load(&trial_active)) { misses = 0; return; }
+    if (interval_ns <= (atomic_load(&active_mode)==4?22000000LL:20500000LL)) { misses = 0; return; }
     if (++misses < 6 && interval_ns <= 50000000LL) return;
     if (pthread_mutex_trylock(&controller_mu)) return;
     set_trial(false, "frame spike"); cooldown_until = now + 60000000000LL; stable_ns = 0; misses = 0;
@@ -119,7 +123,7 @@ void tl_thread_policy_frame(int64_t now, int64_t interval_ns)
 }
 void tl_thread_policy_pipeline_completed(int64_t now, int64_t elapsed_ns)
 {
-    if (elapsed_ns <= TL_WORKER_PIPELINE_MAX_NS || atomic_load(&active_mode) != 3 ||
+    if (elapsed_ns <= TL_WORKER_PIPELINE_MAX_NS || !trial_mode(atomic_load(&active_mode)) ||
         !atomic_load(&trial_active) || pthread_mutex_trylock(&controller_mu)) return;
     set_trial(false, "expensive pipeline call"); cooldown_until = now + 60000000000LL; stable_ns = 0;
     pthread_mutex_unlock(&controller_mu);
@@ -128,21 +132,33 @@ void tl_thread_policy_sample(int64_t now, int64_t span, double fps, double p95_m
                             double max_frame_ms, int thermal, bool low_power,
                             uint64_t pipeline_ns, uint64_t pipeline_max_ns, unsigned pipeline_inflight)
 {
-    if (atomic_load(&active_mode) != 3 || pthread_mutex_trylock(&controller_mu)) return;
+    if (!trial_mode(atomic_load(&active_mode)) || pthread_mutex_trylock(&controller_mu)) return;
     bool transition = previous_power >= 0 && previous_power != (int)low_power;
     previous_power = low_power;
     bool discontinuity = last_sample && (now <= last_sample || now - last_sample > 15000000000LL);
     last_sample = now;
     bool valid = span >= 8000000000LL && span <= 15000000000LL && !discontinuity;
+    bool relative=atomic_load(&active_mode)==4;
+    bool admitted=atomic_load(&trial_active);
+    double minimum_fps=relative?(admitted?baseline_fps*0.98:55.0):59.0;
+    double maximum_p95=relative?(admitted?baseline_p95+0.5:21.5):20.5;
     const char *reason = !valid ? "sample gap/loading" : transition ? "LPM transition" :
+        relative && low_power ? "low power mode" :
         thermal != 0 ? "thermal pressure" : pipeline_inflight ? "pipeline in flight" :
         pipeline_max_ns > TL_WORKER_PIPELINE_MAX_NS || pipeline_ns > (uint64_t)span / 200 ? "pipeline cost" :
-        !(fps >= 59.0 && p95_ms > 0 && p95_ms <= 20.5 && max_frame_ms > 0 && max_frame_ms <= 50) ? "frame cadence" : NULL;
+        !(fps >= minimum_fps && p95_ms > 0 && p95_ms <= maximum_p95 && max_frame_ms > 0 && max_frame_ms <= 50) ? "frame cadence" : NULL;
     /* Small measured pipeline work is allowed; cadence does not prove headroom. */
     bool healthy = !reason;
     if (atomic_load(&trial_active)) {
         if (!healthy) { set_trial(false, reason); cooldown_until = now + 60000000000LL; stable_ns = 0; }
     } else if (healthy && now >= cooldown_until) {
+        if(relative){
+            if(!stable_ns){baseline_low=baseline_high=fps;baseline_p95=p95_ms;}
+            else {if(fps<baseline_low)baseline_low=fps;if(fps>baseline_high)baseline_high=fps;}
+            if(baseline_high-baseline_low>2.0){stable_ns=0;baseline_low=baseline_high=fps;baseline_p95=p95_ms;}
+            if(p95_ms>baseline_p95)baseline_p95=p95_ms;
+            baseline_fps=baseline_low; /* Conservative observed reference, not spare-capacity evidence. */
+        }
         stable_ns += span;
         if (stable_ns >= 20000000000LL) { set_trial(true, "healthy cadence and bounded pipeline cost"); stable_ns = 0; }
     } else stable_ns = 0;
@@ -159,7 +175,7 @@ void tl_thread_policy_sample(int64_t now, int64_t span, double fps, double p95_m
 
 void husk_ue4_set_thread_policy(int mode)
 {
-    atomic_store(&requested_mode, mode >= 0 && mode <= 3 ? mode : 0);
+    atomic_store(&requested_mode, mode >= 0 && mode <= 4 ? mode : 0);
 }
 void tl_thread_policy_activate(const char *project)
 {
@@ -172,10 +188,10 @@ void tl_thread_policy_activate(const char *project)
     atomic_store(&log_events, 0);
     atomic_store(&trial_active, false); atomic_fetch_add(&revision, 1);
     stable_ns = cooldown_until = last_sample = 0; previous_power = -1;
-    last_reason = NULL; reason_at = 0;
-    if (mode == 3) tl_log_line("thread-policy adaptive: runtime CPU count %d, reserved normal-worker budget %d; total-capacity heuristic, not detected P/E topology", atomic_load(&capacity_cpus), atomic_load(&fast_workers));
+    last_reason = NULL; reason_at = 0; reset_baseline();
+    if (trial_mode(mode)) tl_log_line("thread-policy adaptive: runtime CPU count %d, reserved normal-worker budget %d; total-capacity heuristic, not detected P/E topology", atomic_load(&capacity_cpus), atomic_load(&fast_workers));
     if (mode) tl_log_line("thread-policy: %s for Dungeons; normal Default and background Utility baseline; extra caps only in admitted Adaptive trials; no core affinity",
-                         mode == 3 ? "Adaptive Trial (experimental)" : mode == 2 ? "Balanced (experimental)" : "Observe Only");
+                         mode == 4 ? "Baseline-Relative Trial (experimental)" : mode == 3 ? "Adaptive Trial (experimental)" : mode == 2 ? "Balanced (experimental)" : "Observe Only");
     pthread_mutex_unlock(&controller_mu);
 }
 
@@ -224,7 +240,7 @@ static int normal_index(const char *name)
 }
 void tl_thread_policy_checkpoint(void)
 {
-    if (atomic_load(&active_mode) != 3 || !state.name[0] || state.seen_revision == atomic_load(&revision)) return;
+    if (!trial_mode(atomic_load(&active_mode)) || !state.name[0] || state.seen_revision == atomic_load(&revision)) return;
     int saved_errno = errno;
     if (state.retry_after && policy_now() < state.retry_after) { errno = saved_errno; return; }
     tl_thread_policy_named(state.name);
@@ -264,13 +280,13 @@ void tl_thread_policy_named(const char *name)
     }
     int role = tl_thread_policy_role(name);
     qos_class_t cap = role == 1 ? QOS_CLASS_DEFAULT : QOS_CLASS_UTILITY;
-    if (mode == 3 && role == 1 && atomic_load(&trial_active)) {
+    if (trial_mode(mode) && role == 1 && atomic_load(&trial_active)) {
         int index = normal_index(name);
         if (index >= atomic_load(&fast_workers)) cap = QOS_CLASS_UTILITY;
     }
     /* Never raise a thread's original QoS. Restore before every reclassification
      * and stop if restoration failed, retaining that fact for a later retry. */
-    if (!result && (mode == 2 || mode == 3) && role && state.original != QOS_CLASS_UNSPECIFIED && state.original > cap) {
+    if (!result && (mode == 2 || trial_mode(mode)) && role && state.original != QOS_CLASS_UNSPECIFIED && state.original > cap) {
         result = pthread_set_qos_class_self_np(cap, state.relative);
         if (!result) { state.changed = true; atomic_fetch_add(&caps,1); }
         else atomic_fetch_add(&set_failures,1);

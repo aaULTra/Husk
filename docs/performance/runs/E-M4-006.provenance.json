@@ -1,0 +1,18 @@
+{
+  "A": {
+    "source_json": "1-diagnostics-3.json",
+    "raw_bytes": 10623578,
+    "raw_sha256": "4b539fa15715f2513e5b95145259b7fa4414d789d0356ecd4ab4347ca8cfbfb6",
+    "gzip_bytes": 625215,
+    "gzip_sha256": "bd73edff9b233b6eb2b457ead64013d70784217068c65e03e4fa1a84d79f4035",
+    "report_sha256": "e413b93824d1326b9dbf55c68e58be4f1661cf4507351d24dd7c74f29d459133"
+  },
+  "B": {
+    "source_json": "3-diagnostics-4.json",
+    "raw_bytes": 5808372,
+    "raw_sha256": "1000d0dca44ffb399fda54cde874f553d31d0e11fb17d190c09c8a44ac9d0cdb",
+    "gzip_bytes": 348303,
+    "gzip_sha256": "f9cb654ad2dc9071754c9242daa8cb2638c5b50f8ee491d5388379681a557b96",
+    "report_sha256": "f16e6762ca6b75e5e11cfdfcf5186e899d900edc6aa220de939c5ad527852431"
+  }
+}

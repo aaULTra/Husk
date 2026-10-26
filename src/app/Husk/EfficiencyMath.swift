@@ -62,7 +62,11 @@ enum EfficiencyMath {
                   start.isFinite, end.isFinite, lower.isFinite, upper.isFinite else { return nil }
             let a = max(start, lower), b = min(end, upper)
             return b > a ? (a, b) : nil
-        }.sorted { $0.0 < $1.0 }
+        }
+        return intervalUnion(intervals)
+    }
+    static func intervalUnion(_ input: [(Double, Double)]) -> Double {
+        let intervals = input.filter { $0.0.isFinite && $0.1.isFinite && $0.1 > $0.0 }.sorted { $0.0 < $1.0 }
         var total = 0.0, lastStart = 0.0, lastEnd = 0.0
         for (a, b) in intervals {
             if a > lastEnd { total += lastEnd - lastStart; lastStart = a; lastEnd = b }

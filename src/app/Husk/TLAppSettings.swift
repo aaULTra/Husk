@@ -105,7 +105,7 @@ struct TLAppSettings: Codable, Equatable {
     }
 
     enum WorkerScheduling: Int, Codable, CaseIterable, Identifiable {
-        case gameDefault = 0, observe = 1, balanced = 2, adaptive = 3
+        case gameDefault = 0, observe = 1, balanced = 2, adaptive = 3, relativeTrial = 4
         var id: Int { rawValue }
         var title: String {
             switch self {
@@ -113,6 +113,7 @@ struct TLAppSettings: Codable, Equatable {
             case .observe: return "Observe Only"
             case .balanced: return "Balanced (Experimental)"
             case .adaptive: return "Adaptive Trial (Experimental)"
+            case .relativeTrial: return "Baseline-Relative Trial (Experimental)"
             }
         }
     }
@@ -349,6 +350,9 @@ struct TLAppSettingsView: View {
                         .sheet(isPresented: $efficiencySheet) { EfficiencyDiagnosticsView() }
                     Picker("Worker Scheduling", selection: $settings.workerScheduling) {
                         ForEach(TLAppSettings.WorkerScheduling.allCases) { Text($0.title).tag($0) }
+                    }
+                    if settings.workerScheduling == .relativeTrial {
+                        Text("Measures starting cadence before trying extra Utility caps on selected normal workers. Preserves critical roles and a fast-worker budget; rolls back on pacing, pipeline or thermal pressure. No guaranteed efficiency-core placement or energy saving. Restart after changing.").font(.caption)
                     }
                     LabeledContent("Active Preset", value: settings.usesEfficientGraphics(for: app) ? "Sharp / Efficient" : (settings.usesSharpGraphics(for: app) ? "Sharp / High Quality" : "Game Default"))
                     if settings.usesEfficientGraphics(for: app) {

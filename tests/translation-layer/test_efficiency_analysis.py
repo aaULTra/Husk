@@ -55,5 +55,19 @@ class AnalysisTests(unittest.TestCase):
  def test_end_anchor_exposes_clock_offset_change_without_correcting_raw_rows(self):
   d={'metadata':{'monotonic_origin_seconds':1000,'gpu_clock_alignment':{'monotonic_anchor_seconds':1000,'media_anchor_seconds':100},'gpu_clock_alignment_end':{'monotonic_anchor_seconds':1100.01,'media_anchor_seconds':200}}}
   self.assertAlmostEqual(m.gpu_exclusion_audit(d)['clock_offset_change_seconds'],.01)
+ def test_new_paired_metalfx_exports_reconcile_and_preserve_energy_uncertainty(self):
+  for label in ['A','B']:
+   data=json.loads(gzip.decompress((ROOT/'docs/performance/runs'/f'E-M4-006{label}.diagnostics.json.gz').read_bytes()))
+   result=m.audit(data);self.assertEqual(result['errors'],[]);self.assertEqual(result['gpu']['exclusion_audit']['records_overlapping_exclusions'],0)
+   self.assertTrue(result['energy_benefit'].startswith('UNVERIFIED'))
+  self.assertGreater(data['render_inventory']['retained_area_groups'],1)
+ def test_thread_cpu_deltas_require_identity_and_included_boundaries(self):
+  def sample(t,cpu,excluded=False):return {'t':t,'excluded':excluded,'cpu_threads':{'mach_result':0,'threads':[{'thread_id':7,'name':'RHIThread','user_seconds':cpu,'system_seconds':0}]}}
+  data={'samples':[sample(0,1),sample(10,3),sample(20,5,True),sample(30,20),sample(40,21)]}
+  rows=m.thread_cpu_audit(data)['top_threads'];self.assertEqual(rows[0]['cpu_seconds'],3);self.assertEqual(rows[0]['observed_seconds'],20);self.assertEqual(rows[0]['cpu_percent_one_core'],15)
+ def test_gpu_aggregate_remains_checkable_after_raw_cap(self):
+  data={'schema_version':8,'gpu_sampling':{'valid_records':2,'dropped_export_records':1,'aggregate_records':2,'all_window_sample_clipped_union_seconds':.5},'gpu_records':[{}], 'gpu_windows':[{'valid_records':2,'sample_clipped_interval_union_seconds':.5}]}
+  result=m.audit(data);self.assertEqual(result['errors'],[])
+  data['gpu_windows'][0]['valid_records']=3;self.assertIn('GPU aggregate/valid record counts do not reconcile',m.audit(data)['errors'])
 if __name__=='__main__':unittest.main()
 

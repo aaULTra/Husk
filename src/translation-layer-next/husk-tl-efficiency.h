@@ -31,4 +31,14 @@ double tl_em_clock(void);
 /* Supported per-process Mach information. Invalid fields remain -1. */
 typedef struct { double cpu_seconds; int64_t footprint_bytes, peak_bytes, jetsam_bytes; } tl_em_process;
 void tl_em_process_sample(bool memory, tl_em_process *out);
+/* Optional process-thread attribution; direct counters, no core/power inference. */
+typedef struct {uint64_t identity;double user_seconds,system_seconds;int32_t run_state;char name[64];} tl_em_thread;
+typedef struct {uint32_t enumerated,scanned,returned,failures;int32_t result;bool truncated;} tl_em_thread_stats;
+uint32_t tl_em_thread_sample(tl_em_thread *out,uint32_t capacity,tl_em_thread_stats *stats);
+typedef struct {uint64_t session,epoch,cpu_ns,wall_ns;} tl_em_work_ticket;
+typedef struct {uint64_t calls,cpu_ns,wall_ns,dropped;} tl_em_work_stats;
+void tl_em_cpu_work_enable(bool enabled);
+bool tl_em_work_begin(tl_em_work_ticket *ticket);
+void tl_em_work_end(tl_em_work_ticket ticket);
+void tl_em_work_snapshot(tl_em_work_stats *out);
 #endif

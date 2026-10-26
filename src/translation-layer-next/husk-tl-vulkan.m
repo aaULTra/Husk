@@ -545,7 +545,9 @@ static int w_vkQueueSubmit(void *queue, uint32_t count, const void *submits, uin
     }
     bool measure = tl_ue4_sharp_graphics_enabled();
     int64_t start = measure ? monotonic_ns() : 0;
+    tl_em_work_ticket work;bool cpu_measure=tl_em_work_begin(&work);
     int result = real ? real(queue, count, submits, fence) : -3;
+    if(cpu_measure)tl_em_work_end(work);
     if (measure) record_host_timing(TIMING_SUBMIT, start);
     return result;
 }

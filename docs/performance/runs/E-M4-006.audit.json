@@ -1,0 +1,1025 @@
+{
+  "sessions": [
+    {
+      "analysis_version": 3,
+      "build": "70de1bb9f27d99fa168ba583a306f8579d5115b4-dirty",
+      "schema_version": 7,
+      "configuration": {
+        "cache": "existing compatible persistence; see runtime events",
+        "detailed_driver_profiling": false,
+        "driver": "bundled MoltenVK; verify runtime version in attempt log",
+        "efficient_graphics": true,
+        "engine": "ue4",
+        "engine_only_limiter": false,
+        "game": "Minecraft-Dungeons-v1.4-full-apkvision.apk",
+        "launch_height": 1600,
+        "launch_width": 2128,
+        "metalfx_input_percent": 80,
+        "metalfx_spatial_requested": true,
+        "pipeline_creation_feedback": false,
+        "pipeline_identification": false,
+        "render_target_inventory": true,
+        "requested_fps": 60,
+        "sharp_graphics": true,
+        "submission_mode": 0,
+        "windowed": false,
+        "worker_policy": 2
+      },
+      "errors": [],
+      "warnings": [
+        "GPU sampled coverage has losses or unresolved handlers",
+        "GPU raw export cap reached; use bounded aggregate windows when available, not raw totals as full-session coverage",
+        "Render inventory adds diagnostic observation work; not a monitoring-off energy comparison",
+        "Render inventory has lost observations; absent sizes are not evidence of absent render targets",
+        "Balanced run; additional Adaptive normal-worker caps were not requested"
+      ],
+      "host": {
+        "retained_fps": 55.62765969712106,
+        "p95_ms": 20.9,
+        "p99_ms": 21.2,
+        "worst_ms": 416.445,
+        "slow_pipeline_calls": 40,
+        "cpu_weighted_percent_one_core": 75.47078937404653
+      },
+      "gpu": {
+        "status": "MEASURED: sampled command-buffer GPU intervals; partial coverage",
+        "records": 16384,
+        "sample_clipped_interval_union_seconds": 30.442942875000767,
+        "exclusion_audit": {
+          "status": "ESTIMATED: conservative direct brackets / legacy anchor mapping; raw measurements preserved",
+          "direct_exclusion_count": 2,
+          "anchor_mapped_exclusion_count": 0,
+          "direct_boundary_uncertainty_seconds": 6.666664376098197e-07,
+          "clock_offset_change_seconds": -0.024080812499960302,
+          "included_interval_union_seconds_estimated": 30.442942875000767,
+          "records_overlapping_exclusions": 0,
+          "scope": "Partial sampled buffers, not GPU utilisation, per-frame cost or power"
+        },
+        "scope": "Partial sampled command buffers; not utilisation, displayed frames or watts",
+        "retained_window_comparison": {
+          "represented_windows": 73,
+          "common_relative_10_430_count": 43,
+          "mean_union_seconds_per_represented_1s_window": 0.41712267538763215,
+          "mean_buffer_sum_seconds_per_represented_window": 0.5607587374031138,
+          "scope": "Descriptive retained windows only; equal time offsets do not match gameplay; overlap/coverage/driver differences prevent energy conclusions"
+        }
+      },
+      "worker": {
+        "active_mode": 2,
+        "admissions": 0,
+        "rollbacks": 0,
+        "waiting_reason": "Adaptive not selected",
+        "normal_utility_last_observations": 0,
+        "core_residency": "UNAVAILABLE",
+        "scope": "Last observations, not live thread count or verified placement"
+      },
+      "thread_cpu": {
+        "status": "UNAVAILABLE: no paired included thread snapshots",
+        "top_threads": [],
+        "scope": "Only intersecting identities; host included; exited/missing threads absent, not P/E placement or electrical power"
+      },
+      "submit_cpu_work": {},
+      "gpu_windows": [],
+      "spatial_upscaling": {
+        "configured": true,
+        "driver_build": {
+          "default_enabled": false,
+          "feature": "M9-SPATIAL-v2",
+          "husk_spatial_patch_sha256": "7dfada085211e83ca1630ab8803f170f7caeb192ff4d85938fdf4f4d733b7e77",
+          "schema": 1,
+          "upstream_commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+          "upstream_version": "1.4.2"
+        },
+        "encoded_calls": 48920,
+        "energy_benefit": "UNVERIFIED",
+        "failures": 0,
+        "images_created": 3,
+        "input_height": 1280,
+        "input_width": 1696,
+        "live_images": 3,
+        "output_height": 1600,
+        "output_width": 2128,
+        "patch": "M9-SPATIAL-v2",
+        "plan_ids": [
+          "M9",
+          "M3"
+        ],
+        "scope": "MEASURED driver configuration/encode calls; successful encode is not proof of displayed quality or energy benefit",
+        "texture_observations": {
+          "color_processing_mode": 0,
+          "encode_validation_failures": 0,
+          "input_height": 1280,
+          "input_metal_format": 80,
+          "input_width": 1696,
+          "observed_images": 3,
+          "output_height": 1600,
+          "output_metal_format": 80,
+          "output_width": 2128,
+          "resource_preparation_failures": 0,
+          "scope": "Once per image; actual MetalFX boundary textures, not internal UE scene resolution, displayed pixels or perceptual quality",
+          "status": "MEASURED: actual texture properties at validated encode",
+          "unsupported_swapchains": 0
+        }
+      },
+      "pipeline_feedback_request": {
+        "active": false,
+        "appended_extension_devices": 0,
+        "benefit_validation": "unverified",
+        "declined_devices": 0,
+        "enabled_devices": 0,
+        "guest_enabled_devices": 0,
+        "injected_pipeline_infos": 0,
+        "passive_pipeline_infos": 0,
+        "plan_ids": [
+          "M2",
+          "CACHE-01"
+        ],
+        "requested": false,
+        "scope": "Optional supported driver feedback; stage shader-library hits differ from whole-pipeline hits; neither guarantees no Metal pipeline work",
+        "skipped_batches": 0,
+        "unsupported_devices": 0
+      },
+      "conditions": {
+        "brightness_values": [
+          1
+        ],
+        "battery_states": [
+          1
+        ]
+      },
+      "battery": {
+        "coarse_pp_per_hour": 64.2775246139364,
+        "status": "ESTIMATED: coarse percentage-point drain; not measured power",
+        "power_watts": null
+      },
+      "energy_benefit": "UNVERIFIED: needs controlled comparable measurements",
+      "gpu_retained_windows": [
+        {
+          "relative_sample_start": 10.0,
+          "records": 232,
+          "union_seconds": 0.6948701666659645,
+          "buffer_sum_seconds": 0.9640537499997208
+        },
+        {
+          "relative_sample_start": 20.0,
+          "records": 246,
+          "union_seconds": 0.3440187083335786,
+          "buffer_sum_seconds": 0.4370285000009062
+        },
+        {
+          "relative_sample_start": 30.0,
+          "records": 218,
+          "union_seconds": 0.5971414166665454,
+          "buffer_sum_seconds": 0.7747450833331868
+        },
+        {
+          "relative_sample_start": 40.0,
+          "records": 251,
+          "union_seconds": 0.36371870833340836,
+          "buffer_sum_seconds": 0.4487622083331644
+        },
+        {
+          "relative_sample_start": 50.0,
+          "records": 253,
+          "union_seconds": 0.3441585416663884,
+          "buffer_sum_seconds": 0.42296283333314477
+        },
+        {
+          "relative_sample_start": 60.0,
+          "records": 250,
+          "union_seconds": 0.35604462500009504,
+          "buffer_sum_seconds": 0.437765916666649
+        },
+        {
+          "relative_sample_start": 70.0,
+          "records": 247,
+          "union_seconds": 0.36061316666700804,
+          "buffer_sum_seconds": 0.4649049583330225
+        },
+        {
+          "relative_sample_start": 80.0,
+          "records": 188,
+          "union_seconds": 0.4200089999994816,
+          "buffer_sum_seconds": 0.5691883749999533
+        },
+        {
+          "relative_sample_start": 90.0,
+          "records": 254,
+          "union_seconds": 0.41584712499991383,
+          "buffer_sum_seconds": 0.5160418749989049
+        },
+        {
+          "relative_sample_start": 100.0,
+          "records": 245,
+          "union_seconds": 0.4088351250006781,
+          "buffer_sum_seconds": 0.6735776250009167
+        },
+        {
+          "relative_sample_start": 110.0,
+          "records": 225,
+          "union_seconds": 0.46548691666714603,
+          "buffer_sum_seconds": 0.663753166667334
+        },
+        {
+          "relative_sample_start": 120.0,
+          "records": 215,
+          "union_seconds": 0.39935258333298407,
+          "buffer_sum_seconds": 0.5402817500001902
+        },
+        {
+          "relative_sample_start": 130.0,
+          "records": 221,
+          "union_seconds": 0.40969591666669203,
+          "buffer_sum_seconds": 0.5670290833322724
+        },
+        {
+          "relative_sample_start": 140.0,
+          "records": 252,
+          "union_seconds": 0.3021611250002252,
+          "buffer_sum_seconds": 0.38276212500045403
+        },
+        {
+          "relative_sample_start": 150.0,
+          "records": 224,
+          "union_seconds": 0.4577057916665126,
+          "buffer_sum_seconds": 0.636737958332219
+        },
+        {
+          "relative_sample_start": 160.0,
+          "records": 224,
+          "union_seconds": 0.40873766666709344,
+          "buffer_sum_seconds": 0.5485573333330649
+        },
+        {
+          "relative_sample_start": 170.0,
+          "records": 245,
+          "union_seconds": 0.38719458333343937,
+          "buffer_sum_seconds": 0.5270897916672084
+        },
+        {
+          "relative_sample_start": 180.0,
+          "records": 232,
+          "union_seconds": 0.4751507083334445,
+          "buffer_sum_seconds": 0.6513615833334825
+        },
+        {
+          "relative_sample_start": 190.0,
+          "records": 250,
+          "union_seconds": 0.31396645833285675,
+          "buffer_sum_seconds": 0.4123123749999422
+        },
+        {
+          "relative_sample_start": 200.0,
+          "records": 228,
+          "union_seconds": 0.4404457916668889,
+          "buffer_sum_seconds": 0.607196541667463
+        },
+        {
+          "relative_sample_start": 210.0,
+          "records": 234,
+          "union_seconds": 0.5281455416678682,
+          "buffer_sum_seconds": 0.7252307500014012
+        },
+        {
+          "relative_sample_start": 220.0,
+          "records": 228,
+          "union_seconds": 0.39165916666695466,
+          "buffer_sum_seconds": 0.5244383750001589
+        },
+        {
+          "relative_sample_start": 230.0,
+          "records": 222,
+          "union_seconds": 0.460251124999445,
+          "buffer_sum_seconds": 0.6317709166660279
+        },
+        {
+          "relative_sample_start": 240.0,
+          "records": 221,
+          "union_seconds": 0.46052349999922626,
+          "buffer_sum_seconds": 0.6339162499984923
+        },
+        {
+          "relative_sample_start": 250.0,
+          "records": 223,
+          "union_seconds": 0.2985187916660834,
+          "buffer_sum_seconds": 0.41156583333236085
+        },
+        {
+          "relative_sample_start": 260.0,
+          "records": 209,
+          "union_seconds": 0.5369370833336689,
+          "buffer_sum_seconds": 0.7246501250000392
+        },
+        {
+          "relative_sample_start": 270.0,
+          "records": 219,
+          "union_seconds": 0.38126366666608646,
+          "buffer_sum_seconds": 0.49984845833296276
+        },
+        {
+          "relative_sample_start": 280.0,
+          "records": 227,
+          "union_seconds": 0.4705177083332046,
+          "buffer_sum_seconds": 0.6359975416659154
+        },
+        {
+          "relative_sample_start": 290.0,
+          "records": 225,
+          "union_seconds": 0.4505644999997003,
+          "buffer_sum_seconds": 0.6233243333336986
+        },
+        {
+          "relative_sample_start": 300.0,
+          "records": 243,
+          "union_seconds": 0.5266240416667642,
+          "buffer_sum_seconds": 0.5271196250005232
+        },
+        {
+          "relative_sample_start": 310.0,
+          "records": 232,
+          "union_seconds": 0.5110244583331678,
+          "buffer_sum_seconds": 0.6927238333331616
+        },
+        {
+          "relative_sample_start": 320.0,
+          "records": 226,
+          "union_seconds": 0.4010630000002493,
+          "buffer_sum_seconds": 0.5417529166677468
+        },
+        {
+          "relative_sample_start": 330.0,
+          "records": 224,
+          "union_seconds": 0.3835708750004869,
+          "buffer_sum_seconds": 0.521651583333778
+        },
+        {
+          "relative_sample_start": 340.0,
+          "records": 250,
+          "union_seconds": 0.3671297083351419,
+          "buffer_sum_seconds": 0.46982958333569513
+        },
+        {
+          "relative_sample_start": 350.0,
+          "records": 254,
+          "union_seconds": 0.3788190833313365,
+          "buffer_sum_seconds": 0.4758773333314821
+        },
+        {
+          "relative_sample_start": 360.0,
+          "records": 226,
+          "union_seconds": 0.37680583333417417,
+          "buffer_sum_seconds": 0.5338531250004053
+        },
+        {
+          "relative_sample_start": 370.0,
+          "records": 221,
+          "union_seconds": 0.45105949999992845,
+          "buffer_sum_seconds": 0.629340083333318
+        },
+        {
+          "relative_sample_start": 380.0,
+          "records": 220,
+          "union_seconds": 0.43502666666677214,
+          "buffer_sum_seconds": 0.5958326249997299
+        },
+        {
+          "relative_sample_start": 390.0,
+          "records": 218,
+          "union_seconds": 0.36431670833280805,
+          "buffer_sum_seconds": 0.5358107499985181
+        },
+        {
+          "relative_sample_start": 400.0,
+          "records": 205,
+          "union_seconds": 0.2860026666669455,
+          "buffer_sum_seconds": 0.3938401249997696
+        },
+        {
+          "relative_sample_start": 410.0,
+          "records": 203,
+          "union_seconds": 0.3351816666686318,
+          "buffer_sum_seconds": 0.46054329166872776
+        },
+        {
+          "relative_sample_start": 420.0,
+          "records": 206,
+          "union_seconds": 0.338696749999599,
+          "buffer_sum_seconds": 0.4744511666665403
+        },
+        {
+          "relative_sample_start": 430.0,
+          "records": 224,
+          "union_seconds": 0.43741887499959375,
+          "buffer_sum_seconds": 0.6031442500002413
+        },
+        {
+          "relative_sample_start": 440.0,
+          "records": 224,
+          "union_seconds": 0.4260542916670147,
+          "buffer_sum_seconds": 0.588711499998908
+        },
+        {
+          "relative_sample_start": 450.0,
+          "records": 232,
+          "union_seconds": 0.5156972916674931,
+          "buffer_sum_seconds": 0.7051317083328286
+        },
+        {
+          "relative_sample_start": 460.0,
+          "records": 230,
+          "union_seconds": 0.5286507083346805,
+          "buffer_sum_seconds": 0.7142128333364326
+        },
+        {
+          "relative_sample_start": 470.0,
+          "records": 225,
+          "union_seconds": 0.5232962083339316,
+          "buffer_sum_seconds": 0.7152819583332075
+        },
+        {
+          "relative_sample_start": 480.0,
+          "records": 218,
+          "union_seconds": 0.46240395833206094,
+          "buffer_sum_seconds": 0.6278734999982589
+        },
+        {
+          "relative_sample_start": 490.0,
+          "records": 208,
+          "union_seconds": 0.3457395416660347,
+          "buffer_sum_seconds": 0.4724254583327365
+        },
+        {
+          "relative_sample_start": 500.0,
+          "records": 251,
+          "union_seconds": 0.36206479166753525,
+          "buffer_sum_seconds": 0.47585929166666574
+        },
+        {
+          "relative_sample_start": 510.0,
+          "records": 205,
+          "union_seconds": 0.3775171666661663,
+          "buffer_sum_seconds": 0.5179552916658849
+        },
+        {
+          "relative_sample_start": 520.0,
+          "records": 184,
+          "union_seconds": 0.28908125000020846,
+          "buffer_sum_seconds": 0.3997607083333605
+        },
+        {
+          "relative_sample_start": 530.0,
+          "records": 219,
+          "union_seconds": 0.5828298749993337,
+          "buffer_sum_seconds": 0.8741873749995648
+        },
+        {
+          "relative_sample_start": 540.0,
+          "records": 220,
+          "union_seconds": 0.39516749999961576,
+          "buffer_sum_seconds": 0.5433927083327035
+        },
+        {
+          "relative_sample_start": 550.0,
+          "records": 228,
+          "union_seconds": 0.4823741666659771,
+          "buffer_sum_seconds": 0.6571482499998638
+        },
+        {
+          "relative_sample_start": 560.0,
+          "records": 228,
+          "union_seconds": 0.5158571249994566,
+          "buffer_sum_seconds": 0.704557124998928
+        },
+        {
+          "relative_sample_start": 570.0,
+          "records": 221,
+          "union_seconds": 0.46613716666684013,
+          "buffer_sum_seconds": 0.6401771666662626
+        },
+        {
+          "relative_sample_start": 580.0,
+          "records": 221,
+          "union_seconds": 0.46686116666637645,
+          "buffer_sum_seconds": 0.6269967499995346
+        },
+        {
+          "relative_sample_start": 590.0,
+          "records": 222,
+          "union_seconds": 0.5086542500007454,
+          "buffer_sum_seconds": 0.6975761666662947
+        },
+        {
+          "relative_sample_start": 600.0,
+          "records": 220,
+          "union_seconds": 0.4141584166673056,
+          "buffer_sum_seconds": 0.5546044166669617
+        },
+        {
+          "relative_sample_start": 610.0,
+          "records": 218,
+          "union_seconds": 0.5131135416661436,
+          "buffer_sum_seconds": 0.6982392916661411
+        },
+        {
+          "relative_sample_start": 620.0,
+          "records": 212,
+          "union_seconds": 0.3472245416676287,
+          "buffer_sum_seconds": 0.47349400000030073
+        },
+        {
+          "relative_sample_start": 630.0,
+          "records": 212,
+          "union_seconds": 0.35423970833403473,
+          "buffer_sum_seconds": 0.5027274583339931
+        },
+        {
+          "relative_sample_start": 640.0,
+          "records": 225,
+          "union_seconds": 0.45007820833302503,
+          "buffer_sum_seconds": 0.6414793750004719
+        },
+        {
+          "relative_sample_start": 650.0,
+          "records": 226,
+          "union_seconds": 0.3244409999997515,
+          "buffer_sum_seconds": 0.45866920833373115
+        },
+        {
+          "relative_sample_start": 660.0,
+          "records": 201,
+          "union_seconds": 0.29973229166671445,
+          "buffer_sum_seconds": 0.42902500000082
+        },
+        {
+          "relative_sample_start": 670.0,
+          "records": 221,
+          "union_seconds": 0.3701836666668896,
+          "buffer_sum_seconds": 0.5161315833331628
+        },
+        {
+          "relative_sample_start": 680.0,
+          "records": 224,
+          "union_seconds": 0.4976557499987848,
+          "buffer_sum_seconds": 0.697208749999163
+        },
+        {
+          "relative_sample_start": 690.0,
+          "records": 226,
+          "union_seconds": 0.3567726666656199,
+          "buffer_sum_seconds": 0.4959294166660584
+        },
+        {
+          "relative_sample_start": 700.0,
+          "records": 232,
+          "union_seconds": 0.4525842499997452,
+          "buffer_sum_seconds": 0.636577374999888
+        },
+        {
+          "relative_sample_start": 710.0,
+          "records": 208,
+          "union_seconds": 0.2834391250000863,
+          "buffer_sum_seconds": 0.4070377083335188
+        },
+        {
+          "relative_sample_start": 720.0,
+          "records": 220,
+          "union_seconds": 0.3620570833322745,
+          "buffer_sum_seconds": 0.5001571666664404
+        },
+        {
+          "relative_sample_start": 730.0,
+          "records": 143,
+          "union_seconds": 0.23260112500111063,
+          "buffer_sum_seconds": 0.3184992500007411
+        }
+      ]
+    },
+    {
+      "analysis_version": 3,
+      "build": "70de1bb9f27d99fa168ba583a306f8579d5115b4-dirty",
+      "schema_version": 7,
+      "configuration": {
+        "cache": "existing compatible persistence; see runtime events",
+        "detailed_driver_profiling": false,
+        "driver": "bundled MoltenVK; verify runtime version in attempt log",
+        "efficient_graphics": true,
+        "engine": "ue4",
+        "engine_only_limiter": false,
+        "game": "Minecraft-Dungeons-v1.4-full-apkvision.apk",
+        "launch_height": 1600,
+        "launch_width": 2128,
+        "metalfx_input_percent": 80,
+        "metalfx_spatial_requested": false,
+        "pipeline_creation_feedback": false,
+        "pipeline_identification": false,
+        "render_target_inventory": true,
+        "requested_fps": 60,
+        "sharp_graphics": true,
+        "submission_mode": 0,
+        "windowed": false,
+        "worker_policy": 2
+      },
+      "errors": [],
+      "warnings": [
+        "GPU sampled coverage has losses or unresolved handlers",
+        "Render inventory adds diagnostic observation work; not a monitoring-off energy comparison",
+        "Render inventory has lost observations; absent sizes are not evidence of absent render targets",
+        "Balanced run; additional Adaptive normal-worker caps were not requested"
+      ],
+      "host": {
+        "retained_fps": 56.4141549186075,
+        "p95_ms": 20.9,
+        "p99_ms": 21,
+        "worst_ms": 557.325,
+        "slow_pipeline_calls": 62,
+        "cpu_weighted_percent_one_core": 61.75820393145806
+      },
+      "gpu": {
+        "status": "MEASURED: sampled command-buffer GPU intervals; partial coverage",
+        "records": 8957,
+        "sample_clipped_interval_union_seconds": 18.984276000011505,
+        "exclusion_audit": {
+          "status": "ESTIMATED: conservative direct brackets / legacy anchor mapping; raw measurements preserved",
+          "direct_exclusion_count": 4,
+          "anchor_mapped_exclusion_count": 0,
+          "direct_boundary_uncertainty_seconds": 2.291666532983072e-06,
+          "clock_offset_change_seconds": -0.012114374998418498,
+          "included_interval_union_seconds_estimated": 18.984276000011505,
+          "records_overlapping_exclusions": 0,
+          "scope": "Partial sampled buffers, not GPU utilisation, per-frame cost or power"
+        },
+        "scope": "Partial sampled command buffers; not utilisation, displayed frames or watts",
+        "retained_window_comparison": {
+          "represented_windows": 44,
+          "common_relative_10_430_count": 43,
+          "mean_union_seconds_per_represented_1s_window": 0.4392170184111375,
+          "mean_buffer_sum_seconds_per_represented_window": 0.49889329941892313,
+          "scope": "Descriptive retained windows only; equal time offsets do not match gameplay; overlap/coverage/driver differences prevent energy conclusions"
+        }
+      },
+      "worker": {
+        "active_mode": 2,
+        "admissions": 0,
+        "rollbacks": 0,
+        "waiting_reason": "Adaptive not selected",
+        "normal_utility_last_observations": 0,
+        "core_residency": "UNAVAILABLE",
+        "scope": "Last observations, not live thread count or verified placement"
+      },
+      "thread_cpu": {
+        "status": "UNAVAILABLE: no paired included thread snapshots",
+        "top_threads": [],
+        "scope": "Only intersecting identities; host included; exited/missing threads absent, not P/E placement or electrical power"
+      },
+      "submit_cpu_work": {},
+      "gpu_windows": [],
+      "spatial_upscaling": {
+        "configured": false,
+        "driver_build": {
+          "default_enabled": false,
+          "feature": "M9-SPATIAL-v2",
+          "husk_spatial_patch_sha256": "7dfada085211e83ca1630ab8803f170f7caeb192ff4d85938fdf4f4d733b7e77",
+          "schema": 1,
+          "upstream_commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+          "upstream_version": "1.4.2"
+        },
+        "encoded_calls": 0,
+        "energy_benefit": "UNVERIFIED",
+        "failures": 0,
+        "images_created": 0,
+        "input_height": 0,
+        "input_width": 0,
+        "live_images": 0,
+        "output_height": 0,
+        "output_width": 0,
+        "patch": "M9-SPATIAL-v2",
+        "plan_ids": [
+          "M9",
+          "M3"
+        ],
+        "scope": "MEASURED driver configuration/encode calls; successful encode is not proof of displayed quality or energy benefit",
+        "texture_observations": {
+          "color_processing_mode": 0,
+          "encode_validation_failures": 0,
+          "input_height": 0,
+          "input_metal_format": 0,
+          "input_width": 0,
+          "observed_images": 0,
+          "output_height": 0,
+          "output_metal_format": 0,
+          "output_width": 0,
+          "resource_preparation_failures": 0,
+          "scope": "Once per image; actual MetalFX boundary textures, not internal UE scene resolution, displayed pixels or perceptual quality",
+          "status": "UNAVAILABLE: no actual texture observation",
+          "unsupported_swapchains": 0
+        }
+      },
+      "pipeline_feedback_request": {
+        "active": false,
+        "appended_extension_devices": 0,
+        "benefit_validation": "unverified",
+        "declined_devices": 0,
+        "enabled_devices": 0,
+        "guest_enabled_devices": 0,
+        "injected_pipeline_infos": 0,
+        "passive_pipeline_infos": 0,
+        "plan_ids": [
+          "M2",
+          "CACHE-01"
+        ],
+        "requested": false,
+        "scope": "Optional supported driver feedback; stage shader-library hits differ from whole-pipeline hits; neither guarantees no Metal pipeline work",
+        "skipped_batches": 0,
+        "unsupported_devices": 0
+      },
+      "conditions": {
+        "brightness_values": [
+          1
+        ],
+        "battery_states": [
+          1
+        ]
+      },
+      "battery": {
+        "coarse_pp_per_hour": null,
+        "status": "UNRESOLVED: no reported battery decrease; not zero energy",
+        "power_watts": null
+      },
+      "energy_benefit": "UNVERIFIED: needs controlled comparable measurements",
+      "gpu_retained_windows": [
+        {
+          "relative_sample_start": 10.0,
+          "records": 219,
+          "union_seconds": 0.5886621250001554,
+          "buffer_sum_seconds": 0.7574223750009423
+        },
+        {
+          "relative_sample_start": 20.0,
+          "records": 212,
+          "union_seconds": 0.7156087500009107,
+          "buffer_sum_seconds": 0.7541262916677169
+        },
+        {
+          "relative_sample_start": 30.0,
+          "records": 208,
+          "union_seconds": 0.5497046250011408,
+          "buffer_sum_seconds": 0.5862139166681573
+        },
+        {
+          "relative_sample_start": 40.0,
+          "records": 196,
+          "union_seconds": 0.6490411250001671,
+          "buffer_sum_seconds": 0.6548429583335746
+        },
+        {
+          "relative_sample_start": 50.0,
+          "records": 215,
+          "union_seconds": 0.771322791666762,
+          "buffer_sum_seconds": 0.9360513333338076
+        },
+        {
+          "relative_sample_start": 60.0,
+          "records": 209,
+          "union_seconds": 0.38970050000011724,
+          "buffer_sum_seconds": 0.4202540833348394
+        },
+        {
+          "relative_sample_start": 70.0,
+          "records": 214,
+          "union_seconds": 0.3181641249993845,
+          "buffer_sum_seconds": 0.3296060833326919
+        },
+        {
+          "relative_sample_start": 80.0,
+          "records": 200,
+          "union_seconds": 0.6811101666653485,
+          "buffer_sum_seconds": 0.806447874997275
+        },
+        {
+          "relative_sample_start": 90.0,
+          "records": 243,
+          "union_seconds": 0.37945862499918803,
+          "buffer_sum_seconds": 0.3898435416660959
+        },
+        {
+          "relative_sample_start": 100.0,
+          "records": 243,
+          "union_seconds": 0.3842583749994901,
+          "buffer_sum_seconds": 0.38603016666638723
+        },
+        {
+          "relative_sample_start": 110.0,
+          "records": 242,
+          "union_seconds": 0.3676454166663916,
+          "buffer_sum_seconds": 0.3703700833325456
+        },
+        {
+          "relative_sample_start": 120.0,
+          "records": 247,
+          "union_seconds": 0.39453004166830397,
+          "buffer_sum_seconds": 0.3968856666683678
+        },
+        {
+          "relative_sample_start": 130.0,
+          "records": 244,
+          "union_seconds": 0.3717705000008209,
+          "buffer_sum_seconds": 0.3746702500011452
+        },
+        {
+          "relative_sample_start": 140.0,
+          "records": 209,
+          "union_seconds": 0.6568462083318991,
+          "buffer_sum_seconds": 0.7058463749976909
+        },
+        {
+          "relative_sample_start": 150.0,
+          "records": 218,
+          "union_seconds": 0.4648876666678916,
+          "buffer_sum_seconds": 0.5047298750007485
+        },
+        {
+          "relative_sample_start": 160.0,
+          "records": 107,
+          "union_seconds": 0.25842670833299053,
+          "buffer_sum_seconds": 0.2900934999997844
+        },
+        {
+          "relative_sample_start": 170.0,
+          "records": 206,
+          "union_seconds": 0.3046205833345539,
+          "buffer_sum_seconds": 0.3059119583344909
+        },
+        {
+          "relative_sample_start": 180.0,
+          "records": 213,
+          "union_seconds": 0.4035221250005634,
+          "buffer_sum_seconds": 0.40352395833292576
+        },
+        {
+          "relative_sample_start": 190.0,
+          "records": 166,
+          "union_seconds": 0.2530922500009183,
+          "buffer_sum_seconds": 0.25926233333439086
+        },
+        {
+          "relative_sample_start": 200.0,
+          "records": 209,
+          "union_seconds": 0.41129945833222337,
+          "buffer_sum_seconds": 0.48008787499929895
+        },
+        {
+          "relative_sample_start": 210.0,
+          "records": 212,
+          "union_seconds": 0.4415740416666267,
+          "buffer_sum_seconds": 0.5311734166662063
+        },
+        {
+          "relative_sample_start": 220.0,
+          "records": 202,
+          "union_seconds": 0.3772157083312777,
+          "buffer_sum_seconds": 0.430199833333063
+        },
+        {
+          "relative_sample_start": 230.0,
+          "records": 164,
+          "union_seconds": 0.32637516666636657,
+          "buffer_sum_seconds": 0.3701386249999814
+        },
+        {
+          "relative_sample_start": 240.0,
+          "records": 198,
+          "union_seconds": 0.32286337499863293,
+          "buffer_sum_seconds": 0.38588020833321934
+        },
+        {
+          "relative_sample_start": 250.0,
+          "records": 186,
+          "union_seconds": 0.37177237499963667,
+          "buffer_sum_seconds": 0.4323636250001073
+        },
+        {
+          "relative_sample_start": 260.0,
+          "records": 187,
+          "union_seconds": 0.32341875000065556,
+          "buffer_sum_seconds": 0.37698062500066953
+        },
+        {
+          "relative_sample_start": 270.0,
+          "records": 202,
+          "union_seconds": 0.44893066666782033,
+          "buffer_sum_seconds": 0.5027440833350738
+        },
+        {
+          "relative_sample_start": 280.0,
+          "records": 212,
+          "union_seconds": 0.43021362499985116,
+          "buffer_sum_seconds": 0.5063022916660884
+        },
+        {
+          "relative_sample_start": 290.0,
+          "records": 208,
+          "union_seconds": 0.43125499999814565,
+          "buffer_sum_seconds": 0.5186628333308363
+        },
+        {
+          "relative_sample_start": 300.0,
+          "records": 219,
+          "union_seconds": 0.3251570833322148,
+          "buffer_sum_seconds": 0.3980605416641083
+        },
+        {
+          "relative_sample_start": 310.0,
+          "records": 201,
+          "union_seconds": 0.3563069999995605,
+          "buffer_sum_seconds": 0.43528037500027494
+        },
+        {
+          "relative_sample_start": 320.0,
+          "records": 208,
+          "union_seconds": 0.49917750000213346,
+          "buffer_sum_seconds": 0.5658531666690578
+        },
+        {
+          "relative_sample_start": 330.0,
+          "records": 203,
+          "union_seconds": 0.5238827916728042,
+          "buffer_sum_seconds": 0.6130632083390992
+        },
+        {
+          "relative_sample_start": 340.0,
+          "records": 209,
+          "union_seconds": 0.47626862500283096,
+          "buffer_sum_seconds": 0.5759040833345352
+        },
+        {
+          "relative_sample_start": 350.0,
+          "records": 201,
+          "union_seconds": 0.39937912499999584,
+          "buffer_sum_seconds": 0.49254216666713546
+        },
+        {
+          "relative_sample_start": 360.0,
+          "records": 215,
+          "union_seconds": 0.4101135416685793,
+          "buffer_sum_seconds": 0.5078239999988909
+        },
+        {
+          "relative_sample_start": 370.0,
+          "records": 229,
+          "union_seconds": 0.4216978333338375,
+          "buffer_sum_seconds": 0.5093400833357009
+        },
+        {
+          "relative_sample_start": 380.0,
+          "records": 204,
+          "union_seconds": 0.38945395833343355,
+          "buffer_sum_seconds": 0.4661585416656635
+        },
+        {
+          "relative_sample_start": 390.0,
+          "records": 203,
+          "union_seconds": 0.4862743749981746,
+          "buffer_sum_seconds": 0.5650923333319042
+        },
+        {
+          "relative_sample_start": 400.0,
+          "records": 215,
+          "union_seconds": 0.4487312499991276,
+          "buffer_sum_seconds": 0.5299977083332124
+        },
+        {
+          "relative_sample_start": 410.0,
+          "records": 202,
+          "union_seconds": 0.45480170833525335,
+          "buffer_sum_seconds": 0.5281752916694131
+        },
+        {
+          "relative_sample_start": 420.0,
+          "records": 203,
+          "union_seconds": 0.4496577916679598,
+          "buffer_sum_seconds": 0.5308056250005393
+        },
+        {
+          "relative_sample_start": 430.0,
+          "records": 220,
+          "union_seconds": 0.45813833333477305,
+          "buffer_sum_seconds": 0.5676487083360371
+        },
+        {
+          "relative_sample_start": 440.0,
+          "records": 34,
+          "union_seconds": 0.0979442083325921,
+          "buffer_sum_seconds": 0.13438999999925727
+        }
+      ]
+    }
+  ],
+  "comparison": {
+    "changed_fields": [
+      "configuration.metalfx_spatial_requested"
+    ],
+    "host_fps_difference": 0.7864952214864402,
+    "interpretation": "Descriptive only; scene, cache, temperature, display delivery and repeatability are not established by matching metadata",
+    "energy_improvement": "UNVERIFIED"
+  }
+}

@@ -18,6 +18,10 @@ class Stats(C.Structure):
 class Event(C.Structure):
     _fields_ = [('monotonic_seconds',C.c_double),('text',C.c_char*512)]
 
+class WorkTicket(C.Structure):
+    _fields_=[(x,C.c_uint64) for x in ['session','epoch','cpu_ns','wall_ns']]
+class WorkStats(C.Structure):
+    _fields_=[(x,C.c_uint64) for x in ['calls','cpu_ns','wall_ns','dropped']]
 class EfficiencyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -27,13 +31,15 @@ class EfficiencyTests(unittest.TestCase):
         lib=path.with_suffix('.so')
         subprocess.run([os.environ.get('CC','cc'),'-std=c11','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(TL),str(path),'-o',str(lib)],check=True)
         cls.lib=C.CDLL(str(lib))
+        cls.lib.tl_em_work_begin.argtypes=[C.POINTER(WorkTicket)];cls.lib.tl_em_work_begin.restype=C.c_bool
+        cls.lib.tl_em_work_end.argtypes=[WorkTicket];cls.lib.tl_em_work_snapshot.argtypes=[C.POINTER(WorkStats)]
         cls.lib.tl_em_frame.argtypes=[C.c_int64]
         cls.lib.tl_em_host.argtypes=[C.c_uint,C.c_uint64]
         cls.lib.tl_em_snapshot.argtypes=[C.c_bool,C.POINTER(Stats)]
         cls.lib.tl_em_pop.argtypes=[C.POINTER(Event)]; cls.lib.tl_em_pop.restype=C.c_bool
         cls.lib.tl_em_log.argtypes=[C.c_char_p]
     def setUp(self):
-        self.lib.tl_em_start(); self.lib.tl_em_exclude(False)
+        self.lib.tl_em_start(); self.lib.tl_em_exclude(False); self.lib.tl_em_cpu_work_enable(False)
     def tearDown(self): self.lib.tl_em_stop()
     def snapshot(self,total=True):
         s=Stats();self.lib.tl_em_snapshot(total,C.byref(s));return s
@@ -107,5 +113,17 @@ class EfficiencyTests(unittest.TestCase):
     def test_dimensions_survive_start_and_missing_data_has_no_samples(self):
         self.lib.tl_em_size(2128,1600);self.lib.tl_em_start()
         s=self.snapshot();self.assertEqual((s.width,s.height),(2128,1600));self.assertEqual(s.intervals,0)
+
+    def test_submit_cpu_work_is_opt_in_and_epoch_guarded(self):
+        ticket=WorkTicket();self.assertFalse(self.lib.tl_em_work_begin(C.byref(ticket)))
+        self.lib.tl_em_cpu_work_enable(True);self.assertTrue(self.lib.tl_em_work_begin(C.byref(ticket)))
+        sum(i*i for i in range(50000));self.lib.tl_em_work_end(ticket)
+        stats=WorkStats();self.lib.tl_em_work_snapshot(C.byref(stats))
+        self.assertEqual(stats.calls,1);self.assertGreater(stats.cpu_ns,0);self.assertGreater(stats.wall_ns,0)
+        self.assertTrue(self.lib.tl_em_work_begin(C.byref(ticket)))
+        self.lib.tl_em_exclude(True);self.lib.tl_em_exclude(False);self.lib.tl_em_work_end(ticket)
+        self.lib.tl_em_work_snapshot(C.byref(stats));self.assertEqual(stats.calls,1);self.assertEqual(stats.dropped,1)
+        self.lib.tl_em_start();self.lib.tl_em_work_end(ticket);self.lib.tl_em_work_snapshot(C.byref(stats))
+        self.assertEqual(stats.calls,0);self.assertEqual(stats.dropped,1)
 
 if __name__=='__main__':unittest.main()

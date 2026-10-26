@@ -3,7 +3,7 @@
 #define HUSK_TL_THREAD_POLICY_H
 #include <stdint.h>
 #include <stdbool.h>
-/* Configure before UE4 startup. 0=unchanged, 1=observe, 2=balanced caps, 3=adaptive trial.
+/* Configure before UE4 startup. 0=unchanged, 1=observe, 2=balanced caps, 3=strict adaptive, 4=baseline-relative trial.
  * Activation is restricted to the exact UE4 project Dungeons. */
 void husk_ue4_set_thread_policy(int mode);
 void tl_thread_policy_activate(const char *project);
@@ -35,7 +35,8 @@ typedef struct {
  uint32_t requested_mode, active_mode, revision, capacity_hint, fast_worker_budget;
  bool trial_requested;
  uint64_t admissions, rollback_requests, caps_applied, restores_applied, query_failures, set_failures, dropped_observations;
- double stable_seconds, cooldown_remaining_seconds;
+ double stable_seconds, cooldown_remaining_seconds,baseline_fps,baseline_p95_ms;
+ bool relative_trial;
  char waiting_reason[96];
 } tl_worker_summary;
 void tl_thread_policy_summary(tl_worker_summary *out);

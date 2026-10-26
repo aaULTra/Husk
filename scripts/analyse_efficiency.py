@@ -87,8 +87,39 @@ def gpu_exclusion_audit(data):
             'scope': 'Partial sampled buffers, not GPU utilisation, per-frame cost or power'}
 
 
+def thread_cpu_audit(data):
+    """Deltas only for matching thread identities in successive included snapshots."""
+    previous = None
+    costs = {}
+    for sample in data.get('samples', []):
+        if sample.get('excluded'):
+            previous = None
+            continue
+        snapshot = sample.get('cpu_threads', {})
+        if not snapshot or snapshot.get('mach_result') != 0:
+            continue
+        rows = {r['thread_id']: r for r in snapshot.get('threads', []) if 'thread_id' in r}
+        if previous:
+            before_t, before = previous
+            dt = sample['t'] - before_t
+            if dt > 0:
+                for key in rows.keys() & before.keys():
+                    r, old = rows[key], before[key]
+                    delta = r['user_seconds'] + r['system_seconds'] - old['user_seconds'] - old['system_seconds']
+                    if math.isfinite(delta) and delta >= 0:
+                        value = costs.setdefault(key, {'thread_id': key, 'name': r.get('name', ''), 'cpu_seconds': 0.0, 'observed_seconds': 0.0})
+                        value['cpu_seconds'] += delta
+                        value['observed_seconds'] += dt
+        previous = (sample['t'], rows)
+    rows = sorted(costs.values(), key=lambda r: r['cpu_seconds'], reverse=True)
+    for row in rows:
+        row['cpu_percent_one_core'] = row['cpu_seconds'] / row['observed_seconds'] * 100
+    return {'status': 'MEASURED cumulative counters / ESTIMATED per-thread deltas' if rows else 'UNAVAILABLE: no paired included thread snapshots',
+            'top_threads': rows[:16], 'scope': 'Only intersecting identities; host included; exited/missing threads absent, not P/E placement or electrical power'}
+
+
 def audit(data):
-    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7):
+    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8):
         raise ValueError('Unsupported diagnostic schema; preserve source for a version-aware audit')
     summary, metadata = data.get('summary', {}), data.get('metadata', {})
     windows, samples = data.get('windows', []), data.get('samples', [])
@@ -130,6 +161,16 @@ def audit(data):
     exclusion_audit = gpu_exclusion_audit(data)
     if exclusion_audit['records_overlapping_exclusions']:
         warnings.append('GPU records overlap exported exclusions at direct/estimated clock boundaries; use corrected analysis, not raw union, for included scope')
+    gpu_windows = data.get('gpu_windows', [])
+    if gpu_windows:
+        captured = sum(w.get('valid_records', 0) for w in gpu_windows)
+        if captured != gpu.get('aggregate_records') or captured + gpu.get('dropped_aggregate_records', 0) != gpu.get('valid_records'):
+            errors.append('GPU aggregate/valid record counts do not reconcile')
+        aggregate_union = sum(w.get('sample_clipped_interval_union_seconds', 0) for w in gpu_windows)
+        if not math.isclose(aggregate_union, gpu.get('all_window_sample_clipped_union_seconds', -1), rel_tol=1e-9, abs_tol=1e-9):
+            errors.append('GPU aggregate union does not reconcile')
+    if gpu.get('dropped_export_records', 0):
+        warnings.append('GPU raw export cap reached; use bounded aggregate windows when available, not raw totals as full-session coverage')
     inventory = data.get('render_inventory', {})
     if inventory.get('active'):
         warnings.append('Render inventory adds diagnostic observation work; not a monitoring-off energy comparison')
@@ -161,6 +202,8 @@ def audit(data):
                        'rollbacks': worker.get('rollback_requests_since_launch'), 'waiting_reason': worker.get('waiting_reason'),
                        'normal_utility_last_observations': len(utility), 'core_residency': 'UNAVAILABLE',
                        'scope': 'Last observations, not live thread count or verified placement'},
+            'thread_cpu': thread_cpu_audit(data), 'submit_cpu_work': data.get('submit_cpu_work', {}),
+            'gpu_windows': data.get('gpu_windows', []),
             'spatial_upscaling': data.get('spatial_upscaling', {}),
             'pipeline_feedback_request': data.get('pipeline_feedback_request', {}),
             'pipeline_groups_since_launch_top8': groups[:8], 'render_inventory': data.get('render_inventory', {}),

@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-26. Status: QUALITY-BATCH-2 IPA built with 169 passing checks; weighted roadmap 24.02% (~24%) after E-M4-005 review; direct texture/control/inventory/clock changes build-complete, new device and energy-benefit gates remain open.
+Updated: 2026-10-26. Status: E-M4-006 paired ON/OFF logs reviewed; no measured MetalFX energy win and sustained warmth remains. EFFICIENCY-BATCH-3 targets guarded worker treatment and CPU attribution; current weighted roadmap24.02%, all energy gates open.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -375,3 +375,12 @@ QUALITY-BATCH-2 delivery record: [source-specific handover and paired short devi
 
 
 QUALITY-BATCH-2 final validation: [Apple run 40291603363](https://github.com/aaULTra/Husk/actions/runs/40291603363) passed **169 checks**, separate pinned driver compilation and all three custom export checks, iOS app compilation and IPA packaging. [Download IPA artifact](https://github.com/aaULTra/Husk/actions/runs/40291603363/artifacts/12637221044); archive SHA256 `91b5c93cc48b590d979519608db9fc99210c86e9bae828115ed5990fafe71e0b`, expires 2026-11-02. Upstream MoltenVK 1.4.2 / `db66022459ffb663aa2b50f6b018bc2e124f5edf`; integration digest `7dfada085211e83ca1630ab8803f170f7caeb192ff4d85938fdf4f4d733b7e77`. Source and 21 changed files were verified against GitHub. Intermediate ac144ec4/run 40291412856 also passed, but use this final source/artifact with the report counter correction. Binary identity `70de1bb9f27d99fa168ba583a306f8579d5115b4-dirty`; staging/generation explains the honest suffix. No new physical/energy gate closes.
+
+
+### E-M4-006 -> EFFICIENCY-BATCH-3 — prioritise sustained work
+
+[Four-file paired review/provenance](docs/performance/runs/E-M4-006.md), [new fixed batch checklist](docs/performance/19-sustained-cpu-efficiency.md). User still notices warmth after >10minutes and requests larger outcome-focused progress. MetalFX ON55.628FPS/75.47% process CPU versus OFF56.414/61.76% under unequal scenes/durations; no causal saving/regression claim. Actual1696x1280->2128x1600 textures confirmed, useful resolution-dependent HDR/depth/area/pyramid commands now retained. No GPU errors, but long ON raw export caps at16384 and loses3398 later records. Direct media exclusions work; numerical power/temperature and energy benefit remain unmeasured.
+
+Priority: substantial M7/M3 sustained-CPU candidate, preserving strict Adaptive/Balanced/default resolution/driver/cache/60FPS/thermal safeguards. Add separate Baseline-Relative Trial with >=20s stable measured starting cadence, reserved fast/critical roles and explicit rollback/cooldown; opt-in thread CPU/submission caller CPU versus wall counters determine whether workers or translation work dominate. Bounded GPU window aggregates retain later-session summary after raw cap. Existing M4 engine-only and M6 async stay independent, not bundled or duplicated. [C1–C5/D1–D3/E1–E2](docs/performance/19-sustained-cpu-efficiency.md) distinguish coding from physical/energy acceptance.
+
+QUALITY-BATCH-2 device D2 passes narrowly for useful requested target/area inventory and direct GPU-clock exclusion export. Other increment/control/lifecycle and whole-M9 useful-scene/colour/lifetime/net-cost gates remain pending. No whole-plan gate/weight changes; score24.02%, M4-only26.69%, Duo0. Strict Adaptive-versus-Balanced energy, shader identity/cache reuse/prewarming, independent pacing, sizing/submission, translation/JNI/futex/driver research, dynamic resolution and separate Duo stay open.
