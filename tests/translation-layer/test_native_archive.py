@@ -16,7 +16,7 @@ class ArchiveHostTests(unittest.TestCase):
 #include <string.h>
 static int configs,forgets;static atomic_bool entered,leave;
 void tl_log_line(const char*f,...){(void)f;}
-static int configure(const tl_na_config*c){assert(c->version==1&&c->size==sizeof(*c)&&!strcmp(c->directory,"cache"));configs++;return 1;}
+static int configure(const tl_na_config*c){assert(c->version==TL_NATIVE_ARCHIVE_ABI&&c->size==sizeof(*c)&&!strcmp(c->directory,"cache"));configs++;return 1;}
 static int snapshot(tl_na_stats*s){s->requested=s->supported=1;s->pending=2;return 1;}
 static int prepare(void){atomic_store(&entered,true);while(!atomic_load(&leave)){}return 1;}
 static void forget(void){forgets++;}
@@ -87,6 +87,7 @@ static bool failArchive=false,failWrite=false,largeWrite=false,forgetDuringPrepa
 @property(copy) NSString *name;
 -(id)newBinaryArchiveWithDescriptor:(MTLBinaryArchiveDescriptor*)d error:(NSError**)e;
 -(void)newRenderPipelineStateWithDescriptor:(id)d completionHandler:(void(^)(id,NSError*))h;
+-(void)newRenderPipelineStateWithDescriptor:(id)d options:(MTLPipelineOption)o completionHandler:(void(^)(id,id,NSError*))h;
 -(void)newComputePipelineStateWithDescriptor:(id)d options:(MTLPipelineOption)o completionHandler:(void(^)(id,id,NSError*))h;
 @end
 @implementation Device
@@ -94,25 +95,28 @@ static bool failArchive=false,failWrite=false,largeWrite=false,forgetDuringPrepa
 -(void)newRenderPipelineStateWithDescriptor:(id)d completionHandler:(void(^)(id,NSError*))h{
  if(self.defer){self.defer=NO;id keep=[d retain];void(^copy)(id,NSError*)=[h copy];dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY,0),^{@autoreleasepool{[self newRenderPipelineStateWithDescriptor:keep completionHandler:copy];[keep release];[copy release];}});return;}
  compiledCalls++;bool attached=[[d binaryArchives]count]>0;if(attached)attachedCalls++;usleep(18000);if(attached&&failArchive){failArchive=false;h(nil,[NSError errorWithDomain:@"archive" code:9 userInfo:nil]);}else{h((id)@"state",nil);}}
--(void)newComputePipelineStateWithDescriptor:(id)d options:(MTLPipelineOption)o completionHandler:(void(^)(id,id,NSError*))h{assert(o==MTLPipelineOptionBufferTypeInfo);[self newRenderPipelineStateWithDescriptor:d completionHandler:^(id s,NSError*e){h(s,(id)@"reflection",e);}];}
+-(void)newRenderPipelineStateWithDescriptor:(id)d options:(MTLPipelineOption)o completionHandler:(void(^)(id,id,NSError*))h{assert(o==MTLPipelineOptionFailOnBinaryArchiveMiss);[self newRenderPipelineStateWithDescriptor:d completionHandler:^(id s,NSError*e){h(s,nil,e);}];}
+-(void)newComputePipelineStateWithDescriptor:(id)d options:(MTLPipelineOption)o completionHandler:(void(^)(id,id,NSError*))h{assert((o&~MTLPipelineOptionFailOnBinaryArchiveMiss)==MTLPipelineOptionBufferTypeInfo);[self newRenderPipelineStateWithDescriptor:d completionHandler:^(id s,NSError*e){h(s,(id)@"reflection",e);}];}
 -(void)dealloc{[_name release];[super dealloc];}
 @end
 int main(int argc,char**argv){assert(argc==2);@autoreleasepool{
  Device*device=[Device new];device.name=@"test";device.registryID=42;
- tl_na_config c={1,sizeof(c),2,0,argv[1]};assert(!vkHuskArchiveConfigure(&c));c.enabled=0;assert(vkHuskArchiveConfigure(&c));
+ tl_na_config c={TL_NATIVE_ARCHIVE_ABI,sizeof(c),2,0,argv[1]};assert(!vkHuskArchiveConfigure(&c));c.enabled=0;assert(vkHuskArchiveConfigure(&c));
  Descriptor*d=[Descriptor new];unsigned completions=0;__block unsigned complete=0;
  huskArchiveNewRender((id<MTLDevice>)device,(MTLRenderPipelineDescriptor*)d,^(id s,NSError*e){assert(s&&!e);complete++;});assert(complete==1&&huskArchivePending.empty());
  c.enabled=1;assert(vkHuskArchiveConfigure(&c));
  huskArchiveNewRender((id<MTLDevice>)device,(MTLRenderPipelineDescriptor*)d,^(id s,NSError*e){assert(s&&!e);complete++;});
- tl_na_stats stats={1,sizeof(stats)};assert(vkHuskArchiveSnapshot(&stats)&&stats.supported&&stats.pending==1&&!stats.restored_bytes);
+ tl_na_stats stats={TL_NATIVE_ARCHIVE_ABI,sizeof(stats)};assert(vkHuskArchiveSnapshot(&stats)&&stats.supported&&stats.pending==1&&!stats.restored_bytes);
  [d release];assert(huskArchivePending.size()==1);assert(vkHuskArchivePrepare()==1&&preparedCalls==1);
  assert(vkHuskArchiveSnapshot(&stats)&&stats.saved_bytes&&stats.prepared==1&&!stats.pending);
- d=[Descriptor new];failArchive=true;completions=complete;
+ d=[Descriptor new];huskArchiveVerify.store(true);huskArchiveStats.verification_requested=1;failArchive=true;completions=complete;
  huskArchiveNewRender((id<MTLDevice>)device,(MTLRenderPipelineDescriptor*)d,^(id s,NSError*e){assert(s&&!e);complete++;});
  assert(complete==completions+1&&attachedCalls==1&&stats.archive_fallbacks==0);assert(vkHuskArchiveSnapshot(&stats)&&stats.archive_fallbacks==1);
+ assert(vkHuskArchiveSnapshot(&stats)&&stats.verification_attempts==1&&stats.verification_failures==1&&!stats.archive_requirement_satisfied&&stats.last_verification_error_code==9);
  assert(!d.binaryArchives); // caller's descriptor is immutable
  huskArchiveNewCompute((id<MTLDevice>)device,(MTLComputePipelineDescriptor*)d,MTLPipelineOptionBufferTypeInfo,^(id s,id r,NSError*e){assert(s&&r&&!e);complete++;});
- for(unsigned i=0;i<12;i++)huskArchiveCapture((id<MTLDevice>)device,d,false,20000000,true);
+ assert(vkHuskArchiveSnapshot(&stats)&&stats.verification_attempts==2&&stats.archive_requirement_satisfied==1);
+ for(unsigned i=0;i<12;i++)huskArchiveCapture((id<MTLDevice>)device,d,false,20000000,true,huskArchiveGeneration);
  assert(vkHuskArchiveSnapshot(&stats)&&stats.pending==8&&stats.descriptors_dropped>0);
  NSString *path=[huskArchivePath copy];NSString *directory=[path stringByDeletingLastPathComponent];
  for(unsigned i=0;i<6;i++){NSString *old=[directory stringByAppendingPathComponent:[NSString stringWithFormat:@"native-%016llx.metalarc",(unsigned long long)i]];assert([@"old" writeToFile:old atomically:YES encoding:NSUTF8StringEncoding error:NULL]);}
@@ -120,8 +124,8 @@ int main(int argc,char**argv){assert(argc==2);@autoreleasepool{
  huskArchivePrune(directory,path);assert([[NSFileManager defaultManager]fileExistsAtPath:unrelated]);assert(vkHuskArchiveSnapshot(&stats)&&stats.evicted_files>=3);
  NSData*before=[NSData dataWithContentsOfFile:path];
  failWrite=true;assert(vkHuskArchivePrepare()==-1);assert([[NSData dataWithContentsOfFile:path]isEqual:before]);failWrite=false;
- huskArchiveCapture((id<MTLDevice>)device,d,false,20000000,true);largeWrite=true;assert(vkHuskArchivePrepare()==-1);largeWrite=false;assert([[NSData dataWithContentsOfFile:path]isEqual:before]);
- huskArchiveCapture((id<MTLDevice>)device,d,false,20000000,true);unsigned long long oldWriteFailures=huskArchiveStats.write_failures;
+ huskArchiveCapture((id<MTLDevice>)device,d,false,20000000,true,huskArchiveGeneration);largeWrite=true;assert(vkHuskArchivePrepare()==-1);largeWrite=false;assert([[NSData dataWithContentsOfFile:path]isEqual:before]);
+ huskArchiveCapture((id<MTLDevice>)device,d,false,20000000,true,huskArchiveGeneration);unsigned long long oldWriteFailures=huskArchiveStats.write_failures;
  forgetDuringPrepare=true;assert(vkHuskArchivePrepare()==1);assert(!huskArchiveRead&&!huskArchiveDevice&&!huskArchiveEnabled.load());
  assert(vkHuskArchiveSnapshot(&stats)&&stats.saved_bytes&&stats.write_failures==oldWriteFailures); // teardown is not a failed disk write
  assert(vkHuskArchiveConfigure(&c));

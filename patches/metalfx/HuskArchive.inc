@@ -18,12 +18,12 @@
 #define HUSK_ARCHIVE_PATCH_ID "unidentified-patch"
 #endif
 static std::mutex huskArchiveLock;
-static tl_na_stats huskArchiveStats={1,sizeof(tl_na_stats)};
+static tl_na_stats huskArchiveStats={TL_NATIVE_ARCHIVE_ABI,sizeof(tl_na_stats)};
 static NSString *huskArchiveDirectory=nil,*huskArchivePath=nil;
 static id<MTLDevice> huskArchiveDevice=nil;
 static id<MTLBinaryArchive> huskArchiveRead=nil;
 static bool huskArchiveConfigured=false;
-static std::atomic<bool> huskArchiveEnabled{false};
+static std::atomic<bool> huskArchiveEnabled{false},huskArchiveVerify{false};
 static uint64_t huskArchiveGeneration=0;
 struct HuskArchiveCandidate {
  id descriptor=nil;bool compute=false;
@@ -89,28 +89,30 @@ static bool huskArchiveBind(id<MTLDevice> device){
  huskArchiveStats.supported=probe!=nil;[probe release];if(!huskArchiveStats.supported)huskArchiveEnabled.store(false);return huskArchiveStats.supported;
 }
 extern "C" __attribute__((visibility("default"))) int vkHuskArchiveConfigure(const tl_na_config *c){
- if(!c||c->version!=1||c->size!=sizeof(*c)||c->reserved||c->enabled>1)return 0;
+ if(!c||c->version!=TL_NATIVE_ARCHIVE_ABI||c->size!=sizeof(*c)||(c->flags&~TL_NA_VERIFY_REQUIREMENT)||c->enabled>1)return 0;
  std::lock_guard<std::mutex> guard(huskArchiveLock);
  if(huskArchiveDevice||huskArchiveStats.preparing)return 0; // launch-only configuration
  if(c->enabled&&(!c->directory||!c->directory[0]||strlen(c->directory)>900))return 0;
- huskArchiveStats=(tl_na_stats){1,sizeof(tl_na_stats)};huskArchiveGeneration++;
+ huskArchiveStats=(tl_na_stats){TL_NATIVE_ARCHIVE_ABI,sizeof(tl_na_stats)};huskArchiveGeneration++;
  [huskArchiveDirectory release];huskArchiveDirectory=c->enabled?[[NSString stringWithUTF8String:c->directory] copy]:nil;
  huskArchiveConfigured=c->enabled&&huskArchiveDirectory;
+ huskArchiveStats.verification_requested=!!(c->flags&TL_NA_VERIFY_REQUIREMENT);huskArchiveVerify.store(huskArchiveStats.verification_requested);
  huskArchiveStats.requested=c->enabled;huskArchiveEnabled.store(huskArchiveConfigured);return !c->enabled||huskArchiveConfigured;
 }
 // The descriptor copy is owned until the async Metal compiler has accepted it.
-static id huskArchiveDescriptor(id<MTLDevice> device,id descriptor){
+static id huskArchiveDescriptor(id<MTLDevice> device,id descriptor,uint64_t *generation){
  if(!descriptor)return nil;
  std::lock_guard<std::mutex> guard(huskArchiveLock);
- if(!huskArchiveBind(device)||!huskArchiveRead)return [descriptor retain];
+ bool bound=huskArchiveBind(device);*generation=huskArchiveGeneration;
+ if(!bound||!huskArchiveRead)return [descriptor retain];
  id copy=[descriptor copy];
  if(copy){[copy setBinaryArchives:@[huskArchiveRead]];huskArchiveStats.archive_attachments++;}
  return copy?:[descriptor retain];
 }
-static void huskArchiveCapture(id<MTLDevice> device,id descriptor,bool compute,uint64_t elapsed,bool success){
+static void huskArchiveCapture(id<MTLDevice> device,id descriptor,bool compute,uint64_t elapsed,bool success,uint64_t generation){
  if(!success||elapsed<16666667ULL||!descriptor)return;
  std::lock_guard<std::mutex> guard(huskArchiveLock);
- if(!huskArchiveBind(device))return;
+ if(generation!=huskArchiveGeneration||!huskArchiveBind(device))return;
  if(huskArchiveStats.preparing||huskArchivePending.size()>=8){huskArchiveStats.descriptors_dropped++;return;}
  // Native descriptor copies retain Metal functions/resources, not guest handles.
  id copy=[descriptor copy];if(!copy){huskArchiveStats.descriptors_dropped++;return;}
@@ -120,7 +122,7 @@ static void huskArchiveCapture(id<MTLDevice> device,id descriptor,bool compute,u
  huskArchivePending.push_back(candidate);huskArchiveStats.descriptors_captured++;
 }
 extern "C" __attribute__((visibility("default"))) int vkHuskArchiveSnapshot(tl_na_stats *out){
- if(!out||out->version!=1||out->size!=sizeof(*out))return 0;
+ if(!out||out->version!=TL_NATIVE_ARCHIVE_ABI||out->size!=sizeof(*out))return 0;
  std::lock_guard<std::mutex> guard(huskArchiveLock);*out=huskArchiveStats;out->pending=(uint32_t)huskArchivePending.size();return 1;
 }
 extern "C" __attribute__((visibility("default"))) int vkHuskArchivePrepare(void){
@@ -194,20 +196,38 @@ extern "C" __attribute__((visibility("default"))) void vkHuskArchiveForget(void)
  // In-flight preparation owns independent native retains and cannot republish
  // into this generation. No wait for a Metal compiler from Vulkan destruction.
 }
+// Diagnostic only: success with FailOnBinaryArchiveMiss establishes Metal's
+// archive requirement was satisfied. Failure can have other causes: do not call
+// it a proven miss. Always preserve one ordinary native compilation fallback.
+static bool huskArchiveVerifyBegin(id request,id original,uint64_t generation){
+ if(request==original||!huskArchiveVerify.load(std::memory_order_relaxed))return false;
+ std::lock_guard<std::mutex> guard(huskArchiveLock);if(generation!=huskArchiveGeneration||!huskArchiveConfigured)return false;huskArchiveStats.verification_attempts++;return true;
+}
+static void huskArchiveVerifyResult(bool success,NSError *error,uint64_t generation){
+ std::lock_guard<std::mutex> guard(huskArchiveLock);
+ if(generation!=huskArchiveGeneration||!huskArchiveConfigured)return;
+ if(success)huskArchiveStats.archive_requirement_satisfied++;
+ else {huskArchiveStats.verification_failures++;huskArchiveStats.last_verification_error_code=error?error.code:0;
+  const char *domain=error?error.domain.UTF8String:"";snprintf(huskArchiveStats.last_verification_error_domain,sizeof(huskArchiveStats.last_verification_error_domain),"%s",domain?:"");}
+}
 static void huskArchiveNewRender(id<MTLDevice> device,MTLRenderPipelineDescriptor *descriptor,
-                                void (^completion)(id<MTLRenderPipelineState>,NSError*)){ 
+                                void (^completion)(id<MTLRenderPipelineState>,NSError*)){
  if(!huskArchiveEnabled.load(std::memory_order_relaxed)){
   [device newRenderPipelineStateWithDescriptor:descriptor completionHandler:completion];return;
  }
- MTLRenderPipelineDescriptor *request=(MTLRenderPipelineDescriptor*)huskArchiveDescriptor(device,descriptor);uint64_t started=huskArchiveNow();
- [device newRenderPipelineStateWithDescriptor:request completionHandler:^(id<MTLRenderPipelineState> state,NSError *error){
+ uint64_t generation=0;MTLRenderPipelineDescriptor *request=(MTLRenderPipelineDescriptor*)huskArchiveDescriptor(device,descriptor,&generation);uint64_t started=huskArchiveNow();
+ bool verify=huskArchiveVerifyBegin(request,descriptor,generation);
+ void (^finish)(id<MTLRenderPipelineState>,NSError*)=^(id<MTLRenderPipelineState> state,NSError *error){
+  if(verify)huskArchiveVerifyResult(state!=nil,error,generation);
   if(!state&&request!=descriptor){
-   {std::lock_guard<std::mutex> guard(huskArchiveLock);huskArchiveStats.archive_fallbacks++;}
+   {std::lock_guard<std::mutex> guard(huskArchiveLock);if(generation==huskArchiveGeneration&&huskArchiveConfigured)huskArchiveStats.archive_fallbacks++;}
    @synchronized(device){[device newRenderPipelineStateWithDescriptor:descriptor completionHandler:^(id<MTLRenderPipelineState> fallback,NSError *fallbackError){
-    huskArchiveCapture(device,descriptor,false,huskArchiveNow()-started,fallback!=nil);completion(fallback,fallbackError);
+    huskArchiveCapture(device,descriptor,false,huskArchiveNow()-started,fallback!=nil,generation);completion(fallback,fallbackError);
    }];}
-  }else {huskArchiveCapture(device,descriptor,false,huskArchiveNow()-started,state!=nil);completion(state,error);}
- }];
+  }else {huskArchiveCapture(device,descriptor,false,huskArchiveNow()-started,state!=nil,generation);completion(state,error);}
+ };
+ if(verify)[device newRenderPipelineStateWithDescriptor:request options:MTLPipelineOptionFailOnBinaryArchiveMiss completionHandler:^(id<MTLRenderPipelineState> state,MTLRenderPipelineReflection *reflection,NSError *error){(void)reflection;finish(state,error);}];
+ else [device newRenderPipelineStateWithDescriptor:request completionHandler:finish];
  [request release];
 }
 static void huskArchiveNewCompute(id<MTLDevice> device,MTLComputePipelineDescriptor *descriptor,
@@ -215,14 +235,16 @@ static void huskArchiveNewCompute(id<MTLDevice> device,MTLComputePipelineDescrip
  if(!huskArchiveEnabled.load(std::memory_order_relaxed)){
   [device newComputePipelineStateWithDescriptor:descriptor options:options completionHandler:completion];return;
  }
- MTLComputePipelineDescriptor *request=(MTLComputePipelineDescriptor*)huskArchiveDescriptor(device,descriptor);uint64_t started=huskArchiveNow();
- [device newComputePipelineStateWithDescriptor:request options:options completionHandler:^(id<MTLComputePipelineState> state,MTLComputePipelineReflection *reflection,NSError *error){
+ uint64_t generation=0;MTLComputePipelineDescriptor *request=(MTLComputePipelineDescriptor*)huskArchiveDescriptor(device,descriptor,&generation);uint64_t started=huskArchiveNow();
+ bool verify=huskArchiveVerifyBegin(request,descriptor,generation);
+ [device newComputePipelineStateWithDescriptor:request options:verify?(options|MTLPipelineOptionFailOnBinaryArchiveMiss):options completionHandler:^(id<MTLComputePipelineState> state,MTLComputePipelineReflection *reflection,NSError *error){
+  if(verify)huskArchiveVerifyResult(state!=nil,error,generation);
   if(!state&&request!=descriptor){
-   {std::lock_guard<std::mutex> guard(huskArchiveLock);huskArchiveStats.archive_fallbacks++;}
+   {std::lock_guard<std::mutex> guard(huskArchiveLock);if(generation==huskArchiveGeneration&&huskArchiveConfigured)huskArchiveStats.archive_fallbacks++;}
    @synchronized(device){[device newComputePipelineStateWithDescriptor:descriptor options:options completionHandler:^(id<MTLComputePipelineState> fallback,MTLComputePipelineReflection *fallbackReflection,NSError *fallbackError){
-    huskArchiveCapture(device,descriptor,true,huskArchiveNow()-started,fallback!=nil);completion(fallback,fallbackReflection,fallbackError);
+    huskArchiveCapture(device,descriptor,true,huskArchiveNow()-started,fallback!=nil,generation);completion(fallback,fallbackReflection,fallbackError);
    }];}
-  }else {huskArchiveCapture(device,descriptor,true,huskArchiveNow()-started,state!=nil);completion(state,reflection,error);}
+  }else {huskArchiveCapture(device,descriptor,true,huskArchiveNow()-started,state!=nil,generation);completion(state,reflection,error);}
  }];
  [request release];
 }

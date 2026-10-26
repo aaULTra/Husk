@@ -43,6 +43,7 @@ final class HuskAppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // The download session reconnects to whatever was running before Husk was closed or relaunched in the background.
         _ = Downloads.shared
+        if EfficiencyMetricKit.enabledByPreference { _ = EfficiencyMetricKit.shared }
         return true
     }
 

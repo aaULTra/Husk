@@ -15,6 +15,7 @@ static tl_pi_group signatures[SIGNATURES];
 static struct event { tl_pi_request request; bool compute, cache; int result; uint64_t ns, finished, occurrence; int feedback; unsigned stage_count, stage_valid, stage_hits, stage_valid_mask, stage_hit_mask; } events[EVENTS];
 static unsigned head, length;
 static atomic_uint_fast64_t drops;
+static void pi_forget_objects(void *device);
 void tl_log_line(const char *fmt, ...);
 static uint64_t bytes(uint64_t h, const void *p, size_t n) {
     const unsigned char *b = p; for (size_t i = 0; i < n; i++) { h ^= b[i]; h *= 1099511628211ULL; } return h;
@@ -46,10 +47,12 @@ void tl_pi_forget_device(void *device) {
     if (!atomic_load(&enabled)) return;
     pthread_mutex_lock(&mu);
     for (unsigned i = 0; i < MODULES; i++) if (modules[i].device == device) modules[i].device = NULL;
+    pi_forget_objects(device);
     pthread_mutex_unlock(&mu);
 }
 static uint64_t stage_hash(uint64_t h, void *device, const tl_pi_stage *stage, unsigned *known, uint64_t *shader_identity) {
     h = number(number(h, stage->stage), stage->flags);
+    if(stage->flags || stage->type!=18 || (stage->stage&~63u)) *known=0;
     uint64_t shader = 0;
     for (unsigned i = 0; i < MODULES; i++) if (modules[i].device == device && modules[i].module == stage->module) { shader = modules[i].hash; break; }
     if (shader_identity) *shader_identity = shader;
@@ -61,15 +64,18 @@ static uint64_t stage_hash(uint64_t h, void *device, const tl_pi_stage *stage, u
     const tl_pi_specialization *s = stage->specialization;
     if (s) {
         if (s->count > 256 || (s->count && (!s->entries || !s->data))) { *known = 0; return h; }
+        size_t budget = 65536;
         for (unsigned i = 0; i < s->count; i++) {
             const tl_pi_map *e = &s->entries[i];
-            if (e->offset > s->size || e->size > s->size - e->offset || e->size > 65536) { *known = 0; continue; }
+            if (e->offset > s->size || e->size > s->size - e->offset || e->size > budget) { *known = 0; continue; }
+            budget -= e->size;
             h = number(number(h, e->id), e->size); h = bytes(h, (const char *)s->data + e->offset, e->size);
         }
     }
     return h;
 }
 #include "husk-tl-pipeline-state.h"
+#include "husk-tl-pipeline-objects.h"
 
 tl_pi_request tl_pi_identify(bool compute, void *device, uint32_t count, const void *ci) {
     tl_pi_request r = {.count = count};
@@ -82,7 +88,10 @@ tl_pi_request tl_pi_identify(bool compute, void *device, uint32_t count, const v
             const tl_pi_compute *p = (const tl_pi_compute *)ci + i;
             h = number(h, p->flags); h = stage_hash(h, device, &p->stage, &r.known[i], i == 0 ? &r.shader_hashes[0] : NULL);
             if (i == 0) { r.shader_stages = 1; r.stage_bits[0] = p->stage.stage; }
-            if (p->next || p->type != 29) r.known[i] = 0;
+            const pi_prefix *node=p->next;unsigned nodes=0;
+            while(node&&nodes++<32){if(node->type!=1000192000u){r.known[i]=0;break;}node=node->next;}
+            if(node || p->type != 29) r.known[i] = 0;
+            if(r.known[i])r.coverage[i]|=TL_PI_SHADER_STATE;
         } else {
             const tl_pi_graphics *p = (const tl_pi_graphics *)ci + i;
             h = number(number(number(h, p->flags), p->count), p->subpass);
@@ -94,9 +103,21 @@ tl_pi_request tl_pi_identify(bool compute, void *device, uint32_t count, const v
                     h = stage_hash(h, device, p->stages+j, &r.known[i], i == 0 && j < 4 ? &r.shader_hashes[j] : NULL);
                 }
             }
-            h = fixed_state(h,p,&r.known[i]);
-            if (p->next) r.known[i] = 0;
+            if(r.known[i])r.coverage[i]|=TL_PI_SHADER_STATE;
+            if(p->flags&~7u)r.known[i]=0;
+            else if(r.known[i])h = fixed_state(h,p,&r.known[i]);
+            bool discard=p->raster&&r.known[i]&&((const pi_raster*)p->raster)->discard;
+            bool fixed=p->vertex&&p->assembly&&p->raster&&(discard||(p->viewport&&p->multisample&&p->depth&&p->blend));
+            bool tess=p->stages&&p->count<=16;
+            if(tess)for(unsigned j=0;j<p->count;j++)if((p->stages[j].stage&6)&&!p->tessellation)fixed=false;
+            if(r.known[i]&&fixed)r.coverage[i]|=TL_PI_FIXED_STATE;
         }
+        uint32_t flags=compute?((const tl_pi_compute*)ci)[i].flags:((const tl_pi_graphics*)ci)[i].flags;
+        if(r.known[i]&&!(flags&~7u))h=pi_pipeline_dependencies(h,compute,device,compute?(const void*)((const tl_pi_compute*)ci+i):(const void*)((const tl_pi_graphics*)ci+i),&r,i);
+        else r.coverage[i]|=TL_PI_UNSUPPORTED;
+        unsigned wanted=TL_PI_SHADER_STATE|TL_PI_LAYOUT_STATE|TL_PI_BASE_STATE;
+        if(!compute)wanted|=TL_PI_FIXED_STATE|TL_PI_RENDER_STATE;
+        r.full_core[i]=(r.coverage[i]&wanted)==wanted&&!(r.coverage[i]&(TL_PI_UNSUPPORTED|TL_PI_MISSING_OBJECT));
         r.id[i] = h;
     }
     pthread_mutex_unlock(&mu); return r;
@@ -141,6 +162,7 @@ void tl_pi_completed(tl_pi_request r, bool compute, uint64_t elapsed, uint64_t f
         g->stage_feedback_valid += f.stage_valid; g->stage_application_hits += f.stage_hits;
         g->shader_stages = r.shader_stages; memcpy(g->shader_hashes,r.shader_hashes,sizeof(g->shader_hashes)); memcpy(g->stage_bits,r.stage_bits,sizeof(g->stage_bits));
         g->last_stage_valid_mask = f.stage_valid_mask; g->last_stage_hit_mask = f.stage_hit_mask;
+        g->coverage=r.coverage[0];g->full_core=r.full_core[0];g->full_core_calls+=r.full_core[0]!=0;
     } else atomic_fetch_add(&drops, 1);
     if (elapsed >= 16666667 || occurrence == 1 || occurrence == 2) {
         if (length == EVENTS) atomic_fetch_add(&drops, 1);
@@ -159,8 +181,8 @@ void tl_pi_report(void) {
         pthread_mutex_unlock(&mu);
         char ids[220] = {0}; size_t used = 0;
         for (unsigned j = 0; j < e.request.sampled; j++) used += (size_t)snprintf(ids+used,sizeof(ids)-used,"%s%016llx/%s",j?",":"",(unsigned long long)e.request.id[j],e.request.known[j]?"shader-known":"incomplete");
-        tl_log_line("ue4 pipeline identity: M2/PIPE-01 partial-v2 ids=%s kind=%s batch %u sampled %u host %.3f ms cache-present %d occurrence %llu feedback-first %s stages-valid %u/%u stage-hits %u masks %#x/%#x result %d, finished monotonic %.6f s; partial key; batch time; hitch unverified",
-            ids,e.compute?"compute":"graphics",e.request.count,e.request.sampled,e.ns/1e6,e.cache,(unsigned long long)e.occurrence,e.feedback<0?"unavailable":e.feedback?"application-cache-hit":"valid-no-application-hit",e.stage_valid,e.stage_count,e.stage_hits,e.stage_valid_mask,e.stage_hit_mask,e.result,e.finished/1e9);
+        tl_log_line("ue4 pipeline identity: M2/PIPE-01 core-v3 ids=%s kind=%s batch %u sampled %u host %.3f ms cache-present %d occurrence %llu feedback-first %s stages-valid %u/%u stage-hits %u masks %#x/%#x result %d, finished monotonic %.6f s; full-core-first %u coverage %#x; diagnostic hash, not replay/cache key; batch time; hitch unverified",
+            ids,e.compute?"compute":"graphics",e.request.count,e.request.sampled,e.ns/1e6,e.cache,(unsigned long long)e.occurrence,e.feedback<0?"unavailable":e.feedback?"application-cache-hit":"valid-no-application-hit",e.stage_valid,e.stage_count,e.stage_hits,e.stage_valid_mask,e.stage_hit_mask,e.result,e.finished/1e9,e.request.full_core[0],e.request.coverage[0]);
     }
     uint64_t lost = atomic_exchange(&drops,0);
     if (lost) tl_log_line("ue4 pipeline identity: M2/PIPE-01 diagnostic records unavailable/dropped %llu; bounded registry/events",(unsigned long long)lost);

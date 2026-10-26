@@ -83,5 +83,12 @@ class AnalysisTests(unittest.TestCase):
   r=m.audit({'schema_version':10,'native_pipeline_archive':{'archive_attachments':10,'prepared':2}})
   self.assertEqual(r['native_pipeline_archive']['prepared'],2)
   self.assertIn('UNVERIFIED',r['energy_benefit'])
+ def test_short_exclusion_between_thread_snapshots_is_not_counted_as_included_cpu(self):
+  def sample(t,cpu):return {'t':t,'excluded':False,'cpu_threads':{'mach_result':0,'threads':[{'thread_id':7,'name':'RHIThread','user_seconds':cpu,'system_seconds':0}]}}
+  data={'samples':[sample(0,1),sample(10,5),sample(20,6)],'exclusions':[{'start':4,'end':5}]}
+  rows=m.thread_cpu_audit(data)['top_threads'];self.assertEqual(rows[0]['cpu_seconds'],1);self.assertEqual(rows[0]['observed_seconds'],10)
+ def test_new_component_and_driver_fields_keep_scope_without_auto_root_cause(self):
+  data={'schema_version':11,'component_sampling':{'requested':True,'components':[]},'driver_phases':{'available':False},'component_triage':{'root_cause_confirmed':False},'delayed_os_reports':{'retained_reports':0}}
+  result=m.audit(data);self.assertFalse(result['errors']);self.assertTrue(result['component_sampling']['requested']);self.assertFalse(result['component_triage']['root_cause_confirmed'])
 if __name__=='__main__':unittest.main()
 

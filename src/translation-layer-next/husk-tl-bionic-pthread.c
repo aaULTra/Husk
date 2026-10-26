@@ -14,6 +14,7 @@
  * thread wins the transition to "initialising" and the others spin until it is done.
  */
 #define _DARWIN_C_SOURCE
+#include "husk-tl-component-scope.h"
 #include "husk-tl-bionic.h"
 #include "husk-tl-ld.h"
 #include "husk-tl-thread-policy.h"
@@ -347,6 +348,7 @@ static int b_once(_Atomic int *once, void (*fn)(void))
     /* Published initialization is immutable. Avoid a write/exclusive cache-line
      * transaction on every already-completed call; acquire pairs with publish. */
     if (atomic_load_explicit(once, memory_order_acquire) == 1) return 0;
+    TL_CP_SCOPE(TL_CP_ONCE_SLOW);
     int expect = 0;
     if (atomic_compare_exchange_strong(once, &expect, 2)) {
         tl_em_sync_event(TL_SYNC_ONCE_INIT);

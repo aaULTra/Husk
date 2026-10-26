@@ -11,6 +11,7 @@
 #ifndef HUSK_BRIDGE_H
 #define HUSK_BRIDGE_H
 
+#include "husk-tl-component-profile.h"
 #include <stdbool.h>
 #include <stdint.h>
 

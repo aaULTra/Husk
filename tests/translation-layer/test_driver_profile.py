@@ -59,6 +59,16 @@ unsigned calls(void){return api_calls;}
 void events(unsigned count){event_count=count;}
 void fail_read(int mode){read_failure=mode;}
 int environment_enabled(void){const char *s=getenv("MVK_CONFIG_PERFORMANCE_TRACKING");return s&&!strcmp(s,"1");}
+int structured_copy(int mode){
+ tl_dp_device((void*)1);event_count=4;tl_dp_report();unsigned before=api_calls;
+ tl_dp_phase rows[24];tl_dp_info info;unsigned n=tl_dp_copy(rows,24,&info);
+ if(n!=23||!info.available||info.serial!=1||info.previous_query_ns||!info.queried_ns||api_calls!=before)return 1;
+ for(unsigned i=0;i<n;i++)if(rows[i].phase>=23||rows[i].new_calls!=4||!rows[i].values_valid||!rows[i].estimated_total_valid||rows[i].estimated_new_total_ms!=12)return 2;
+ if(mode==1){event_count=5;tl_dp_report();n=tl_dp_copy(rows,24,&info);if(n!=23||info.serial!=2||!info.previous_query_ns||rows[0].new_calls!=1||rows[0].estimated_new_total_ms!=3)return 3;}
+ if(mode==2){event_count=1;tl_dp_report();n=tl_dp_copy(rows,24,&info);if(n!=23||!rows[0].reset||rows[0].estimated_total_valid)return 4;}
+ if(mode==3){event_count=5;read_failure=3;tl_dp_report();n=tl_dp_copy(rows,24,&info);if(n!=22||info.invalid_values!=1)return 5;for(unsigned i=0;i<n;i++)if(rows[i].phase==1)return 6;}
+ return 0;
+}
 int exercise_busy_mutex(void){unsigned before=api_calls;pthread_mutex_lock(&profile_mu);tl_dp_report();pthread_mutex_unlock(&profile_mu);return api_calls==before;}
 '''
         vulkan = (ROOT/'src/translation-layer-next/husk-tl-vulkan.m').read_text()
@@ -163,6 +173,12 @@ int exercise_create(int status){
         self.lib.tl_dp_device(1); self.lib.events(1); self.lib.fail_read(3); self.lib.tl_dp_report()
         self.assertNotIn('SPIR-V-to-MSL new',self.log())
         self.assertIn('Metal-library-compile new',self.log())
+
+
+    def test_structured_copy_reuses_queries_and_distinguishes_estimates_resets_invalid_values(self):
+        for mode in range(4):
+            self.setUp()
+            self.assertEqual(self.lib.structured_copy(mode),0)
 
 
 if __name__ == '__main__':

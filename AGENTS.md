@@ -66,6 +66,10 @@ When the user requests a minimum potential progress increment, map it to named e
 
 Review an optimisation end to end: configuration, added/removed hot-path work, translation/Metal behaviour, resource and threading lifetimes, persistence/rollback and exported evidence. Record the actual review scope and risks. Code review can establish a mechanism and catch defects; it cannot guarantee on-device energy or heat benefits. Include preparation/loading/monitoring overhead in net acceptance.
 
+## Complete feasible implementation before repeated device requests
+
+The user explicitly authorises completing the permanent plan's feasible engineering in substantial independent batches before testing later. Do not use missing physical validation as a blanket blocker for unrelated coding. Preserve the current test artifact/instructions, protected defaults and independent experiment controls. Implement concrete mechanisms and component-level diagnosis; do not add dummy toggles or claim unavailable engine inputs/hardware results exist. Record actual blocking dependencies and continue other feasible work. Implementation/build readiness and measured benefit remain separate under unchanged gates.
+
 ## Coding, testing and handover
 
 Use the existing architecture and tests. Preserve API arguments, results, object lifetimes and threading guarantees. Pipeline identification must not hash raw pointers/padding as stable identity or pretend incomplete state is complete. Unsupported feedback must remain unavailable. Never fabricate pipeline objects or precompile indiscriminately.

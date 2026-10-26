@@ -30,6 +30,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     @Published var phase = "Unmarked"
     @Published var gpuSampling = false
     @Published var cpuThreadSampling = false
+    @Published var componentSampling = false
     private var lastThreadAt = -10.0
     private final class GPUWindow {
         var intervals: [(Double, Double)] = []
@@ -100,17 +101,18 @@ final class EfficiencyDiagnostics: ObservableObject {
         metadata = ["session_id": UUID().uuidString, "started_utc": ISO8601DateFormatter().string(from: Date()),
                     "monotonic_origin_seconds": origin, "device_identifier": model,
                     "os": device.systemVersion, "processor_count": ProcessInfo.processInfo.processorCount,
-                    "physical_memory_bytes": ProcessInfo.processInfo.physicalMemory,
+                    "physical_memory_bytes": ProcessInfo.processInfo.physicalMemory, "device_capabilities": EfficiencyDeviceInventory.snapshot(),
                     "build_sha": Bundle.main.object(forInfoDictionaryKey: "HuskBuildCommit") as? String ?? "UNAVAILABLE",
                     "build_date": Bundle.main.object(forInfoDictionaryKey: "HuskBuildDate") as? String ?? "UNAVAILABLE",
                     "launch_configuration": attached, "metal_capabilities": metalCapabilities,
                     "process_scope": "Husk/LiveContainer host process; not isolated guest-game utilisation"]
+        metadata["component_sampling_requested"] = componentSampling
         metadata["cpu_thread_sampling_requested"] = cpuThreadSampling
-        tl_em_start(); tl_em_cpu_work_enable(cpuThreadSampling); tl_pt_monitor(true); tl_gput_native_start(gpuSampling)
+        tl_cp_start(componentSampling); tl_em_start(); tl_em_cpu_work_enable(cpuThreadSampling); tl_pt_monitor(true); tl_gput_native_start(gpuSampling)
         // Bracket a host-clock read with media-clock reads. Raw values remain
         // authoritative; this mapping supports estimated host/GPU correlation.
         metadata["gpu_clock_alignment"] = gpuClockAlignment()
-        running = true; refreshExclusion(); event("phase", phase); sample()
+        running = true; refreshExclusion(); tl_cp_exclude(!excludedReason.isEmpty); event("phase", phase); sample()
         timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.sample() }
         }
@@ -141,6 +143,7 @@ final class EfficiencyDiagnostics: ObservableObject {
         guard reason != excludedReason else { return }
         let t = now
         var mediaBefore = 0.0, mediaAfter = 0.0
+        tl_cp_exclude(!reason.isEmpty)
         tl_em_exclude(!reason.isEmpty)
         tl_gput_native_exclude(!reason.isEmpty, &mediaBefore, &mediaAfter)
         if let start = excludedAt {
@@ -187,7 +190,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     }
     private func collectWindow() {
         var s = tl_em_stats(); tl_em_snapshot(false, &s)
-        var row = stats(s); row["start"] = windowAt - origin; row["end"] = now - origin
+        var row = stats(s); row["component_sampling"] = componentReport(); row["driver_phases"] = driverPhaseReport(); row["start"] = windowAt - origin; row["end"] = now - origin
         append(row, to: &windows, limit: 1440); windowAt = now
     }
     private func collectGPU() {
@@ -375,10 +378,50 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "images_created": s.images_created, "encoded_calls": s.encoded, "failures": s.failures,
                 "texture_observations": textures, "patch": "M9-SPATIAL-v2", "energy_benefit": "UNVERIFIED"]
     }
+    private func driverPhaseReport() -> [String: Any] {
+        var info = tl_dp_info(), phases = Array(repeating: tl_dp_phase(), count: 23)
+        let count = phases.withUnsafeMutableBufferPointer { tl_dp_copy($0.baseAddress, UInt32($0.count), &info) }
+        let rows: [[String: Any]] = phases.prefix(Int(count)).map { p in
+            ["phase_id": p.phase, "component": String(cString: tl_dp_name(p.phase)),
+             "new_calls_since_previous_query": p.new_calls, "lifetime_calls": p.total_calls,
+             "counter_reset_or_wrap": p.reset, "lifetime_average_ms": p.lifetime_average_ms,
+             "latest_event_ms": p.latest_ms, "lifetime_max_ms": p.lifetime_max_ms,
+             "new_total_ms_estimated": p.estimated_total_valid ? p.estimated_new_total_ms as Any : NSNull()]
+        }
+        return ["plan_ids": ["M3", "M8", "M2"], "requested": info.requested,
+                "available": info.available, "compatible": info.compatible,
+                "query_serial": info.serial, "previous_query_monotonic_ns": info.previous_query_ns,
+                "query_monotonic_ns": info.queried_ns, "invalid_phase_values": info.invalid_values,
+                "phases": rows, "status": info.available ? "MEASURED driver host-activity counters; ESTIMATED new aggregate duration" : "UNAVAILABLE: profiling off, unsupported ABI, or no accepted query",
+                "scope": "Read-only copy of already-collected opt-in MoltenVK1.4.2/private43 sample. Serial/timestamp deduplicate repeated copies. Counters include pre-session/lifecycle/excluded work. First query is lifetime; maxima/averages remain lifetime. New totals subtract average*count and are estimates, unavailable on reset. Activities overlap: never sum; callback latency is not GPU execution, drawable waiting is not electrical power. Heavy profiling remains separate and off by default."]
+    }
+    private func componentReport() -> [String: Any] {
+        let names = ["vulkan_acquire_wrapper", "vulkan_submit_wrapper", "present_wrapper_including_limiter", "graphics_pipeline_wrapper", "compute_pipeline_wrapper", "jni_invoke", "futex_wait_operation", "futex_wake_operation", "once_slow_path_including_initializer"]
+        var stats = tl_cp_stats(), rows = Array(repeating: tl_cp_row(), count: Int(TL_CP_COUNT))
+        let count = rows.withUnsafeMutableBufferPointer { tl_cp_snapshot($0.baseAddress, UInt32($0.count), &stats) }
+        let records: [[String: Any]] = rows.prefix(Int(count)).map { r in
+            ["component_id": r.kind, "component": Int(r.kind) < names.count ? names[Int(r.kind)] : "unknown",
+             "completed_sampled_calls": r.samples, "sampled_wall_ns": r.wall_ns, "sampled_caller_cpu_ns": r.cpu_ns,
+             "worst_sampled_wall_ns": r.worst_wall_ns, "worst_sampled_cpu_ns": r.worst_cpu_ns]
+        }
+        return ["plan_ids": ["M1", "M3", "M8"], "requested": stats.requested,
+                "status": stats.requested ? "MEASURED completed included sampled wrapper scopes" : "UNAVAILABLE: component sampling off",
+                "sample_every_per_thread_component": stats.sample_every, "epoch": stats.epoch,
+                "dropped_samples": stats.dropped, "boundary_dropped_samples": stats.boundary_dropped,
+                "clock_errors": stats.clock_errors, "components": records,
+                "scope": "One in64 entries per thread/component, deterministic not a whole-component cost estimate. Completed included scopes only; crossing epochs omitted and late completions may follow snapshot. Wall includes waits; caller CPU excludes other threads/compiler processes. Nested scopes overlap: do not sum or infer watts/core residency. Present scope includes host limiter; exact native API timings remain separate. Zero samples is not zero cost."]
+    }
     private func nativeArchiveReport() -> [String: Any] {
         var a = tl_na_stats(); tl_vk_archive_snapshot(&a)
+        let errorDomain = withUnsafePointer(to: &a.last_verification_error_domain) { p in
+            p.withMemoryRebound(to: CChar.self, capacity: 64) { String(cString: $0) }
+        }
         return ["plan_ids": ["M2", "M5", "M3"], "requested": a.requested != 0,
             "supported": a.supported != 0, "preparing": a.preparing != 0, "pending": a.pending,
+            "verification_requested": a.verification_requested != 0, "verification_attempts": a.verification_attempts,
+            "metal_archive_requirement_satisfied_calls": a.archive_requirement_satisfied, "verification_failed_calls": a.verification_failures,
+            "last_verification_error_domain": errorDomain, "last_verification_error_code": a.last_verification_error_code,
+            "verification_scope": "Opt-in extra FailOnBinaryArchiveMiss API attempt. Success is native Metal archive-requirement evidence, not a Vulkan cache hit or zero-cost compilation. Failure is not a proven miss; ordinary native fallback preserved. Verification adds overhead and stays OFF for energy comparisons.",
             "captured": a.descriptors_captured, "dropped": a.descriptors_dropped,
             "archive_attachments": a.archive_attachments, "archive_fallbacks": a.archive_fallbacks,
             "prepare_calls": a.prepare_calls, "prepared": a.prepared, "prepare_failures": a.prepare_failures,
@@ -484,14 +527,14 @@ final class EfficiencyDiagnostics: ObservableObject {
             let stages: [[String: Any]] = (0..<min(Int(g.shader_stages), 4)).map { i in
                 ["stage_index": i, "vulkan_stage": bitList[i], "module_content_hash": String(format: "%016llx", hashList[i]), "module_known": hashList[i] != 0]
             }
-            return ["signature_version": "partial-v2", "partial_signature": String(format: "%016llx", g.signature), "batch_calls": g.calls,
+            return ["signature_version": "core-v3", "full_core_fields_known": g.full_core != 0, "state_coverage_mask": g.coverage, "full_core_batch_calls": g.full_core_calls, "partial_signature": String(format: "%016llx", g.signature), "batch_calls": g.calls,
              "slow_batch_calls": g.slow_calls, "aggregate_host_ns": g.total_ns, "worst_host_ns": g.worst_ns,
              "first_pipeline_valid_feedback_calls": g.valid_feedback, "first_pipeline_application_hit_calls": g.application_hits,
              "first_pipeline_shader_stages": stages,
              "first_pipeline_last_stage_valid_mask": g.last_stage_valid_mask, "first_pipeline_last_stage_hit_mask": g.last_stage_hit_mask,
              "first_pipeline_valid_stage_feedback_count": g.stage_feedback_valid,
              "first_pipeline_stage_application_cache_hit_count": g.stage_application_hits,
-             "scope": "since game launch; first partial group per batch; not full variants or replay state",
+             "scope": "Since launch; first sampled group per batch. Coverage bits shader1/fixed2/layout4/render8/base16; unsupported65536/missing131072. Recognised core fields only, not minimal compatibility/replay/cache keys; unhandled extensions remain partial.",
              "plan_ids": ["M2", "PIPE-01"]]
         }.sorted { ($0["worst_host_ns"] as? UInt64 ?? 0) > ($1["worst_host_ns"] as? UInt64 ?? 0) }
     }
@@ -501,14 +544,14 @@ final class EfficiencyDiagnostics: ObservableObject {
         var mediaBefore = 0.0, mediaAfter = 0.0
         tl_gput_native_exclude(true, &mediaBefore, &mediaAfter)
         metadata["gpu_clock_alignment_end"] = gpuClockAlignment()
-        tl_em_stop(); tl_pt_monitor(false); tl_gput_end(); collectGPU(); drainEvents(); collectWindow()
+        tl_cp_stop(); tl_em_stop(); tl_pt_monitor(false); tl_gput_end(); collectGPU(); drainEvents(); collectWindow()
         if let start = excludedAt { append(exclusionRow(start, now, mediaBefore, mediaAfter), to: &exclusions, limit: 2048) }
         timer?.invalidate(); timer = nil
         observers.forEach { NotificationCenter.default.removeObserver($0) }; observers = []
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
-        stoppedReport = ["schema_version": 10, "metadata": metadata, "duration_seconds": now - origin,
-                         "summary": stats(total), "native_pipeline_archive": nativeArchiveReport(), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
+        stoppedReport = ["schema_version": 11, "metadata": metadata, "duration_seconds": now - origin,
+                         "summary": stats(total), "delayed_os_reports": EfficiencyMetricKit.shared.summary, "component_sampling": componentReport(), "driver_phases": driverPhaseReport(), "native_pipeline_archive": nativeArchiveReport(), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
                          "battery_arithmetic_rate_pp_per_hour": battery.arithmeticRate.map { $0 as Any } ?? NSNull(),
@@ -549,7 +592,9 @@ final class EfficiencyDiagnostics: ObservableObject {
                     .appendingPathComponent("EfficiencyTests").appendingPathComponent(UUID().uuidString)
                 try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
                 let json = dir.appendingPathComponent("diagnostics.json"), md = dir.appendingPathComponent("report.md")
-                try EfficiencyMath.json(report).write(to: json, options: .atomic)
+                let triage = EfficiencyComponentTriage.build(report)
+                var enriched = report; enriched["component_triage"] = triage
+                try EfficiencyMath.json(enriched).write(to: json, options: .atomic)
                 let summary = report["summary"] as? [String: Any] ?? [:], meta = report["metadata"] as? [String: Any] ?? [:]
                 let rows = report["samples"] as? [[String: Any]] ?? []
                 let cpu = rows.compactMap { $0["process_cpu_percent_one_core"] as? Double }
@@ -612,6 +657,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 Presentation feedback: \(presentation["status"] ?? "UNAVAILABLE"); source may be estimated by driver, not complete display accounting.
                 UNAVAILABLE: actual displayed frames, per-frame GPU attribution, peak footprint and aggregate cache-hit rate. Per-request driver feedback is exported only where available.
                 EXTERNAL: electrical power and numerical physical temperature. Thermal state is a classification.
+                \(EfficiencyComponentTriage.text(triage))
                 No measured energy improvement. Monitoring overhead and device correctness need validation.
                 """
                 try text.write(to: md, atomically: true, encoding: .utf8)
@@ -637,6 +683,8 @@ struct EfficiencyDiagnosticsView: View {
                     Text("Optional: samples completed game command buffers for 1 second every 10 seconds. Adds instrumentation; leave OFF for normal energy comparisons. No graphics change.")
                     Toggle("Sample CPU threads and submit work (Diagnostic)", isOn: $monitor.cpuThreadSampling).disabled(monitor.running || monitor.exporting)
                     Text("Optional thread CPU counters about every 10 seconds and caller CPU/wall time around submissions. Identifies CPU work, not core placement or watts. Adds overhead; OFF for clean energy comparisons.")
+                    Toggle("Sample component CPU and waits (Diagnostic)", isOn: $monitor.componentSampling).disabled(monitor.running || monitor.exporting || monitor.nativePreparing)
+                    Text("Samples Vulkan, JNI and synchronisation scopes. Adds diagnostic work; OFF for normal energy comparisons. Wall time includes waiting and nested scopes overlap.")
                     Button("Start lightweight test") { monitor.start() }.disabled(monitor.running || monitor.exporting || monitor.nativePreparing)
                     Picker("Phase marker", selection: Binding(get: { monitor.phase }, set: { monitor.markPhase($0) })) {
                         ForEach(["Unmarked", "Loading", "Menu", "Gameplay", "First-use effect", "Repeated effect"], id: \.self) { Text($0).tag($0) }

@@ -1,0 +1,251 @@
+{
+  "purpose": "Conservative exclusion-overlap correction; historical raw/analysis retained. Not causal or energy acceptance.",
+  "records": {
+    "E-M4-006A": {
+      "status": "UNAVAILABLE: no paired included thread snapshots",
+      "top_threads": [],
+      "scope": "Only intersecting identities with no excluded interval between samples; host included; exited/missing threads absent, not P/E placement or electrical power"
+    },
+    "E-M4-006B": {
+      "status": "UNAVAILABLE: no paired included thread snapshots",
+      "top_threads": [],
+      "scope": "Only intersecting identities with no excluded interval between samples; host included; exited/missing threads absent, not P/E placement or electrical power"
+    },
+    "E-M4-007A": {
+      "status": "MEASURED cumulative counters / ESTIMATED per-thread deltas",
+      "top_threads": [
+        {
+          "thread_id": 327888,
+          "name": "",
+          "cpu_seconds": 78.402274,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 19.899101032153453
+        },
+        {
+          "thread_id": 327917,
+          "name": "RHIThread",
+          "cpu_seconds": 41.24627899999999,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 10.468623308316147
+        },
+        {
+          "thread_id": 327948,
+          "name": "RenderThread 1",
+          "cpu_seconds": 37.16688799999999,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 9.433242451140277
+        },
+        {
+          "thread_id": 327925,
+          "name": "AudioMi-nder(1)",
+          "cpu_seconds": 11.878571000000004,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 3.0148728141049603
+        },
+        {
+          "thread_id": 327895,
+          "name": "TaskGraphHP 4",
+          "cpu_seconds": 10.912692,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 2.7697252842535245
+        },
+        {
+          "thread_id": 327752,
+          "name": "",
+          "cpu_seconds": 6.7557550000000015,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 1.7146626549821231
+        },
+        {
+          "thread_id": 327896,
+          "name": "TaskGraphHP 5",
+          "cpu_seconds": 6.699499000000001,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 1.7003844488721214
+        },
+        {
+          "thread_id": 329324,
+          "name": "",
+          "cpu_seconds": 5.1839429999999975,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 1.315724662551556
+        },
+        {
+          "thread_id": 329322,
+          "name": "",
+          "cpu_seconds": 4.903842999999999,
+          "observed_seconds": 369.94058799999766,
+          "cpu_percent_one_core": 1.325575824624042
+        },
+        {
+          "thread_id": 327787,
+          "name": "",
+          "cpu_seconds": 4.839943999999998,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 1.2284150667104996
+        },
+        {
+          "thread_id": 327897,
+          "name": "TaskGraphHP 6",
+          "cpu_seconds": 4.379667000000001,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 1.1115932188419488
+        },
+        {
+          "thread_id": 327891,
+          "name": "TaskGraphNP 0",
+          "cpu_seconds": 4.2041189999999995,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 1.067037784289215
+        },
+        {
+          "thread_id": 329323,
+          "name": "",
+          "cpu_seconds": 4.173751999999999,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 1.0593304057883897
+        },
+        {
+          "thread_id": 327855,
+          "name": "",
+          "cpu_seconds": 3.526028000000001,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 0.8949330655154466
+        },
+        {
+          "thread_id": 327927,
+          "name": "AudioThread",
+          "cpu_seconds": 3.267736000000001,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 0.829376566429757
+        },
+        {
+          "thread_id": 327908,
+          "name": "PoolThread 5",
+          "cpu_seconds": 3.1359639999999986,
+          "observed_seconds": 393.9990749999997,
+          "cpu_percent_one_core": 0.7959318178602326
+        }
+      ],
+      "scope": "Only intersecting identities with no excluded interval between samples; host included; exited/missing threads absent, not P/E placement or electrical power"
+    },
+    "E-M4-007B": {
+      "status": "MEASURED cumulative counters / ESTIMATED per-thread deltas",
+      "top_threads": [
+        {
+          "thread_id": 346366,
+          "name": "",
+          "cpu_seconds": 50.46649000000001,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 20.520452350369105
+        },
+        {
+          "thread_id": 346395,
+          "name": "RHIThread",
+          "cpu_seconds": 26.017286999999993,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 10.579029731795837
+        },
+        {
+          "thread_id": 346440,
+          "name": "RenderThread 1",
+          "cpu_seconds": 22.706843,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 9.232952198752324
+        },
+        {
+          "thread_id": 346403,
+          "name": "AudioMi-nder(1)",
+          "cpu_seconds": 7.134690000000001,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 2.90107487522225
+        },
+        {
+          "thread_id": 346373,
+          "name": "TaskGraphHP 4",
+          "cpu_seconds": 7.082019999999998,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 2.8796584417573117
+        },
+        {
+          "thread_id": 346374,
+          "name": "TaskGraphHP 5",
+          "cpu_seconds": 4.1858629999999994,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 1.702036385662507
+        },
+        {
+          "thread_id": 346025,
+          "name": "",
+          "cpu_seconds": 4.185799999999998,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 1.702010768891891
+        },
+        {
+          "thread_id": 346539,
+          "name": "",
+          "cpu_seconds": 3.7029900000000002,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 1.5056927844376196
+        },
+        {
+          "thread_id": 346196,
+          "name": "",
+          "cpu_seconds": 3.325608,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 1.3522434490690018
+        },
+        {
+          "thread_id": 346541,
+          "name": "",
+          "cpu_seconds": 3.2672389999999996,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 1.3285097144019244
+        },
+        {
+          "thread_id": 346375,
+          "name": "TaskGraphHP 6",
+          "cpu_seconds": 2.7639759999999995,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 1.1238752250367279
+        },
+        {
+          "thread_id": 346194,
+          "name": "",
+          "cpu_seconds": 2.6432250000000006,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 1.0747760080759405
+        },
+        {
+          "thread_id": 346369,
+          "name": "TaskGraphNP 0",
+          "cpu_seconds": 2.4689680000000003,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 1.0039204271703084
+        },
+        {
+          "thread_id": 346107,
+          "name": "",
+          "cpu_seconds": 2.1177529999999996,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 0.8611109971458527
+        },
+        {
+          "thread_id": 346405,
+          "name": "AudioThread",
+          "cpu_seconds": 2.0768740000000014,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 0.8444889659399832
+        },
+        {
+          "thread_id": 346385,
+          "name": "PoolThread 4",
+          "cpu_seconds": 2.038377,
+          "observed_seconds": 245.93263899999874,
+          "cpu_percent_one_core": 0.8288354926326027
+        }
+      ],
+      "scope": "Only intersecting identities with no excluded interval between samples; host included; exited/missing threads absent, not P/E placement or electrical power"
+    }
+  }
+}

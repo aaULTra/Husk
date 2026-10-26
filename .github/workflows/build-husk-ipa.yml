@@ -53,10 +53,14 @@ jobs:
           python3 tests/translation-layer/test_vk_frame_timing.py -v
           python3 tests/translation-layer/test_present_clock.py -v
           python3 tests/translation-layer/test_pipeline_store.py -v
+          python3 tests/translation-layer/test_component_profile.py -v
+          python3 tests/translation-layer/test_component_triage.py -v
+          python3 tests/translation-layer/test_device_profiles.py -v
           python3 tests/translation-layer/test_driver_profile.py -v
           python3 tests/translation-layer/test_efficiency.py -v
           python3 tests/translation-layer/test_cpu_threads.py -v
           python3 tests/translation-layer/test_efficiency_math.py -v
+          python3 tests/translation-layer/test_pipeline_core_state.py -v
           python3 tests/translation-layer/test_pipeline_diagnostics.py -v
           python3 tests/translation-layer/test_pipeline_feedback.py -v
           python3 tests/translation-layer/test_game_chrome.py -v

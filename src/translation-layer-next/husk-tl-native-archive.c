@@ -4,6 +4,7 @@
 #include <stdatomic.h>
 #include <string.h>
 static atomic_int requested_mode;
+static atomic_bool verify_requested;
 static atomic_int preparation_phase; /*0 idle,1 reserved on UI thread,2 executing*/
 static bool configured;
 static tl_npa_api api;
@@ -11,12 +12,13 @@ static void *first_device;
 static pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
 void tl_log_line(const char *format,...);
 void husk_ue4_set_native_archive(int mode){atomic_store(&requested_mode,mode==2?2:mode==1?1:0);}
+void husk_ue4_set_native_archive_verification(bool enabled){atomic_store(&verify_requested,enabled);}
 bool tl_npa_requested(void){return atomic_load(&requested_mode)==2;}
 void tl_npa_set_api(tl_npa_api value){pthread_mutex_lock(&lock);api=value;pthread_mutex_unlock(&lock);}
 void tl_npa_configure(const char *project,const char *directory,bool sharp){
  if(!tl_npa_requested()||!sharp||!project||strcmp(project,"Dungeons"))return;
  pthread_mutex_lock(&lock);
- tl_na_config c={1,sizeof(c),1,0,directory};
+ tl_na_config c={TL_NATIVE_ARCHIVE_ABI,sizeof(c),1,atomic_load(&verify_requested)?TL_NA_VERIFY_REQUIREMENT:0,directory};
  configured=api.configure&&api.snapshot&&api.prepare&&api.forget&&api.configure(&c);
  pthread_mutex_unlock(&lock);
  tl_log_line("[M2/M5 native-archive] requested; driver ABI %s; native support checked on first pipeline; no guaranteed cache hits/first-use elimination or energy benefit",configured?"accepted":"unavailable");
@@ -29,14 +31,14 @@ void tl_npa_forget(void *device){
 }
 void tl_vk_archive_snapshot(tl_na_stats *out){
  if(!out)return;
- *out=(tl_na_stats){.version=1,.size=sizeof(*out),.requested=tl_npa_requested()};
+ *out=(tl_na_stats){.version=TL_NATIVE_ARCHIVE_ABI,.size=sizeof(*out),.requested=tl_npa_requested()};
  pthread_mutex_lock(&lock);
- if(configured&&api.snapshot&&!api.snapshot(out))*out=(tl_na_stats){.version=1,.size=sizeof(*out),.requested=1};
+ if(configured&&api.snapshot&&!api.snapshot(out))*out=(tl_na_stats){.version=TL_NATIVE_ARCHIVE_ABI,.size=sizeof(*out),.requested=1};
  pthread_mutex_unlock(&lock);
  out->preparing|=(atomic_load(&preparation_phase)!=0);
 }
 bool tl_vk_archive_begin_prepare(void){
- pthread_mutex_lock(&lock);tl_na_stats s={.version=1,.size=sizeof(s)};
+ pthread_mutex_lock(&lock);tl_na_stats s={.version=TL_NATIVE_ARCHIVE_ABI,.size=sizeof(s)};
  bool valid=configured&&api.snapshot&&api.snapshot(&s)&&s.supported&&s.pending;
  int expected=0;
  valid=valid&&atomic_compare_exchange_strong(&preparation_phase,&expected,1);

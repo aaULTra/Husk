@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 /* MoltenVK v1.4.2 private API 43: 11 shader, 3 cache, 9 queue, 1 memory
  * trackers in this order. Require the complete exact-size ABI; never read a
@@ -26,6 +27,18 @@ static bool enabled, compatible, known_version;
 static void *profile_device;
 static int (*get_stats)(void *, void *, size_t *);
 static uint32_t previous_counts[24];
+static double previous_averages[24];
+static tl_dp_phase last_phases[23];
+static tl_dp_info last_info;
+static const char *const phase_names[24] = {
+ "shader-hash", "SPIR-V-to-MSL", "Metal-library-compile", "Metal-library-load",
+ "MSL-compress", "MSL-decompress", "shader-library-cache-retrieval", "Metal-function-retrieval",
+ "Metal-function-specialization", "Metal-pipeline-compile", "GLSL-to-SPIR-V",
+ "cache-size", "cache-write", "cache-read", "command-buffer-retrieval", "command-encoding",
+ "submit-to-encoding-wait", "submit-and-encoding", "commit-to-completion-callback-latency",
+ "drawable-retrieval", "present-to-encoding-wait", "commit-to-presentation-callback-latency",
+ "presentation-interval", "GPU-memory-KiB"
+};
 static pthread_mutex_t profile_mu = PTHREAD_MUTEX_INITIALIZER;
 void tl_log_line(const char *fmt, ...);
 
@@ -48,6 +61,7 @@ void tl_dp_device(void *device)
     if (!profile_device) {
         profile_device = device; compatible = false;
         memset(previous_counts, 0, sizeof(previous_counts));
+        memset(previous_averages,0,sizeof(previous_averages));memset(last_phases,0,sizeof(last_phases));memset(&last_info,0,sizeof(last_info));
         size_t size = 0;
         int result = get_stats && known_version ? get_stats(device, NULL, &size) : -7;
         compatible = (result == 0 || result == 5) && size == sizeof(statistics);
@@ -63,7 +77,7 @@ void tl_dp_forget(void *device)
     if (!enabled) return;
     /* Serialize only this short host query with teardown, never GPU completion. */
     pthread_mutex_lock(&profile_mu);
-    if (profile_device == device) { profile_device = NULL; compatible = false; }
+    if (profile_device == device) { profile_device = NULL; compatible = false;last_info.available=false; }
     pthread_mutex_unlock(&profile_mu);
 }
 void tl_dp_report(void)
@@ -78,18 +92,24 @@ void tl_dp_report(void)
         tl_log_line("ue4 driver profile: stopped after incomplete statistics read result %d, bytes %zu; no prefix interpretation", result, size);
         return;
     }
-    static const char *const names[24] = {
-        "shader-hash", "SPIR-V-to-MSL", "Metal-library-compile", "Metal-library-load",
-        "MSL-compress", "MSL-decompress", "shader-library-cache-retrieval", "Metal-function-retrieval",
-        "Metal-function-specialization", "Metal-pipeline-compile", "GLSL-to-SPIR-V",
-        "cache-size", "cache-write", "cache-read", "command-buffer-retrieval", "command-encoding",
-        "submit-to-encoding-wait", "submit-and-encoding", "commit-to-completion-callback-latency",
-        "drawable-retrieval", "present-to-encoding-wait", "commit-to-presentation-callback-latency",
-        "presentation-interval", "GPU-memory-KiB"
-    };
     /* Copy results and counts under lifetime protection, then release before
      * log I/O. Counters are cumulative; nested activities must not be summed. */
     uint32_t previous[24]; memcpy(previous, previous_counts, sizeof(previous));
+    last_info.previous_query_ns=last_info.queried_ns;
+    struct timespec query_time;if(!clock_gettime(CLOCK_MONOTONIC,&query_time))last_info.queried_ns=(uint64_t)query_time.tv_sec*1000000000ULL+query_time.tv_nsec;else last_info.queried_ns=0;
+    last_info.serial++;last_info.invalid_values=0;last_info.available=true;
+    for(unsigned i=0;i<23;i++){
+        tracker t=stats.values[i];bool reset=t.count<previous[i];
+        tl_dp_phase row={.phase=i,.new_calls=reset?t.count:t.count-previous[i],.total_calls=t.count,.reset=reset};
+        bool valid=isfinite(t.average)&&isfinite(t.latest)&&isfinite(t.maximum)&&t.average>=0&&t.latest>=0&&t.maximum>=0;
+        row.values_valid=valid;
+        if(valid){
+            row.lifetime_average_ms=t.average;row.latest_ms=t.latest;row.lifetime_max_ms=t.maximum;
+            double delta=t.average*t.count-(reset?0:previous_averages[i]*previous[i]);
+            if(!reset&&isfinite(delta)&&delta>=0){row.estimated_total_valid=true;row.estimated_new_total_ms=delta;}
+        }else{last_info.invalid_values++;row.estimated_total_valid=false;}
+        last_phases[i]=row;previous_averages[i]=valid?t.average:NAN;
+    }
     for (unsigned i = 0; i < 24; ++i) previous_counts[i] = stats.values[i].count;
     pthread_mutex_unlock(&profile_mu);
     tl_log_line("ue4 driver profile: cumulative host/activity statistics; new=count since previous sample, avg/max=lifetime, last=latest event; activities overlap; callback latency is NOT pure GPU execution, energy or a CPU/GPU bottleneck verdict");
@@ -103,7 +123,14 @@ void tl_dp_report(void)
         uint32_t added = reset ? t.count : t.count - previous[i];
         emitted = true;
         tl_log_line("ue4 driver phase: %s new %u total %u, avg %.3f ms last %.3f ms max %.3f ms%s",
-                    names[i], added, t.count, t.average, t.latest, t.maximum, reset ? " (counter reset/wrap)" : "");
+                    phase_names[i], added, t.count, t.average, t.latest, t.maximum, reset ? " (counter reset/wrap)" : "");
     }
     if (!emitted) tl_log_line("ue4 driver profile: no new validated activities; ABI acceptance alone does not establish active tracking");
+}
+const char *tl_dp_name(uint32_t phase){return phase<24?phase_names[phase]:"unknown";}
+uint32_t tl_dp_copy(tl_dp_phase *out,uint32_t capacity,tl_dp_info *info){
+    pthread_mutex_lock(&profile_mu);uint32_t n=0;
+    if(info){*info=last_info;info->requested=enabled;info->compatible=compatible;info->available=enabled&&compatible&&last_info.available;}
+    if(enabled&&compatible&&last_info.available&&out)for(unsigned i=0;i<23&&n<capacity;i++)if(last_phases[i].new_calls&&last_phases[i].values_valid)out[n++]=last_phases[i];
+    pthread_mutex_unlock(&profile_mu);return n;
 }

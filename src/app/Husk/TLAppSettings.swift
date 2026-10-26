@@ -127,6 +127,7 @@ struct TLAppSettings: Codable, Equatable {
     var clockPresentation = false
     var feedbackClockCorrection = false
     var nativePipelineArchiveMode = 0
+    var nativeArchiveVerification = false
     var pipelineIdentification = false
     var pipelineFeedback = false
     var spatialUpscaling = false
@@ -214,6 +215,7 @@ struct TLAppSettings: Codable, Equatable {
         engineOnlyLimiter = try c.decodeIfPresent(Bool.self, forKey: .engineOnlyLimiter) ?? false
         clockPresentation = try c.decodeIfPresent(Bool.self, forKey: .clockPresentation) ?? false
         feedbackClockCorrection = try c.decodeIfPresent(Bool.self, forKey: .feedbackClockCorrection) ?? false
+        nativeArchiveVerification = try c.decodeIfPresent(Bool.self, forKey: .nativeArchiveVerification) ?? false
         let archiveMode = try c.decodeIfPresent(Int.self, forKey: .nativePipelineArchiveMode) ?? 0
         nativePipelineArchiveMode = [0,1,2].contains(archiveMode) ? archiveMode : 0
         pipelineIdentification = try c.decodeIfPresent(Bool.self, forKey: .pipelineIdentification) ?? false
@@ -264,6 +266,8 @@ struct TLAppSettingsView: View {
     let app: TLApp
 
     @State private var efficiencySheet = false
+    @State private var profilesSheet = false
+    @State private var metricKitSheet = false
     @ObservedObject private var store = TranslationLayerStore.shared
     @ObservedObject private var geode = GeodeSupport.shared
     @State private var settings: TLAppSettings
@@ -353,6 +357,8 @@ struct TLAppSettingsView: View {
                         Text("Archive Enabled").tag(2)
                     }
                     Text("Archive mode captures up to eight slow native pipeline requests. Prepare them explicitly in Efficiency Test while the game pauses; later launches can reuse the saved archive. Preparation costs CPU/time. Driver Only uses the same experimental driver without the archive for comparison. Restart after changing.").font(.caption)
+                    Toggle("Verify Native Archive Reuse (Diagnostic)", isOn: $settings.nativeArchiveVerification).disabled(settings.nativePipelineArchiveMode != 2)
+                    Text("Short diagnostic only: requires Archive Enabled and restart. Metal is asked to fail on an archive miss, with ordinary compilation fallback. Success tests the native archive requirement; failures may have other causes. Adds API work, so leave OFF for energy comparisons.").font(.caption)
                     Toggle("Guest-Clock Feedback Only (Experimental)", isOn: $settings.feedbackClockCorrection)
                     Text("Corrects the clock domain of presentation feedback consumed by the game. Keeps immediate presentation; does not enable future scheduling. Benefit needs testing. Restart after changing.").font(.caption)
                     Toggle("Clock-Correct Presentation (Experimental)", isOn: $settings.clockPresentation)
@@ -365,6 +371,10 @@ struct TLAppSettingsView: View {
                     Toggle("Driver Phase Profiling", isOn: $settings.driverPhaseProfiling)
                     Button("Performance & Efficiency Diagnostics") { efficiencySheet = true }
                         .sheet(isPresented: $efficiencySheet) { EfficiencyDiagnosticsView() }
+                    Button("Device Graphics Profiles") { profilesSheet = true }
+                        .sheet(isPresented: $profilesSheet) { EfficiencyProfilesView(settings: $settings, game: app.packageName ?? app.label) }
+                    Button("Delayed OS Reports (MetricKit)") { metricKitSheet = true }
+                        .sheet(isPresented: $metricKitSheet) { EfficiencyMetricKitView() }
                     Picker("Worker Scheduling", selection: $settings.workerScheduling) {
                         ForEach(TLAppSettings.WorkerScheduling.allCases) { Text($0.title).tag($0) }
                     }

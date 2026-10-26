@@ -217,5 +217,10 @@ class CampaignTests(unittest.TestCase):
         self.assertEqual(result['energy_improvement'], 'UNVERIFIED')
 
 
+    def test_component_diagnostic_difference_is_a_confounded_pair(self):
+        self.a['metadata']['component_sampling_requested'] = False
+        self.b['metadata']['component_sampling_requested'] = True
+        self.assertIn('Changed diagnostic: component_sampling_requested',self.compare()['blockers'])
+
 if __name__ == '__main__':
     unittest.main()

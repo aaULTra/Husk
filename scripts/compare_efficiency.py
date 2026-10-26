@@ -144,7 +144,7 @@ def compare_pair(left, right, recipe, context=None):
             blockers.append('Additional changed control: ' + key)
     defaults = {'worker_policy': 2, 'submission_mode': 0, 'engine_only_limiter': False,
                 'clock_correct_presentation': False, 'metalfx_spatial_requested': False,
-                'feedback_clock_correction': False, 'native_pipeline_archive_mode': 0}
+                'feedback_clock_correction': False, 'native_pipeline_archive_mode': 0, 'native_archive_verification': False}
     for index, (data, analysed, config) in enumerate(zip((left, right), analyses, configs)):
         side = 'baseline' if index == 0 else 'candidate'
         blockers.extend(side + ': ' + e for e in analysed['errors'])
@@ -179,7 +179,7 @@ def compare_pair(left, right, recipe, context=None):
             blockers.append(side + ': Low Power Mode observed')
         if included_seconds(data) is None or included_seconds(data) < 120:
             blockers.append(side + ': invalid exclusions/duration or less than120 included seconds')
-    for key in ('cpu_thread_sampling_requested',):
+    for key in ('cpu_thread_sampling_requested', 'component_sampling_requested'):
         if metas[0].get(key) != metas[1].get(key):
             blockers.append('Changed diagnostic: ' + key)
     if left.get('gpu_sampling', {}).get('requested') != right.get('gpu_sampling', {}).get('requested'):
@@ -218,7 +218,7 @@ def compare_pair(left, right, recipe, context=None):
         if not finite(archive.get('archive_attachments')) or archive['archive_attachments'] <= 0:
             blockers.append('Candidate has no native archive attachment evidence')
         builds = [d.get('spatial_upscaling', {}).get('driver_build') for d in (left, right)]
-        if not all(isinstance(b, dict) and b.get('native_archive_abi') == 1 for b in builds) or builds[0] != builds[1]:
+        if not all(isinstance(b, dict) and b.get('native_archive_abi') in (1, 2) for b in builds) or builds[0] != builds[1]:
             blockers.append('Same native experimental driver manifest not established')
         warnings.append('Native attachments/bytes are not cache hits; include separately audited preparation receipt and loading costs in net acceptance')
     if recipe == 'feedback-clock':
@@ -238,6 +238,7 @@ def compare_pair(left, right, recipe, context=None):
         elif rows[0] != rows[1]:
             warnings.append('User-supplied condition differs: ' + key)
     clean = all(d.get('gpu_sampling', {}).get('requested') is False and m.get('cpu_thread_sampling_requested') is False
+                and m.get('component_sampling_requested', False if d.get('schema_version', 0) < 11 else None) is False
                 and all(c.get(k) is False for k in ('detailed_driver_profiling', 'pipeline_identification', 'pipeline_creation_feedback', 'render_target_inventory'))
                 for d, m, c in zip((left, right), metas, configs))
     metrics = [run_metrics(d, a) for d, a in zip((left, right), analyses)]

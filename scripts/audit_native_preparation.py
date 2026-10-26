@@ -40,7 +40,7 @@ def audit_preparation(first, receipt, restarted):
         errors.append('Archive Enabled must be selected in both captures')
     builds = [d.get('spatial_upscaling', {}).get('driver_build') for d in (first, restarted)] + [receipt.get('driver_build')]
     for build in builds:
-        if (not isinstance(build, dict) or build.get('upstream_commit') != PIN or build.get('native_archive_abi') != 1
+        if (not isinstance(build, dict) or build.get('upstream_commit') != PIN or build.get('native_archive_abi') not in (1, 2)
                 or not isinstance(build.get('husk_native_pipeline_patch_sha256'), str)
                 or not re.fullmatch('[0-9a-f]{64}', build['husk_native_pipeline_patch_sha256'])):
             errors.append('Missing/incompatible native driver identity')

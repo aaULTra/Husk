@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
+#include "husk-tl-component-scope.h"
 #include "husk-tl-vulkan.h"
 
 #import <QuartzCore/QuartzCore.h>
@@ -424,6 +425,33 @@ static void w_vkDestroyShaderModule(void *device, uint64_t module, const void *a
     if (real) real(device, module, alloc);
 }
 
+/* M2: track semantic core object descriptions after successful native creation.
+ * Forward all arguments/results unchanged; no object or pointer is persisted. */
+#define PI_OBJECT_WRAPPERS(Name, Kind) \
+static int w_vkCreate##Name(void *device,const void *ci,const void *alloc,uint64_t *out){ \
+    typedef int(*fn)(void*,const void*,const void*,uint64_t*); \
+    static _Atomic(fn) cached;fn real=atomic_load_explicit(&cached,memory_order_acquire); \
+    if(!real&&V.lib){real=(fn)dlsym(V.lib,"vkCreate" #Name);atomic_store_explicit(&cached,real,memory_order_release);} \
+    int result=real?real(device,ci,alloc,out):-3; \
+    if(result==VK_SUCCESS&&out&&*out){tl_pi_object(Kind,device,*out,ci);}return result; \
+} \
+static void w_vkDestroy##Name(void *device,uint64_t object,const void *alloc){ \
+    typedef void(*fn)(void*,uint64_t,const void*); \
+    static _Atomic(fn) cached;fn real=atomic_load_explicit(&cached,memory_order_acquire); \
+    if(!real&&V.lib){real=(fn)dlsym(V.lib,"vkDestroy" #Name);atomic_store_explicit(&cached,real,memory_order_release);} \
+    tl_pi_forget_object(Kind,device,object);if(real)real(device,object,alloc); \
+}
+PI_OBJECT_WRAPPERS(Sampler,TL_PI_SAMPLER)
+PI_OBJECT_WRAPPERS(DescriptorSetLayout,TL_PI_DESCRIPTOR_LAYOUT)
+PI_OBJECT_WRAPPERS(PipelineLayout,TL_PI_PIPELINE_LAYOUT)
+PI_OBJECT_WRAPPERS(RenderPass,TL_PI_RENDER_PASS)
+#undef PI_OBJECT_WRAPPERS
+static void w_vkDestroyPipeline(void *device,uint64_t pipeline,const void *alloc){
+    typedef void(*fn)(void*,uint64_t,const void*);
+    fn real=V.lib?(fn)dlsym(V.lib,"vkDestroyPipeline"):NULL;
+    tl_pi_forget_object(TL_PI_PIPELINE,device,pipeline);if(real)real(device,pipeline,alloc);
+}
+
 /* Direct MoltenVK handles only, no Vulkan loader/layers. The deprecated
  * export is optional: absent exports leave GPU timing unavailable. */
 static void observe_game_queue(void *device,void *queue)
@@ -540,6 +568,7 @@ static int w_vkAcquireNextImageKHR(void *device, uint64_t swapchain, uint64_t ti
     if (!real && V.lib) real = (pfn_acquire)dlsym(V.lib, "vkAcquireNextImageKHR");
     bool measure = tl_ue4_sharp_graphics_enabled();
     int64_t start = measure ? monotonic_ns() : 0;
+    TL_CP_SCOPE(TL_CP_ACQUIRE);
     int r = real ? real(device, swapchain, timeout, sem, fence, index) : -3;
     if (measure) record_host_timing(TIMING_ACQUIRE, start);
     if (r != VK_SUCCESS && atomic_fetch_add(&bad, 1) < 20) tl_log_line("vulkan: vkAcquireNextImageKHR -> %d", r);
@@ -558,6 +587,7 @@ static int w_vkQueueSubmit(void *queue, uint32_t count, const void *submits, uin
     }
     bool measure = tl_ue4_sharp_graphics_enabled();
     int64_t start = measure ? monotonic_ns() : 0;
+    TL_CP_SCOPE(TL_CP_SUBMIT);
     tl_em_work_ticket work;bool cpu_measure=tl_em_work_begin(&work);
     int result = real ? real(queue, count, submits, fence) : -3;
     if(cpu_measure)tl_em_work_end(work);
@@ -634,6 +664,7 @@ static int w_vkGetPipelineCacheData(void *device, uint64_t cache, size_t *size, 
 typedef int (*pfn_create_pipelines)(void *, uint64_t, uint32_t, const void *, const void *, uint64_t *);
 static int measure_pipeline_create(pfn_create_pipelines real, unsigned stage, void *device, uint64_t cache, uint32_t count, const void *ci, const void *alloc, uint64_t *out)
 {
+    TL_CP_SCOPE(stage==TIMING_COMPUTE_PIPELINES?TL_CP_COMPUTE:TL_CP_GRAPHICS);
     tl_pi_request identity = tl_pi_identify(stage == TIMING_COMPUTE_PIPELINES, device, count, ci);
     tl_pf_batch feedback_batch;
     const void *observed_ci = tl_pf_prepare(stage == TIMING_COMPUTE_PIPELINES, device, count, ci, &feedback_batch);
@@ -643,6 +674,7 @@ static int measure_pipeline_create(pfn_create_pipelines real, unsigned stage, vo
     bool locked = tl_pc_enter();
     int64_t entered = measure ? monotonic_ns() : 0;
     int result = real ? real(device, cache, count, observed_ci, alloc, out) : -3;
+    if(real&&out)tl_pi_pipeline_objects(identity,device,out);
     if (real && count) tl_pc_changed(device, cache);
     tl_pc_leave(locked);
     if (measure) {
@@ -858,6 +890,7 @@ static int w_vkGetPastPresentationTimingGOOGLE(void *device,uint64_t swap,uint32
 typedef int (*pfn_queue_present)(void *, const void *);
 static int w_vkQueuePresentKHR(void *queue, const void *info)
 {
+    TL_CP_SCOPE(TL_CP_PRESENT);
     static _Atomic(pfn_queue_present) cached;
     pfn_queue_present real=atomic_load_explicit(&cached,memory_order_acquire);
     if(!real&&V.lib){real=(pfn_queue_present)dlsym(V.lib,"vkQueuePresentKHR");atomic_store_explicit(&cached,real,memory_order_release);}
@@ -1265,6 +1298,15 @@ static const struct { const char *name; void *fn; } k_over[] = {
     { "vkDestroyDevice", w_vkDestroyDevice },
     { "vkCreateShaderModule", w_vkCreateShaderModule },
     { "vkDestroyShaderModule", w_vkDestroyShaderModule },
+    { "vkCreateSampler", w_vkCreateSampler },
+    { "vkDestroySampler", w_vkDestroySampler },
+    { "vkCreateDescriptorSetLayout", w_vkCreateDescriptorSetLayout },
+    { "vkDestroyDescriptorSetLayout", w_vkDestroyDescriptorSetLayout },
+    { "vkCreatePipelineLayout", w_vkCreatePipelineLayout },
+    { "vkDestroyPipelineLayout", w_vkDestroyPipelineLayout },
+    { "vkCreateRenderPass", w_vkCreateRenderPass },
+    { "vkDestroyRenderPass", w_vkDestroyRenderPass },
+    { "vkDestroyPipeline", w_vkDestroyPipeline },
     { "vkCreateGraphicsPipelines", w_vkCreateGraphicsPipelines },
     { "vkCreateComputePipelines", w_vkCreateComputePipelines },
     { "vkCreateSwapchainKHR", w_vkCreateSwapchainKHR },

@@ -12,6 +12,7 @@ class CompatSyncTests(unittest.TestCase):
   source=r'''
 #define _GNU_SOURCE
 #define _DARWIN_C_SOURCE
+#include "husk-tl-component-scope.h"
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdint.h>
@@ -72,7 +73,7 @@ int once_case(void){
  return atomic_load(&init_count)==1&&atomic_load(&once_word)==1?0:3;
 }
 '''
-  (p/'test.c').write_text(source);subprocess.run([os.environ.get('CC','cc'),'-std=c11','-O2','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(ROOT/'src/translation-layer-next'),str(p/'test.c'),'-o',str(p/'test.so')],check=True);cls.lib=ctypes.CDLL(str(p/'test.so'))
+  (p/'test.c').write_text(source);subprocess.run([os.environ.get('CC','cc'),'-std=c11','-O2','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(ROOT/'src/translation-layer-next'),str(p/'test.c'),str(ROOT/'src/translation-layer-next/husk-tl-component-profile.c'),'-o',str(p/'test.so')],check=True);cls.lib=ctypes.CDLL(str(p/'test.so'))
  def test_spurious_wake_preserves_relative_deadline(self):self.assertEqual(self.lib.deadline_case(0),0)
  def test_spurious_wake_preserves_absolute_monotonic_deadline(self):self.assertEqual(self.lib.deadline_case(1),0)
  def test_validation_and_value_mismatch_before_expired_deadline(self):self.assertEqual(self.lib.invalid_case(),0)

@@ -52,6 +52,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
     private let clockPresentation: Bool
     private let feedbackClockCorrection: Bool
     private let nativePipelineArchiveMode: Int
+    private let nativeArchiveVerification: Bool
     private let driverProfiling: Bool
     private let threadPolicy: Int
     /// The app's other APKs -- splits, an asset pack -- which an SDL game's libraries and data may be in.
@@ -80,7 +81,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
     /// Called when three fingers tap at once: the way back to the interface while it is hidden.
     var onThreeFingerTap: (() -> Void)?
 
-    init(apk: String, extraApks: [String] = [], dataDir: String, engine: TLNativeEngine, portrait: Bool = false, scale: CGFloat = 2, sharpGraphics: Bool = false, efficientGraphics: Bool = false, efficientFrameLimit: Int = 60, threadPolicy: Int = 0, submissionMode: Int = 0, driverProfiling: Bool = false, pipelineIdentification: Bool = false, engineOnlyLimiter: Bool = false, renderTargetInventory: Bool = false, pipelineFeedback: Bool = false, spatialUpscaling: Bool = false, spatialInputPercent: Int = 80, clockPresentation: Bool = false, feedbackClockCorrection: Bool = false, nativePipelineArchiveMode: Int = 0) {
+    init(apk: String, extraApks: [String] = [], dataDir: String, engine: TLNativeEngine, portrait: Bool = false, scale: CGFloat = 2, sharpGraphics: Bool = false, efficientGraphics: Bool = false, efficientFrameLimit: Int = 60, threadPolicy: Int = 0, submissionMode: Int = 0, driverProfiling: Bool = false, pipelineIdentification: Bool = false, engineOnlyLimiter: Bool = false, renderTargetInventory: Bool = false, pipelineFeedback: Bool = false, spatialUpscaling: Bool = false, spatialInputPercent: Int = 80, clockPresentation: Bool = false, feedbackClockCorrection: Bool = false, nativePipelineArchiveMode: Int = 0, nativeArchiveVerification: Bool = false) {
         self.apk = apk
         self.sharpGraphics = sharpGraphics
         self.efficientGraphics = efficientGraphics
@@ -95,6 +96,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
         self.clockPresentation = clockPresentation
         self.feedbackClockCorrection = feedbackClockCorrection
         self.nativePipelineArchiveMode = nativePipelineArchiveMode
+        self.nativeArchiveVerification = nativeArchiveVerification
         self.engineOnlyLimiter = engineOnlyLimiter
         self.renderTargetInventory = renderTargetInventory
         self.portrait = portrait
@@ -307,7 +309,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
                 "launch_width": width, "launch_height": height,
                 "sharp_graphics": sharpGraphics, "efficient_graphics": efficientGraphics,
                 "requested_fps": efficientFrameLimit, "worker_policy": threadPolicy,
-                "submission_mode": submissionMode, "detailed_driver_profiling": driverProfiling, "pipeline_identification": pipelineIdentification, "pipeline_creation_feedback": pipelineFeedback, "metalfx_spatial_requested": spatialUpscaling, "metalfx_input_percent": spatialInputPercent, "clock_correct_presentation": clockPresentation, "feedback_clock_correction": feedbackClockCorrection, "native_pipeline_archive_mode": nativePipelineArchiveMode, "engine_only_limiter": engineOnlyLimiter, "render_target_inventory": renderTargetInventory,
+                "submission_mode": submissionMode, "detailed_driver_profiling": driverProfiling, "pipeline_identification": pipelineIdentification, "pipeline_creation_feedback": pipelineFeedback, "metalfx_spatial_requested": spatialUpscaling, "metalfx_input_percent": spatialInputPercent, "clock_correct_presentation": clockPresentation, "feedback_clock_correction": feedbackClockCorrection, "native_pipeline_archive_mode": nativePipelineArchiveMode, "native_archive_verification": nativeArchiveVerification, "engine_only_limiter": engineOnlyLimiter, "render_target_inventory": renderTargetInventory,
                 "windowed": windowed, "cache": "existing compatible persistence; see runtime events",
                 "driver": "bundled MoltenVK; verify runtime version in attempt log"
             ])
@@ -360,6 +362,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
             husk_ue4_set_clock_presentation(clockPresentation)
             husk_ue4_set_feedback_clock(feedbackClockCorrection)
             husk_ue4_set_native_archive(Int32(nativePipelineArchiveMode))
+            husk_ue4_set_native_archive_verification(nativeArchiveVerification)
             husk_ue4_set_spatial_upscaling(spatialUpscaling)
             husk_ue4_set_spatial_input_percent(Int32(spatialInputPercent))
             husk_ue4_set_sharp_graphics(sharpGraphics)

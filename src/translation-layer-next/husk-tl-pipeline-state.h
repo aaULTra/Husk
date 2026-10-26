@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Private partial-v2 state hashing; included after number()/bytes(). This is
- * diagnostic grouping, not a complete Vulkan compatibility/cache/replay key. */
+ * diagnostic grouping, not a Vulkan compatibility/cache/replay key. */
 typedef struct {uint32_t type;const void *next;uint32_t flags;} pi_prefix;
 typedef struct {uint32_t type;const void *next;uint32_t flags,count;const uint32_t *states;} pi_dynamic;
 typedef struct {uint32_t type;const void *next;uint32_t flags,bindings;const uint32_t *binding_data;uint32_t attributes;const uint32_t *attribute_data;} pi_vertex;
@@ -16,13 +16,13 @@ static uint64_t pi_float(uint64_t h,float value){uint32_t word;memcpy(&word,&val
 static bool pi_state(uint64_t *h,const void *raw,uint32_t type,unsigned *known){
  *h=number(*h,raw!=NULL);if(!raw)return false;
  const pi_prefix *p=raw;if(p->type!=type){*known=0;return false;}
- *h=number(*h,p->flags);if(p->next)*known=0;return true;
+ *h=number(*h,p->flags);if(p->next||p->flags){*known=0;return false;}return true;
 }
 static uint64_t fixed_state(uint64_t h,const tl_pi_graphics *p,unsigned *known){
  /* Unknown top-level extensions (e.g. pipeline libraries) change which nested
   * pointers are meaningful. Read only feedback nodes; keep other state unknown. */
  const pi_prefix *chain=p->next;unsigned nodes=0;
- while(chain&&nodes++<32){if(chain->type!=1000192000u){*known=0;return h;}chain=chain->next;}
+ while(chain&&nodes++<32){if(chain->type!=1000192000u&&chain->type!=1000044002u){*known=0;return h;}chain=chain->next;}
  if(chain){*known=0;return h;}
  uint32_t dynamic=0;bool unknown_dynamic=false;
  if(pi_state(&h,p->dynamic,27,known)){
@@ -31,6 +31,7 @@ static uint64_t fixed_state(uint64_t h,const tl_pi_graphics *p,unsigned *known){
   if(d->count>128||(d->count&&!d->states)){*known=0;return h;}
   for(unsigned i=0;i<d->count;i++){h=number(h,d->states[i]);if(d->states[i]<9)dynamic|=1u<<d->states[i];else unknown_dynamic=true;}
  }
+ if(!*known)return h;
  /* Extended dynamic state can make otherwise ignored pointers invalid to read.
   * Keep a partial shader group instead of guessing those extension semantics. */
  if(unknown_dynamic){*known=0;return h;}
@@ -41,8 +42,11 @@ static uint64_t fixed_state(uint64_t h,const tl_pi_graphics *p,unsigned *known){
   if(v->bindings>128||v->attributes>128||(v->bindings&&!v->binding_data)||(v->attributes&&!v->attribute_data))*known=0;
   else{for(unsigned i=0;i<v->bindings*3;i++)h=number(h,v->binding_data[i]);for(unsigned i=0;i<v->attributes*4;i++)h=number(h,v->attribute_data[i]);}
  }
+ if(!*known)return h;
  if(!mesh&&pi_state(&h,p->assembly,20,known)){const pi_assembly *v=p->assembly;h=number(number(h,v->topology),v->restart);}
+ if(!*known)return h;
  if(tess&&pi_state(&h,p->tessellation,21,known))h=number(h,((const pi_tess *)p->tessellation)->points);
+ if(!*known)return h;
  bool discard=false;
  if(pi_state(&h,p->raster,23,known)){
   const pi_raster *v=p->raster;discard=v->discard!=0;
@@ -50,6 +54,7 @@ static uint64_t fixed_state(uint64_t h,const tl_pi_graphics *p,unsigned *known){
   if(!(dynamic&(1u<<3))&&v->bias){h=pi_float(pi_float(pi_float(h,v->constant),v->clamp_factor),v->slope);}
   if(!(dynamic&(1u<<2)))h=pi_float(h,v->line);
  }
+ if(!*known)return h;
  /* Rasterizer discard ignores viewport, multisample, depth and blend pointers. */
  if(discard)return h;
  if(pi_state(&h,p->viewport,22,known)){
@@ -58,17 +63,20 @@ static uint64_t fixed_state(uint64_t h,const tl_pi_graphics *p,unsigned *known){
   if(!(dynamic&1)){if(v->viewports&&!v->viewport_data)*known=0;else for(unsigned i=0;i<v->viewports*6;i++)h=pi_float(h,v->viewport_data[i]);}
   if(!(dynamic&2)){if(v->scissors&&!v->scissor_data)*known=0;else for(unsigned i=0;i<v->scissors*4;i++)h=number(h,v->scissor_data[i]);}
  }
+ if(!*known)return h;
  if(pi_state(&h,p->multisample,24,known)){
   const pi_multi *v=p->multisample;h=number(number(number(number(h,v->samples),v->shading),v->coverage),v->one);
   if(v->shading)h=pi_float(h,v->minimum);
   if(!v->samples||v->samples>64||(v->samples&(v->samples-1)))*known=0;
   else for(unsigned i=0;i<(v->samples+31)/32;i++)h=number(h,v->mask?v->mask[i]:UINT32_MAX);
  }
+ if(!*known)return h;
  if(pi_state(&h,p->depth,25,known)){
   const pi_depth *v=p->depth;h=number(number(number(number(number(h,v->test),v->write),v->compare),v->bounds),v->stencil);
   if(v->stencil)for(unsigned side=0;side<2;side++){const uint32_t *words=side?v->back:v->front;for(unsigned i=0;i<7;i++)if(i<4||!(dynamic&(1u<<(i+2))))h=number(h,words[i]);}
   if(v->bounds&&!(dynamic&(1u<<5)))h=pi_float(pi_float(h,v->minimum),v->maximum);
  }
+ if(!*known)return h;
  if(pi_state(&h,p->blend,26,known)){
   const pi_blend *v=p->blend;h=number(number(number(h,v->logic),v->op),v->count);
   if(v->count>16||(v->count&&!v->attachments))*known=0;else for(unsigned i=0;i<v->count*8;i++)h=number(h,v->attachments[i]);

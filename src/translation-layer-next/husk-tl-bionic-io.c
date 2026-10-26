@@ -1,3 +1,4 @@
+#include "husk-tl-component-scope.h"
 #include "husk-tl-efficiency.h"
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /*
@@ -1570,6 +1571,7 @@ static void fut_unlink(size_t h, fut_waiter *w)
 static long futex_call(uint32_t *addr, int op, uint32_t val, const struct timespec *to, uint32_t bitset_val)
 {
     int cmd = op & 127;
+    TL_CP_SCOPE((cmd==0||cmd==9)?TL_CP_FUTEX_WAIT:TL_CP_FUTEX_WAKE);
     if(cmd!=0&&cmd!=1&&cmd!=9&&cmd!=10)return -38;
     if (!addr) return -14;
     if ((uintptr_t)addr & 3u) return -22;

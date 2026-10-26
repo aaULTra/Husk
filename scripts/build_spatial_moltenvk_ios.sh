@@ -25,6 +25,7 @@ for patch in "$HUSK_ROOT"/patches/husk-spirv-cross-*.patch; do
     git -C "$SPVC" apply --reverse --check "$patch" 2>/dev/null || git -C "$SPVC" apply "$patch"
 done
 ./fetchDependencies --ios --spirv-cross-root "$SPVC"
+python3 "$HUSK_ROOT/scripts/verify_vulkan_observer_abi.py" "$SRC" --ios
 make ios
 SOURCE="$SRC/Package/Release/MoltenVK/dynamic/MoltenVK.xcframework/ios-arm64/MoltenVK.framework"
 test -s "$SOURCE/MoltenVK"

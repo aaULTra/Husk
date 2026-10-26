@@ -102,7 +102,16 @@ def thread_cpu_audit(data):
         if previous:
             before_t, before = previous
             dt = sample['t'] - before_t
-            if dt > 0:
+            overlaps_exclusion = False
+            for exclusion in data.get('exclusions', []):
+                a, b = exclusion.get('start'), exclusion.get('end')
+                if not all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) for v in (a, b)) or b < a:
+                    overlaps_exclusion = True
+                    break
+                if max(before_t, a) < min(sample['t'], b):
+                    overlaps_exclusion = True
+                    break
+            if dt > 0 and not overlaps_exclusion:
                 for key in rows.keys() & before.keys():
                     r, old = rows[key], before[key]
                     delta = r['user_seconds'] + r['system_seconds'] - old['user_seconds'] - old['system_seconds']
@@ -118,11 +127,11 @@ def thread_cpu_audit(data):
     for row in rows:
         row['cpu_percent_one_core'] = row['cpu_seconds'] / row['observed_seconds'] * 100
     return {'status': 'MEASURED cumulative counters / ESTIMATED per-thread deltas' if rows else 'UNAVAILABLE: no paired included thread snapshots',
-            'top_threads': rows[:16], 'scope': 'Only intersecting identities; host included; exited/missing threads absent, not P/E placement or electrical power'}
+            'top_threads': rows[:16], 'scope': 'Only intersecting identities with no excluded interval between samples; host included; exited/missing threads absent, not P/E placement or electrical power'}
 
 
 def audit(data):
-    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
+    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11):
         raise ValueError('Unsupported diagnostic schema; preserve source for a version-aware audit')
     summary, metadata = data.get('summary', {}), data.get('metadata', {})
     windows, samples = data.get('windows', []), data.get('samples', [])
@@ -205,7 +214,9 @@ def audit(data):
                        'rollbacks': worker.get('rollback_requests_since_launch'), 'waiting_reason': worker.get('waiting_reason'),
                        'normal_utility_last_observations': len(utility), 'core_residency': 'UNAVAILABLE',
                        'scope': 'Last observations, not live thread count or verified placement'},
-            'native_pipeline_archive': data.get('native_pipeline_archive', {}),
+            'native_pipeline_archive': data.get('native_pipeline_archive', {}), 'component_sampling': data.get('component_sampling', {}),
+            'driver_phases': data.get('driver_phases', {}), 'component_triage': data.get('component_triage', {}),
+            'delayed_os_reports': data.get('delayed_os_reports', {}),
             'presentation_clock': data.get('presentation_clock', {}), 'compatibility_sync': data.get('compatibility_sync', {}),
             'thread_cpu': thread_cpu_audit(data), 'submit_cpu_work': data.get('submit_cpu_work', {}),
             'gpu_windows': data.get('gpu_windows', []),

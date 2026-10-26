@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #define _DARWIN_C_SOURCE
+#include "husk-tl-component-scope.h"
 #include "husk-tl-jni.h"
 
 #include <pthread.h>
@@ -471,6 +472,7 @@ static jvalue g_zero;
 
 static jvalue invoke(jobj *self, tl_jmeth *m, bool nonvirtual, const jvalue *args)
 {
+    TL_CP_SCOPE(TL_CP_JNI);
     if (m->dvm && tl_dvm) {
         jvalue r = tl_dvm->invoke(m->dvm, self, nonvirtual, args);
         if (g_trace >= 3) {
