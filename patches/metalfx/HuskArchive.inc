@@ -89,7 +89,7 @@ static bool huskArchiveBind(id<MTLDevice> device){
  huskArchiveStats.supported=probe!=nil;[probe release];if(!huskArchiveStats.supported)huskArchiveEnabled.store(false);return huskArchiveStats.supported;
 }
 extern "C" __attribute__((visibility("default"))) int vkHuskArchiveConfigure(const tl_na_config *c){
- if(!c||c->version!=1||c->size!=sizeof(*c)||c->reserved)return 0;
+ if(!c||c->version!=1||c->size!=sizeof(*c)||c->reserved||c->enabled>1)return 0;
  std::lock_guard<std::mutex> guard(huskArchiveLock);
  if(huskArchiveDevice||huskArchiveStats.preparing)return 0; // launch-only configuration
  if(c->enabled&&(!c->directory||!c->directory[0]||strlen(c->directory)>900))return 0;
@@ -171,8 +171,13 @@ extern "C" __attribute__((visibility("default"))) int vkHuskArchivePrepare(void)
    huskArchiveStats.prepared+=prepared;huskArchiveStats.prepare_failures+=failures;
    if(pending.size()>prepared+failures)huskArchiveStats.descriptors_dropped+=pending.size()-prepared-failures;
    huskArchiveStats.prepare_ns+=huskArchiveNow()-started;
-   if(wrote&&replacement&&generation==huskArchiveGeneration){[huskArchiveRead release];huskArchiveRead=replacement;huskArchiveStats.saved_bytes=saved;}
-   else {if(prepared||!writer)huskArchiveStats.write_failures++;[replacement release];}
+   // A successful disk write remains successful if teardown cancels publishing
+   // its live read archive. Keep I/O failures separate from that lifecycle case.
+   if(wrote)huskArchiveStats.saved_bytes=saved;
+   else if(prepared||!writer)huskArchiveStats.write_failures++;
+   if(wrote&&!replacement)huskArchiveStats.read_failures++;
+   if(wrote&&replacement&&generation==huskArchiveGeneration){[huskArchiveRead release];huskArchiveRead=replacement;}
+   else [replacement release];
    huskArchiveStats.preparing=0;
   }
  }

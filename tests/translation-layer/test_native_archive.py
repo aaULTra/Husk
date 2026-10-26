@@ -93,7 +93,7 @@ static bool failArchive=false,failWrite=false,largeWrite=false,forgetDuringPrepa
 @end
 int main(int argc,char**argv){assert(argc==2);@autoreleasepool{
  Device*device=[Device new];device.name=@"test";device.registryID=42;
- tl_na_config c={1,sizeof(c),0,0,argv[1]};assert(vkHuskArchiveConfigure(&c));
+ tl_na_config c={1,sizeof(c),2,0,argv[1]};assert(!vkHuskArchiveConfigure(&c));c.enabled=0;assert(vkHuskArchiveConfigure(&c));
  Descriptor*d=[Descriptor new];unsigned completions=0;__block unsigned complete=0;
  huskArchiveNewRender((id<MTLDevice>)device,(MTLRenderPipelineDescriptor*)d,^(id s,NSError*e){assert(s&&!e);complete++;});assert(complete==1&&huskArchivePending.empty());
  c.enabled=1;assert(vkHuskArchiveConfigure(&c));
@@ -115,7 +115,9 @@ int main(int argc,char**argv){assert(argc==2);@autoreleasepool{
  NSData*before=[NSData dataWithContentsOfFile:path];
  failWrite=true;assert(vkHuskArchivePrepare()==-1);assert([[NSData dataWithContentsOfFile:path]isEqual:before]);failWrite=false;
  huskArchiveCapture((id<MTLDevice>)device,d,false,20000000,true);largeWrite=true;assert(vkHuskArchivePrepare()==-1);largeWrite=false;assert([[NSData dataWithContentsOfFile:path]isEqual:before]);
- huskArchiveCapture((id<MTLDevice>)device,d,false,20000000,true);forgetDuringPrepare=true;assert(vkHuskArchivePrepare()==1);assert(!huskArchiveRead&&!huskArchiveDevice&&!huskArchiveEnabled.load());
+ huskArchiveCapture((id<MTLDevice>)device,d,false,20000000,true);unsigned long long oldWriteFailures=huskArchiveStats.write_failures;
+ forgetDuringPrepare=true;assert(vkHuskArchivePrepare()==1);assert(!huskArchiveRead&&!huskArchiveDevice&&!huskArchiveEnabled.load());
+ assert(vkHuskArchiveSnapshot(&stats)&&stats.saved_bytes&&stats.write_failures==oldWriteFailures); // teardown is not a failed disk write
  assert(vkHuskArchiveConfigure(&c));
  huskArchiveNewRender((id<MTLDevice>)device,(MTLRenderPipelineDescriptor*)d,^(id s,NSError*e){assert(s&&!e);complete++;});assert(vkHuskArchiveSnapshot(&stats)&&stats.restored_bytes);
  Descriptor*asyncDescriptor=[Descriptor new];device.defer=YES;dispatch_semaphore_t done=dispatch_semaphore_create(0);
