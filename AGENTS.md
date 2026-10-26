@@ -30,7 +30,7 @@ Working code, a passing build, a larger cache file, nominal thermal state and a 
 
 Label metrics MEASURED, ESTIMATED, UNAVAILABLE or EXTERNAL, with provenance, units and scope. Distinguish host present cadence from displayed frames; callback latency from GPU execution; cache seed acceptance from a cache hit; process CPU usage from device CPU utilisation; thermal classification from numerical temperature. Do not sum overlapping driver durations into frame time.
 
-Use bounded diagnostics, event-driven collection and periodic aggregation. Do not add per-frame disk logs, queue-idle waits or synchronous GPU readbacks for ordinary monitoring. Keep heavyweight driver profiling opt-in and off for normal energy comparisons. Measure monitoring overhead.
+Maximise actionable information alongside implementation batches, as requested by the user; prioritise missing decision-critical data and reuse existing collectors. Diagnostics have CPU/GPU/memory/energy cost: keep routine capture bounded, expose losses/coverage and make detailed or one-shot capture explicitly opt-in. Use bounded diagnostics, event-driven collection and periodic aggregation. Do not add per-frame disk logs, queue-idle waits or synchronous GPU readbacks for ordinary monitoring. Keep heavyweight driver profiling opt-in and off for normal energy comparisons. Measure monitoring overhead.
 
 Compare matched scenes, build/configuration, brightness, charging state, ambient/starting temperature and cache state. Separate first use, repeated use and persisted-cache restart tests. Record lifecycle/manual interruptions and exclusions without deleting diagnostic evidence. Do not infer power savings from lower resolution or lower CPU submission duration alone.
 

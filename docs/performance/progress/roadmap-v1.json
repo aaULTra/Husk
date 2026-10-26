@@ -1,7 +1,7 @@
 {
   "model": "HUSK-ROADMAP-v1",
   "gate_version": "whole-milestones-1",
-  "updated": "2026-10-25",
+  "updated": "2026-10-26",
   "scope": "M0-M10; M4 platform plus explicitly reserved future Duo; first scored baseline",
   "milestones": [
     {
@@ -268,16 +268,19 @@
           {
             "id": "M3-D1",
             "criterion": "Actual M4 GPU timestamps, queue attribution and exclusions validated",
-            "status": "pending",
-            "evidence": [],
-            "remaining": "No new sampler export supplied"
+            "status": "passed",
+            "evidence": [
+              "docs/performance/runs/E-M4-005.md",
+              "docs/performance/runs/E-M4-005.audit.json"
+            ],
+            "remaining": "Verified for B sampled game-queue timestamps and exported panel exclusions only. A single-anchor mapping ambiguity remains; broad lifecycle/overhead/energy acceptance is separate."
           },
           {
             "id": "M3-D2",
             "criterion": "Representative CPU/GPU/presentation attribution with coverage limits",
             "status": "pending",
             "evidence": [],
-            "remaining": "New GPU data absent"
+            "remaining": "Two bounded GPU datasets available; representative deeper attribution, per-frame limits and instrumentation cost still need matched/trace evidence."
           },
           {
             "id": "M3-D3",
@@ -788,34 +791,38 @@
             "criterion": "Actual useful lower-resolution scene input and output dimensions verified",
             "status": "pending",
             "evidence": [
-              "docs/performance/17-metalfx-spatial-prototype.md"
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md"
             ],
-            "remaining": "Default-off prototype now built; Actual useful lower-resolution scene input and output dimensions verified requires physical matched evidence."
+            "remaining": "Guest 1696x1280 and scaler 2128x1600 path established; useful internal scene identity/resolution not independently verified, inventory saturated."
           },
           {
             "id": "M9-D2",
             "criterion": "Vulkan/Metal lifetime/synchronisation and colour correctness",
             "status": "pending",
             "evidence": [
-              "docs/performance/17-metalfx-spatial-prototype.md"
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md"
             ],
             "remaining": "Default-off prototype now built; Vulkan/Metal lifetime/synchronisation and colour correctness requires physical matched evidence."
           },
           {
             "id": "M9-D3",
             "criterion": "HUD/detail/motion perceptual quality and input latency acceptable",
-            "status": "pending",
+            "status": "passed",
             "evidence": [
-              "docs/performance/17-metalfx-spatial-prototype.md"
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md"
             ],
-            "remaining": "Default-off prototype now built; HUD/detail/motion perceptual quality and input latency acceptable requires physical matched evidence."
+            "remaining": "Subjective ordinary-play acceptance for E-M4-005: visually probably the same, no issue noticed. No quantified input latency/objective equivalence; matched visual/energy and lifecycle gates remain separate."
           },
           {
             "id": "M9-D4",
             "criterion": "Resize/pause/resume/device-loss/baseline restoration checks",
             "status": "pending",
             "evidence": [
-              "docs/performance/17-metalfx-spatial-prototype.md"
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md"
             ],
             "remaining": "Default-off prototype now built; Resize/pause/resume/device-loss/baseline restoration checks requires physical matched evidence."
           }
@@ -826,7 +833,8 @@
             "criterion": "Total GPU cost including scaler improves for chosen visual budget",
             "status": "pending",
             "evidence": [
-              "docs/performance/17-metalfx-spatial-prototype.md"
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md"
             ],
             "remaining": "Default-off prototype now built; Total GPU cost including scaler improves for chosen visual budget requires physical matched evidence."
           },
@@ -835,16 +843,18 @@
             "criterion": "Comparable quality and smooth 60 FPS under matched conditions",
             "status": "pending",
             "evidence": [
-              "docs/performance/17-metalfx-spatial-prototype.md"
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md"
             ],
-            "remaining": "Default-off prototype now built; Comparable quality and smooth 60 FPS under matched conditions requires physical matched evidence."
+            "remaining": "User no-issue feedback and ~60 FPS host cadence support ordinary play, but matched quality/smoothness comparison remains unverified."
           },
           {
             "id": "M9-E3",
             "criterion": "Repeated sustained electrical/battery/temperature benefit",
             "status": "pending",
             "evidence": [
-              "docs/performance/17-metalfx-spatial-prototype.md"
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md"
             ],
             "remaining": "Default-off prototype now built; Repeated sustained electrical/battery/temperature benefit requires physical matched evidence."
           }
@@ -921,5 +931,6 @@
       }
     }
   ],
-  "source_sha": "9d298c5c7c56af87c715ba2b8ad03111a48dcbac"
+  "source_sha": "9d298c5c7c56af87c715ba2b8ad03111a48dcbac",
+  "evidence_id": "E-M4-005"
 }

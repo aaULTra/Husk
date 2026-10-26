@@ -1,0 +1,369 @@
+{
+  "sessions": [
+    {
+      "analysis_version": 2,
+      "build": "6c4fef3d20178f8b4a49a157a5863b2de981a616-dirty",
+      "schema_version": 2,
+      "configuration": {
+        "cache": "existing compatible persistence; see runtime events",
+        "detailed_driver_profiling": false,
+        "driver": "bundled MoltenVK; verify runtime version in attempt log",
+        "efficient_graphics": true,
+        "engine": "ue4",
+        "engine_only_limiter": false,
+        "game": "Minecraft-Dungeons-v1.4-full-apkvision.apk",
+        "launch_height": 1600,
+        "launch_width": 2128,
+        "pipeline_identification": false,
+        "requested_fps": 60,
+        "sharp_graphics": true,
+        "submission_mode": 0,
+        "windowed": false,
+        "worker_policy": 2
+      },
+      "errors": [],
+      "warnings": [],
+      "host": {
+        "retained_fps": 57.17270623889466,
+        "p95_ms": 20.9,
+        "p99_ms": 21,
+        "worst_ms": 474.38,
+        "slow_pipeline_calls": 40,
+        "cpu_weighted_percent_one_core": 62.8131672200976
+      },
+      "gpu": {
+        "status": "UNAVAILABLE: no sampled GPU data",
+        "records": 0,
+        "sample_clipped_interval_union_seconds": 0.0,
+        "exclusion_audit": {
+          "status": "UNAVAILABLE: no valid cross-clock alignment",
+          "included_interval_union_seconds_estimated": null,
+          "records_overlapping_exclusions": null
+        },
+        "scope": "Partial sampled command buffers; not utilisation, displayed frames or watts"
+      },
+      "worker": {
+        "active_mode": null,
+        "admissions": null,
+        "rollbacks": null,
+        "waiting_reason": null,
+        "normal_utility_last_observations": 0,
+        "core_residency": "UNAVAILABLE",
+        "scope": "Last observations, not live thread count or verified placement"
+      },
+      "spatial_upscaling": {},
+      "pipeline_feedback_request": {},
+      "pipeline_groups_since_launch_top8": [],
+      "render_inventory": {
+        "retained_group_count": 0
+      },
+      "conditions": {
+        "brightness_values": [
+          1
+        ],
+        "battery_states": [
+          1
+        ]
+      },
+      "battery": {
+        "coarse_pp_per_hour": 27.52317797218378,
+        "status": "ESTIMATED: coarse percentage-point drain; not measured power",
+        "power_watts": null
+      },
+      "energy_benefit": "UNVERIFIED: needs controlled comparable measurements"
+    },
+    {
+      "analysis_version": 2,
+      "build": "9d298c5c7c56af87c715ba2b8ad03111a48dcbac-dirty",
+      "schema_version": 6,
+      "configuration": {
+        "cache": "existing compatible persistence; see runtime events",
+        "detailed_driver_profiling": false,
+        "driver": "bundled MoltenVK; verify runtime version in attempt log",
+        "efficient_graphics": true,
+        "engine": "ue4",
+        "engine_only_limiter": false,
+        "game": "Minecraft-Dungeons-v1.4-full-apkvision.apk",
+        "launch_height": 1600,
+        "launch_width": 2128,
+        "metalfx_spatial_requested": true,
+        "pipeline_creation_feedback": false,
+        "pipeline_identification": false,
+        "render_target_inventory": true,
+        "requested_fps": 60,
+        "sharp_graphics": true,
+        "submission_mode": 0,
+        "windowed": false,
+        "worker_policy": 2
+      },
+      "errors": [],
+      "warnings": [
+        "GPU sampled coverage has losses or unresolved handlers",
+        "GPU records overlap exported exclusions after estimated clock mapping; use corrected analysis, not raw union, for included scope",
+        "Render inventory adds diagnostic observation work; not a monitoring-off energy comparison",
+        "Render inventory has lost observations; absent sizes are not evidence of absent render targets",
+        "Balanced run; additional Adaptive normal-worker caps were not requested"
+      ],
+      "host": {
+        "retained_fps": 59.728353620747775,
+        "p95_ms": 19.8,
+        "p99_ms": 20.3,
+        "worst_ms": 405.662,
+        "slow_pipeline_calls": 2,
+        "cpu_weighted_percent_one_core": 66.74044091434388
+      },
+      "gpu": {
+        "status": "MEASURED: sampled command-buffer GPU intervals; partial coverage",
+        "records": 6416,
+        "sample_clipped_interval_union_seconds": 15.316499458669568,
+        "exclusion_audit": {
+          "status": "ESTIMATED: anchor-mapped exclusions; raw measurements preserved",
+          "included_interval_union_seconds_estimated": 15.310283312850515,
+          "records_overlapping_exclusions": 3,
+          "scope": "Partial sampled buffers, not GPU utilisation, per-frame cost or power"
+        },
+        "scope": "Partial sampled command buffers; not utilisation, displayed frames or watts"
+      },
+      "worker": {
+        "active_mode": 2,
+        "admissions": 0,
+        "rollbacks": 0,
+        "waiting_reason": "Adaptive not selected",
+        "normal_utility_last_observations": 0,
+        "core_residency": "UNAVAILABLE",
+        "scope": "Last observations, not live thread count or verified placement"
+      },
+      "spatial_upscaling": {
+        "configured": true,
+        "driver_build": {
+          "default_enabled": false,
+          "feature": "M9-SPATIAL-v1",
+          "husk_spatial_patch_sha256": "06ccc3562c7d4e35a5bac09c96b81b9e76414aefed977caa7d698f395ebaefc9",
+          "schema": 1,
+          "upstream_commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+          "upstream_version": "1.4.2"
+        },
+        "encoded_calls": 18046,
+        "energy_benefit": "UNVERIFIED",
+        "failures": 0,
+        "images_created": 3,
+        "input_height": 1280,
+        "input_width": 1696,
+        "live_images": 3,
+        "output_height": 1600,
+        "output_width": 2128,
+        "patch": "M9-SPATIAL-v1",
+        "plan_ids": [
+          "M9",
+          "M3"
+        ],
+        "scope": "MEASURED driver configuration/encode calls; successful encode is not proof of displayed quality or energy benefit"
+      },
+      "pipeline_feedback_request": {
+        "active": false,
+        "appended_extension_devices": 0,
+        "benefit_validation": "unverified",
+        "declined_devices": 0,
+        "enabled_devices": 0,
+        "guest_enabled_devices": 0,
+        "injected_pipeline_infos": 0,
+        "passive_pipeline_infos": 0,
+        "plan_ids": [
+          "M2",
+          "CACHE-01"
+        ],
+        "requested": false,
+        "scope": "Optional supported driver feedback; stage shader-library hits differ from whole-pipeline hits; neither guarantees no Metal pipeline work",
+        "skipped_batches": 0,
+        "unsupported_devices": 0
+      },
+      "pipeline_groups_since_launch_top8": [],
+      "render_inventory": {
+        "active": true,
+        "benefit_validation": "unverified",
+        "dropped_observations": 351366,
+        "metalfx_integration": "separate opt-in prototype; requested inventory does not prove internal scene resolution",
+        "observed_image_creations": 4273,
+        "observed_legacy_render_areas": 350955,
+        "plan_ids": [
+          "M9",
+          "GAP-03"
+        ],
+        "requested": true,
+        "scope": "Requested base fields/legacy render areas since launch; not actual scene/HUD pixels, executed GPU passes, texture identity or replay state; swapchain images and newer renderpass paths may be absent",
+        "retained_group_count": 256
+      },
+      "conditions": {
+        "brightness_values": [
+          1
+        ],
+        "battery_states": [
+          1
+        ]
+      },
+      "battery": {
+        "coarse_pp_per_hour": null,
+        "status": "UNRESOLVED: no reported battery decrease; not zero energy",
+        "power_watts": null
+      },
+      "energy_benefit": "UNVERIFIED: needs controlled comparable measurements"
+    },
+    {
+      "analysis_version": 2,
+      "build": "9d298c5c7c56af87c715ba2b8ad03111a48dcbac-dirty",
+      "schema_version": 6,
+      "configuration": {
+        "cache": "existing compatible persistence; see runtime events",
+        "detailed_driver_profiling": false,
+        "driver": "bundled MoltenVK; verify runtime version in attempt log",
+        "efficient_graphics": true,
+        "engine": "ue4",
+        "engine_only_limiter": false,
+        "game": "Minecraft-Dungeons-v1.4-full-apkvision.apk",
+        "launch_height": 1600,
+        "launch_width": 2128,
+        "metalfx_spatial_requested": true,
+        "pipeline_creation_feedback": false,
+        "pipeline_identification": false,
+        "render_target_inventory": true,
+        "requested_fps": 60,
+        "sharp_graphics": true,
+        "submission_mode": 0,
+        "windowed": false,
+        "worker_policy": 2
+      },
+      "errors": [],
+      "warnings": [
+        "GPU sampled coverage has losses or unresolved handlers",
+        "Render inventory adds diagnostic observation work; not a monitoring-off energy comparison",
+        "Render inventory has lost observations; absent sizes are not evidence of absent render targets",
+        "Balanced run; additional Adaptive normal-worker caps were not requested"
+      ],
+      "host": {
+        "retained_fps": 59.543845848839354,
+        "p95_ms": 18.3,
+        "p99_ms": 19.8,
+        "worst_ms": 411.843,
+        "slow_pipeline_calls": 18,
+        "cpu_weighted_percent_one_core": 62.63983612889269
+      },
+      "gpu": {
+        "status": "MEASURED: sampled command-buffer GPU intervals; partial coverage",
+        "records": 3337,
+        "sample_clipped_interval_union_seconds": 7.741024624527199,
+        "exclusion_audit": {
+          "status": "ESTIMATED: anchor-mapped exclusions; raw measurements preserved",
+          "included_interval_union_seconds_estimated": 7.741024624527199,
+          "records_overlapping_exclusions": 0,
+          "scope": "Partial sampled buffers, not GPU utilisation, per-frame cost or power"
+        },
+        "scope": "Partial sampled command buffers; not utilisation, displayed frames or watts"
+      },
+      "worker": {
+        "active_mode": 2,
+        "admissions": 0,
+        "rollbacks": 0,
+        "waiting_reason": "Adaptive not selected",
+        "normal_utility_last_observations": 0,
+        "core_residency": "UNAVAILABLE",
+        "scope": "Last observations, not live thread count or verified placement"
+      },
+      "spatial_upscaling": {
+        "configured": true,
+        "driver_build": {
+          "default_enabled": false,
+          "feature": "M9-SPATIAL-v1",
+          "husk_spatial_patch_sha256": "06ccc3562c7d4e35a5bac09c96b81b9e76414aefed977caa7d698f395ebaefc9",
+          "schema": 1,
+          "upstream_commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+          "upstream_version": "1.4.2"
+        },
+        "encoded_calls": 10455,
+        "energy_benefit": "UNVERIFIED",
+        "failures": 0,
+        "images_created": 3,
+        "input_height": 1280,
+        "input_width": 1696,
+        "live_images": 3,
+        "output_height": 1600,
+        "output_width": 2128,
+        "patch": "M9-SPATIAL-v1",
+        "plan_ids": [
+          "M9",
+          "M3"
+        ],
+        "scope": "MEASURED driver configuration/encode calls; successful encode is not proof of displayed quality or energy benefit"
+      },
+      "pipeline_feedback_request": {
+        "active": false,
+        "appended_extension_devices": 0,
+        "benefit_validation": "unverified",
+        "declined_devices": 0,
+        "enabled_devices": 0,
+        "guest_enabled_devices": 0,
+        "injected_pipeline_infos": 0,
+        "passive_pipeline_infos": 0,
+        "plan_ids": [
+          "M2",
+          "CACHE-01"
+        ],
+        "requested": false,
+        "scope": "Optional supported driver feedback; stage shader-library hits differ from whole-pipeline hits; neither guarantees no Metal pipeline work",
+        "skipped_batches": 0,
+        "unsupported_devices": 0
+      },
+      "pipeline_groups_since_launch_top8": [],
+      "render_inventory": {
+        "active": true,
+        "benefit_validation": "unverified",
+        "dropped_observations": 355489,
+        "metalfx_integration": "separate opt-in prototype; requested inventory does not prove internal scene resolution",
+        "observed_image_creations": 3634,
+        "observed_legacy_render_areas": 355036,
+        "plan_ids": [
+          "M9",
+          "GAP-03"
+        ],
+        "requested": true,
+        "scope": "Requested base fields/legacy render areas since launch; not actual scene/HUD pixels, executed GPU passes, texture identity or replay state; swapchain images and newer renderpass paths may be absent",
+        "retained_group_count": 256
+      },
+      "conditions": {
+        "brightness_values": [
+          1
+        ],
+        "battery_states": [
+          1
+        ]
+      },
+      "battery": {
+        "coarse_pp_per_hour": null,
+        "status": "UNRESOLVED: no reported battery decrease; not zero energy",
+        "power_watts": null
+      },
+      "energy_benefit": "UNVERIFIED: needs controlled comparable measurements"
+    }
+  ],
+  "comparisons_to_first": [
+    {
+      "changed_fields": [
+        "configuration.metalfx_spatial_requested",
+        "configuration.pipeline_creation_feedback",
+        "configuration.render_target_inventory"
+      ],
+      "host_fps_difference": 2.555647381853113,
+      "interpretation": "Descriptive only; scene, cache, temperature, display delivery and repeatability are not established by matching metadata",
+      "energy_improvement": "UNVERIFIED"
+    },
+    {
+      "changed_fields": [
+        "configuration.metalfx_spatial_requested",
+        "configuration.pipeline_creation_feedback",
+        "configuration.render_target_inventory"
+      ],
+      "host_fps_difference": 2.3711396099446915,
+      "interpretation": "Descriptive only; scene, cache, temperature, display delivery and repeatability are not established by matching metadata",
+      "energy_improvement": "UNVERIFIED"
+    }
+  ]
+}

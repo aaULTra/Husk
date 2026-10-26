@@ -24,6 +24,51 @@ def interval_union(rows):
     return total
 
 
+def gpu_exclusion_audit(data):
+    """Estimated cross-clock clipping; raw exported records remain untouched."""
+    alignment = data.get('metadata', {}).get('gpu_clock_alignment', {})
+    fields = [alignment.get('monotonic_anchor_seconds'), alignment.get('media_anchor_seconds'),
+              data.get('metadata', {}).get('monotonic_origin_seconds')]
+    if not all(isinstance(v, (int, float)) and math.isfinite(v) for v in fields):
+        return {'status': 'UNAVAILABLE: no valid cross-clock alignment',
+                'included_interval_union_seconds_estimated': None, 'records_overlapping_exclusions': None}
+    offset = fields[0] - fields[1] - fields[2]
+    exclusions = []
+    for row in data.get('exclusions', []):
+        lo, hi = row.get('start'), row.get('end')
+        if isinstance(lo, (int, float)) and isinstance(hi, (int, float)) and math.isfinite(lo) and math.isfinite(hi) and hi > lo:
+            exclusions.append((lo-offset, hi-offset))
+    retained, overlapping = [], 0
+    for row in data.get('gpu_records', []):
+        values = [row.get(k) for k in ('gpu_start_media_seconds', 'gpu_end_media_seconds',
+                                     'sample_start_media_seconds', 'sample_end_media_seconds')]
+        if not all(isinstance(v, (int, float)) and math.isfinite(v) for v in values):
+            continue
+        lo, hi = max(values[0], values[2]), min(values[1], values[3])
+        if hi <= lo:
+            continue
+        pieces, hit = [(lo, hi)], False
+        for a, b in exclusions:
+            next_pieces = []
+            for x, y in pieces:
+                if y <= a or x >= b:
+                    next_pieces.append((x, y))
+                else:
+                    hit = True
+                    if x < a:
+                        next_pieces.append((x, a))
+                    if y > b:
+                        next_pieces.append((b, y))
+            pieces = next_pieces
+        overlapping += int(hit)
+        retained.extend({'gpu_start_media_seconds': x, 'gpu_end_media_seconds': y,
+                         'sample_start_media_seconds': x, 'sample_end_media_seconds': y} for x, y in pieces)
+    return {'status': 'ESTIMATED: anchor-mapped exclusions; raw measurements preserved',
+            'included_interval_union_seconds_estimated': interval_union(retained),
+            'records_overlapping_exclusions': overlapping,
+            'scope': 'Partial sampled buffers, not GPU utilisation, per-frame cost or power'}
+
+
 def audit(data):
     if data.get('schema_version') not in (1, 2, 3, 4, 5, 6):
         raise ValueError('Unsupported diagnostic schema; preserve source for a version-aware audit')
@@ -64,6 +109,14 @@ def audit(data):
         errors.append('GPU interval union does not match export')
     if gpu.get('dropped_records_or_capture_attempts', 0) or gpu.get('unresolved_handlers_at_snapshot', 0):
         warnings.append('GPU sampled coverage has losses or unresolved handlers')
+    exclusion_audit = gpu_exclusion_audit(data)
+    if exclusion_audit['records_overlapping_exclusions']:
+        warnings.append('GPU records overlap exported exclusions after estimated clock mapping; use corrected analysis, not raw union, for included scope')
+    inventory = data.get('render_inventory', {})
+    if inventory.get('active'):
+        warnings.append('Render inventory adds diagnostic observation work; not a monitoring-off energy comparison')
+    if inventory.get('dropped_observations', 0):
+        warnings.append('Render inventory has lost observations; absent sizes are not evidence of absent render targets')
     worker = data.get('worker_policy', {})
     utility = [w for w in worker.get('last_observed_workers', [])
                if w.get('role') == 1 and w.get('query_result') == 0 and w.get('after_qos') == 0x11]
@@ -78,13 +131,14 @@ def audit(data):
     cpu = [(s.get('process_cpu_percent_one_core'), s.get('cpu_sample_elapsed_seconds')) for s in samples if not s.get('excluded')]
     cpu = [(v, dt) for v, dt in cpu if isinstance(v, (int, float)) and isinstance(dt, (int, float)) and dt > 0]
     cpu_mean = sum(v * dt for v, dt in cpu) / sum(dt for _, dt in cpu) if cpu else None
-    return {'analysis_version': 1, 'build': metadata.get('build_sha'), 'schema_version': data['schema_version'],
+    return {'analysis_version': 2, 'build': metadata.get('build_sha'), 'schema_version': data['schema_version'],
             'configuration': metadata.get('launch_configuration', {}), 'errors': errors, 'warnings': warnings,
             'host': {'retained_fps': cadence, 'p95_ms': summary.get('p95_ms'), 'p99_ms': summary.get('p99_ms'),
                      'worst_ms': summary.get('worst_ms'), 'slow_pipeline_calls': summary.get('slow_pipeline_calls'),
                      'cpu_weighted_percent_one_core': cpu_mean},
             'gpu': {'status': gpu.get('status', 'UNAVAILABLE: no sampled GPU data'), 'records': len(gpu_rows),
-                    'sample_clipped_interval_union_seconds': union, 'scope': 'Partial sampled command buffers; not utilisation, displayed frames or watts'},
+                    'sample_clipped_interval_union_seconds': union, 'exclusion_audit': exclusion_audit,
+                    'scope': 'Partial sampled command buffers; not utilisation, displayed frames or watts'},
             'worker': {'active_mode': worker.get('active_mode'), 'admissions': worker.get('admissions_since_launch'),
                        'rollbacks': worker.get('rollback_requests_since_launch'), 'waiting_reason': worker.get('waiting_reason'),
                        'normal_utility_last_observations': len(utility), 'core_residency': 'UNAVAILABLE',
@@ -130,3 +184,4 @@ def main():
 
 if __name__ == '__main__':
     raise SystemExit(main())
+

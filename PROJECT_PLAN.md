@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: M9-SPATIAL-v1 experimental MetalFX IPA built with 161 passing checks; weighted roadmap ~22% (+0.60 points); physical correctness/quality/energy gates open; user starting the current IPA test, results pending.
+Updated: 2026-10-25. Status: M9-SPATIAL-v1 experimental MetalFX IPA built with 161 passing checks; weighted roadmap ~24% after E-M4-005 (+2.25 evidence points); two MetalFX sessions reviewed; broad correctness/lifecycle and all energy-benefit gates remain open.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -346,3 +346,17 @@ No iPad action requested now. Later, one update can check baseline, enable spati
 ### M0 cadence instruction / M9 test starting
 
 User adopts the faster approach permanently and says they will test the current IPA now. Save batching, existing-telemetry reuse, specific short tests, active-build continuity and separate readiness/validation reporting in AGENTS.md and IPA_HANDOVER.md. Sequence: M0 delivery discipline -> current M9/M3 correctness/GPU capture -> evidence-led next implementation batch or targeted follow-up. This documentation update changes no runtime, controls, IPA or scoring criteria. Overall remains 21.77% (~22%); all physical/benefit gates await results. Preserve prior no-improvement feedback, Adaptive energy versus Balanced, shader/non-pipeline stalls and every unfinished milestone. Do not infer a completed or successful test from the user's intention to start.
+
+### 2026-10-26 — E-M4-005: all four files reviewed, restarted run and corrected visual feedback
+
+[Two-session review, raw reports/compressed JSON and objective resolution limits](docs/performance/runs/E-M4-005.md). Same 9d298c5c build; actual guest swapchain 1696 × 1280 and configured/validated 2128 × 1600 scaler output, 18,046/10,455 encode calls, zero reported scaler failures. Host cadence 59.728/59.544 FPS. User reports restart before B, correcting initial uncertainty about A. Later user correction: visually probably the same, no issue noticed; supersedes the uncertain slightly-worse impression, without inventing objective image equivalence or quantified latency.
+
+M3-D1 passes for B's bounded actual M4 queue/timestamps/panel-exclusion conditions; A has ~6.2 ms of estimated cross-clock boundary overlap, potentially drift or transition timing, retained and conservatively trimmed offline. M9-D3 passes subjective ordinary-play acceptance under reported conditions. Whole M3 device 1/4; whole M9 device 1/4; energy/benefit remain zero accepted. [Immutable ledger](docs/performance/progress/E-M4-005.ledger.json) / [score](docs/performance/progress/E-M4-005.score.json): **24.02% (~24%)**, +2.25 points versus 21.77; M4-only ~27%, Duo 0%. No model/weights/gates changed. M9 internal useful scene-resolution proof, colour/lifetime/lifecycle/restoration and matched-quality/net-cost gates remain open.
+
+Shader hitches persist: B 411.843 ms interval alongside 410.309 ms pipeline call. A 405.662 ms interval lacks one long pipeline call, but 92 calls total 537.915 ms; cumulative creation cannot be excluded. Preserve BUG-01/02 and first/repeat/restart/cache-hit investigations. Identification/feedback OFF, launch restore/checkpoint bytes absent; do not call this a cache regression or verified reuse. GPU records 6416/3337, no command errors, explicit budget/invalid/outside losses; not utilisation, displayed frames or watts.
+
+Inventory ON saturates 256 groups (351366/355489 drops), retaining no useful scene-size areas; actual internal 3D resolution remains unproved. Process CPU weighted 66.74%/62.64% of one logical CPU; diagnostic overhead is uncontrolled. Battery is flat 30% within A and 25% within B, with an unobserved gap; no zero-energy or precise drain conclusion. Thermal nominal, brightness 100%, numerical temperature/power unavailable. No measured MetalFX or Adaptive energy benefit.
+
+User requests maximum useful logging alongside next substantive changes. Honour decision value with bounded/opt-in capture and disclosed overhead. Next consolidated M9/M1 batch: measured input/output texture properties, optional higher-detail input budgets, reserved render-target/area capacity with bounded hash lookup and classified losses, direct GPU media-clock exclusion brackets and end alignment. Preserve current candidate and analyse these exports before another general test. All earlier M2–M10 investigations stay tracked.
+
+Offline analysis v2 now warns about inventory losses/observation overhead and estimates exclusion-aware GPU unions while preserving raw rows. **11 offline tests pass**, all three E-M4-004/005 datasets reconcile. No new runtime source/IPA in this evidence commit; next implementation batch is separate.

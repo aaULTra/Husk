@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Independent arithmetic and uncertainty checks against archived device exports."""
-import copy, importlib.util, json, unittest
+import copy, gzip, importlib.util, json, unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 spec=importlib.util.spec_from_file_location('analysis',ROOT/'scripts/analyse_efficiency.py')
@@ -27,4 +27,20 @@ class AnalysisTests(unittest.TestCase):
   a=m.audit(d);self.assertEqual(a['pipeline_groups_since_launch_top8'][0]['first_pipeline_stage_application_cache_hit_count'],2);self.assertTrue(a['energy_benefit'].startswith('UNVERIFIED'))
  def test_unknown_schema_is_not_silently_reinterpreted(self):
   with self.assertRaises(ValueError):m.audit({'schema_version':999})
+ def test_gpu_exclusions_use_clock_mapping_and_union_not_summed_overlaps(self):
+  def row(a,b):return dict(gpu_start_media_seconds=a,gpu_end_media_seconds=b,sample_start_media_seconds=100,sample_end_media_seconds=103)
+  d={'metadata':{'monotonic_origin_seconds':1000,'gpu_clock_alignment':{'monotonic_anchor_seconds':1000,'media_anchor_seconds':100}},'gpu_records':[row(100,102),row(101,103)],'exclusions':[{'start':.5,'end':1.5},{'start':1,'end':2}]}
+  a=m.gpu_exclusion_audit(d);self.assertEqual(a['records_overlapping_exclusions'],2);self.assertAlmostEqual(a['included_interval_union_seconds_estimated'],1.5);self.assertTrue(a['status'].startswith('ESTIMATED'));self.assertEqual(len(d['gpu_records']),2)
+ def test_missing_or_nonfinite_clock_mapping_is_unavailable(self):
+  a=m.gpu_exclusion_audit({});self.assertIsNone(a['included_interval_union_seconds_estimated']);self.assertTrue(a['status'].startswith('UNAVAILABLE'))
+  d={'metadata':{'monotonic_origin_seconds':1,'gpu_clock_alignment':{'monotonic_anchor_seconds':float('inf'),'media_anchor_seconds':1}}};self.assertIsNone(m.gpu_exclusion_audit(d)['records_overlapping_exclusions'])
+ def test_render_inventory_losses_do_not_become_absent_scene_or_energy_evidence(self):
+  a=m.audit({'schema_version':6,'render_inventory':{'active':True,'dropped_observations':10,'groups_since_launch':[]}})
+  self.assertTrue(any('absent sizes' in w for w in a['warnings']));self.assertTrue(any('diagnostic observation work' in w for w in a['warnings']));self.assertTrue(a['energy_benefit'].startswith('UNVERIFIED'))
+ def test_metalfx_exports_preserve_raw_records_and_detect_boundary_overlap(self):
+  for label,overlaps in [('A',3),('B',0)]:
+   d=json.loads(gzip.decompress((ROOT/'docs/performance/runs'/f'E-M4-005{label}.diagnostics.json.gz').read_bytes()));a=m.audit(d)
+   self.assertEqual(a['errors'],[]);self.assertTrue(a['spatial_upscaling']['configured']);self.assertEqual(a['spatial_upscaling']['failures'],0)
+   self.assertEqual(a['gpu']['exclusion_audit']['records_overlapping_exclusions'],overlaps);self.assertIsNone(a['battery']['coarse_pp_per_hour']);self.assertTrue(a['energy_benefit'].startswith('UNVERIFIED'))
 if __name__=='__main__':unittest.main()
+
