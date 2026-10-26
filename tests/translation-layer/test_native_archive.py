@@ -7,6 +7,7 @@ class ArchiveHostTests(unittest.TestCase):
  def test_scoped_configuration_singleflight_reservation_and_teardown(self):
   with tempfile.TemporaryDirectory() as d:
    source=(TL/'husk-tl-unity-app.c').read_text();resume='void husk_unity_set_paused(bool paused)'+source.split('void husk_unity_set_paused(bool paused)',1)[1].split('\n}',1)[0]+'\n}'
+   touch='void husk_unity_touch(int phase, int id, float x, float y)'+source.split('void husk_unity_touch(int phase, int id, float x, float y)',1)[1].split('\n}',1)[0]+'\n}'
    p=Path(d);(p/'main.c').write_text(r'''
 #include "husk-tl-native-archive.h"
 #include <assert.h>
@@ -20,22 +21,27 @@ static int snapshot(tl_na_stats*s){s->requested=s->supported=1;s->pending=2;retu
 static int prepare(void){atomic_store(&entered,true);while(!atomic_load(&leave)){}return 1;}
 static void forget(void){forgets++;}
 enum{HUSK_UNITY_RUNNING=1,ENGINE_JAVA,ENGINE_GAMEMAKER,ENGINE_FLUTTER,ENGINE_GODOT,ENGINE_GTA,ENGINE_UE4,ENGINE_SDL,ENGINE_GAMEACTIVITY,ENGINE_COCOS};
-static struct{_Atomic int state;int engine;}A={1,ENGINE_UE4};static unsigned pauses,resumes;
+static struct{_Atomic int state;int engine;}A={1,ENGINE_UE4};static unsigned pauses,resumes,touches;
 #define STUB(name) static void name(bool p){(void)p;}
 STUB(tl_javaapp_set_paused) STUB(tl_gm_set_paused) STUB(tl_flutter_set_paused) STUB(tl_godot_set_paused) STUB(tl_gta_set_paused)
 STUB(tl_sdl_set_paused) STUB(tl_ga_set_paused) STUB(tl_cocos_set_paused) STUB(tl_unity_set_paused)
 static void tl_na_set_paused(bool p){if(p)pauses++;else resumes++;}
 static void tl_audio_set_paused(bool p){if(p)pauses++;else resumes++;}
+#define TOUCH(name) static void name(int phase,int id,float x,float y){(void)phase;(void)id;(void)x;(void)y;touches++;}
+TOUCH(tl_javaapp_touch) TOUCH(tl_gm_touch) TOUCH(tl_flutter_touch) TOUCH(tl_godot_touch) TOUCH(tl_gta_touch)
+TOUCH(tl_na_touch) TOUCH(tl_sdl_touch) TOUCH(tl_ga_touch) TOUCH(tl_cocos_touch) TOUCH(tl_unity_touch)
+/* ACTUAL_TOUCH */
 /* ACTUAL_RESUME */
 static void*job(void*p){(void)p;assert(tl_vk_archive_prepare()==1);return 0;}
 int main(void){
- tl_npa_set_api((tl_npa_api){configure,snapshot,prepare,forget});
+ tl_npa_set_api((tl_npa_api){configure,snapshot,prepare,forget});husk_unity_touch(0,1,5,6);assert(touches==1);
  husk_ue4_set_native_archive(0);tl_npa_configure("Dungeons","cache",true);assert(!configs&&!tl_vk_archive_begin_prepare());
  husk_ue4_set_native_archive(1);tl_npa_configure("Dungeons","cache",true);assert(!configs);
  husk_ue4_set_native_archive(2);tl_npa_configure("Other","cache",true);tl_npa_configure("Dungeons","cache",false);assert(!configs);
  tl_npa_configure("Dungeons","cache",true);assert(configs==1);tl_npa_device((void*)1);
  assert(tl_vk_archive_begin_prepare()&&tl_vk_archive_preparing()&&!tl_vk_archive_begin_prepare());
  husk_unity_set_paused(false);assert(!resumes);husk_unity_set_paused(true);assert(pauses==2);
+ husk_unity_touch(1,1,5,6);assert(touches==2); // input forwarding remains unchanged; no unrelated pause variable/guard
  tl_na_stats s;tl_vk_archive_snapshot(&s);assert(s.preparing&&s.pending==2);
  pthread_t t;assert(!pthread_create(&t,0,job,0));while(!atomic_load(&entered)){}
  assert(tl_vk_archive_prepare()==0);assert(tl_vk_archive_preparing());
@@ -44,7 +50,7 @@ int main(void){
  tl_npa_configure("Dungeons","cache",true);tl_npa_device((void*)3);assert(tl_vk_archive_begin_prepare());
  tl_npa_forget((void*)3);assert(!tl_vk_archive_preparing()&&tl_vk_archive_prepare()==0);return 0;
 }
-'''.replace('/* ACTUAL_RESUME */',resume))
+'''.replace('/* ACTUAL_RESUME */',resume).replace('/* ACTUAL_TOUCH */',touch))
    subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror','-I',str(TL),str(p/'main.c'),str(TL/'husk-tl-native-archive.c'),'-pthread','-o',str(p/'check')],check=True);subprocess.run([str(p/'check')],check=True)
  @unittest.skipUnless(sys.platform=='darwin','Apple Metal SDK required; candidate IPA CI runs native ownership/archive tests')
  def test_actual_native_archive_ownership_persistence_fallback_and_bounds(self):
