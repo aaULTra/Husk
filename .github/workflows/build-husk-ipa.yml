@@ -17,7 +17,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: husk-ipa-${{ github.ref }}
+  # Capacity-stalled Arm runs must not hold the Intel fallback's concurrency slot.
+  group: husk-ipa-intel-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
