@@ -6,8 +6,8 @@
   "workflow_run": 40362934029,
   "job_id": 121712911166,
   "workflow_url": "https://github.com/aaULTra/Husk/actions/runs/40362934029",
-  "conclusion": "in_progress",
-  "phase": "regression step passed; separate pinned driver compiling",
+  "conclusion": "failure",
+  "phase": "237tests and pinned driver passed; app failed undeclared paused in unintended touch guard; no IPA packaged",
   "tests_expected": 237,
   "suites_expected": 27,
   "local_tests": {
@@ -32,5 +32,12 @@
     40357300459,
     40359358563
   ],
-  "corrected_test_fixture_failure": 40362541491
+  "corrected_test_fixture_failure": 40362541491,
+  "tests": {
+    "total": 237,
+    "passed": 237,
+    "skipped": 0,
+    "suites": 27
+  },
+  "superseded_by": "c6f7a33bd106fe4657a80356826fe1c5ad57cdbb"
 }

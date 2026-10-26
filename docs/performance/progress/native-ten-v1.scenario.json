@@ -25,7 +25,7 @@
     "No other milestone gates, core-residency claim, strict Adaptive energy, MetalFX net energy or Duo acceptance are assumed. Keep failures/inconclusive results and original-driver rollback."
   ],
   "baseline_ledger": "docs/performance/progress/E-M4-007.ledger.json",
-  "runtime_candidate_source": "35d4aebdeb77a92412459921b2f9cb8f766f789b",
+  "runtime_candidate_source": "c6f7a33bd106fe4657a80356826fe1c5ad57cdbb",
   "target_at_definition_percent": 36.32,
   "additional_points_at_definition": 10.05
 }

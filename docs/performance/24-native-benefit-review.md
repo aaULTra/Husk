@@ -49,3 +49,11 @@ The receipt audit hashes original/decoded inputs, refuses evidence-file overwrit
 
 
 Pinned queue-label audit: MVKQueue.mm lines166–200 constructs command buffers, applies per-command-use labels after creation and caches the labels for BeginCommandBuffer/QueueSubmit/QueuePresent/AcquireNextImage. Sampling reads labels on completion, after this assignment, rather than at the factory interception point. Original debug labels can replace them; unknown/other remains explicit instead of guessing a role. [Exact upstream source](https://github.com/KhronosGroup/MoltenVK/blob/db66022459ffb663aa2b50f6b018bc2e124f5edf/MoltenVK/MoltenVK/GPUObjects/MVKQueue.mm#L166). Labels are attribution hints, not proof of exclusive per-frame GPU work or system energy.
+
+
+Retained-object risk: the8-request cap bounds descriptor count,not the RAM retained by their Metal functions/libraries or an opened archive. The64MiB file/128MiB directory limits are disk limits,not process-memory limits. Compare footprint and include this in device/net-cost acceptance; keep the featureOFF if cost outweighs useful stalls saved. Native first-use archive opening also costs work inside the wrapper's total pipeline duration,even though native Metal-API elapsed capture starts after descriptor/archive preparation.
+
+Availability audit: public iOS15.5 Metal headers declare MTLDevice.registryID available since iOS11 and newBinaryArchiveWithDescriptor since iOS14; the project minimum is15.5 and the runtime probes native archive creation/support. No unsupported registryID availability change was necessary. MetalFX remains separately availability/capability gated.
+
+
+Final implementation/build acceptance: sourceC6/run40365842093 passed237Apple checks and native driver/app/IPA. M5-I1/I2/I3 contribute2.40earned points,actual28.67%; NATIVE-TEN-v1 remaining7.65device/benefit points are unearned,conditional36.32. [Final handover](builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md). The first requested short mechanism check cannot establish this whole result. Source review caught/fixed driver-rollout text; final build caught/removes an unintended duplicate pause guard in touch dispatch,now covered by both actual-body compilations. No guarantee of heat/energy benefit; no new actual M4 data.

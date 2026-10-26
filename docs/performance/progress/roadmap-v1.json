@@ -422,32 +422,38 @@
           {
             "id": "M5-I1",
             "criterion": "Complete valid pipeline creation state and safe early preparation route",
-            "status": "pending",
+            "status": "passed",
             "evidence": [
               "docs/performance/23-native-pipeline-and-clock-batch.md",
-              "docs/performance/builds/35d4aebdeb77a92412459921b2f9cb8f766f789b.md"
+              "docs/performance/24-native-benefit-review.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.ci.json"
             ],
-            "remaining": "Complete native Metal descriptors and a later-use/restart preparation route implemented; native Apple validation pending. Partial Vulkan signatures still cannot reconstruct pipelines."
+            "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           },
           {
             "id": "M5-I2",
             "criterion": "Bounded selective prototype with lifetime/synchronisation/loading budget",
-            "status": "pending",
+            "status": "passed",
             "evidence": [
               "docs/performance/23-native-pipeline-and-clock-batch.md",
-              "docs/performance/builds/35d4aebdeb77a92412459921b2f9cb8f766f789b.md"
+              "docs/performance/24-native-benefit-review.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.ci.json"
             ],
-            "remaining": "Bounded paused native prototype implemented with lifetime/file/budget safeguards; Apple ownership/archive checks and build pending."
+            "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           },
           {
             "id": "M5-I3",
             "criterion": "Relevant tests and clean build for preparation candidate",
-            "status": "pending",
+            "status": "passed",
             "evidence": [
               "docs/performance/23-native-pipeline-and-clock-batch.md",
-              "docs/performance/builds/35d4aebdeb77a92412459921b2f9cb8f766f789b.md"
+              "docs/performance/24-native-benefit-review.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.ci.json"
             ],
-            "remaining": "Local host checks pass; Apple native component, pinned driver, app and IPA queued."
+            "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           }
         ],
         "D": [
@@ -457,7 +463,7 @@
             "status": "pending",
             "evidence": [
               "docs/performance/23-native-pipeline-and-clock-batch.md",
-              "docs/performance/builds/35d4aebdeb77a92412459921b2f9cb8f766f789b.md"
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md"
             ],
             "remaining": "Same-event first/repeat/restart and same-driver archive1vs2 comparison pending."
           },
@@ -467,7 +473,7 @@
             "status": "pending",
             "evidence": [
               "docs/performance/23-native-pipeline-and-clock-batch.md",
-              "docs/performance/builds/35d4aebdeb77a92412459921b2f9cb8f766f789b.md"
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md"
             ],
             "remaining": "Native support, preparation, graphics/input/audio/lifecycle/cache regression checks pending on M4."
           },
@@ -477,7 +483,7 @@
             "status": "pending",
             "evidence": [
               "docs/performance/23-native-pipeline-and-clock-batch.md",
-              "docs/performance/builds/35d4aebdeb77a92412459921b2f9cb8f766f789b.md"
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md"
             ],
             "remaining": "Separate preparation CPU/wall receipt implemented; physical receipt and loading/gameplay attribution pending."
           }
@@ -489,7 +495,7 @@
             "status": "pending",
             "evidence": [
               "docs/performance/23-native-pipeline-and-clock-batch.md",
-              "docs/performance/builds/35d4aebdeb77a92412459921b2f9cb8f766f789b.md"
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md"
             ],
             "remaining": "No new device result; reduced representative gameplay severe stalls not demonstrated."
           },
@@ -499,7 +505,7 @@
             "status": "pending",
             "evidence": [
               "docs/performance/23-native-pipeline-and-clock-batch.md",
-              "docs/performance/builds/35d4aebdeb77a92412459921b2f9cb8f766f789b.md"
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md"
             ],
             "remaining": "No measured loading-plus-gameplay net energy or physical temperature result."
           }
@@ -999,6 +1005,6 @@
       }
     }
   ],
-  "source_sha": "35d4aebdeb77a92412459921b2f9cb8f766f789b",
-  "evidence_id": "NATIVE-BATCH-5 source implemented; Apple CI pending; E-M4-007 physical evidence retained"
+  "source_sha": "c6f7a33bd106fe4657a80356826fe1c5ad57cdbb",
+  "evidence_id": "NATIVE-BATCH-5 Apple237/driver/app/IPA; M5 implementation only; E-M4-007 remains latest physical evidence"
 }
