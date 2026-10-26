@@ -23,7 +23,9 @@ concurrency:
 jobs:
   build:
     name: Build iOS IPA
-    runs-on: macos-latest
+    # Hosted Arm capacity failed before runner assignment in40357300459/40359358563.
+    # Intel runs the same Apple SDK checks and cross-compiles the arm64 iOS IPA.
+    runs-on: macos-26-intel
     timeout-minutes: 120
 
     steps:
@@ -115,7 +117,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             src/rppairing-ios/target
-          key: husk-pairing-${{ runner.os }}-${{ hashFiles('src/rppairing-ios/Cargo.lock') }}
+          key: husk-pairing-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/rppairing-ios/Cargo.lock') }}
 
       - name: Build pairing library
         shell: bash
