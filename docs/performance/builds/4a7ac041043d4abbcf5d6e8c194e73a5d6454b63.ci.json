@@ -1,0 +1,20 @@
+{
+  "source_sha": "4a7ac041043d4abbcf5d6e8c194e73a5d6454b63",
+  "workflow_run_id": 40415776642,
+  "workflow_job_id": 121897619213,
+  "status": "failed_app_compile",
+  "regression_step": "261/261 passed,31suites,zero skips",
+  "expected_checks": 261,
+  "expected_suites": 31,
+  "driver_app_package": "Pinned driver/SDKABI passed; app failed missing forwarding parameter and missing Swift bridge driver header; IPA upload skipped",
+  "source_changed_paths_verified": 47,
+  "native_archive_abi": 2,
+  "physical_validation": "pending",
+  "energy_improvement": "unverified",
+  "new_test_requested": false,
+  "retained_offered_test_source": "c6f7a33bd106fe4657a80356826fe1c5ad57cdbb",
+  "runner": "macos-26-intel; arm64 iOS target",
+  "defaults_changed": false,
+  "corrective_action": "Forward nativeArchiveVerification through both TLUnityScreen paths and import driver-profile header; new source/Apple rerun required",
+  "experimental_patch_sha256": "e2863776e337d146ec55717ce835b5bc7ec2f7a40aa29d8802ca6915c8b9f0cb"
+}

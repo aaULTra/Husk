@@ -247,5 +247,25 @@
       ],
       "scope": "Only intersecting identities with no excluded interval between samples; host included; exited/missing threads absent, not P/E placement or electrical power"
     }
-  }
+  },
+  "source_provenance": {
+    "E-M4-006A": {
+      "path": "docs/performance/runs/E-M4-006A.diagnostics.json.gz",
+      "compressed_sha256": "bd73edff9b233b6eb2b457ead64013d70784217068c65e03e4fa1a84d79f4035"
+    },
+    "E-M4-006B": {
+      "path": "docs/performance/runs/E-M4-006B.diagnostics.json.gz",
+      "compressed_sha256": "f9cb654ad2dc9071754c9242daa8cb2638c5b50f8ee491d5388379681a557b96"
+    },
+    "E-M4-007A": {
+      "path": "docs/performance/runs/E-M4-007A.diagnostics.json.gz",
+      "compressed_sha256": "8c34eeb5c594d312f4e7bee38d3668a73275817e14efbdec0393d7e3cff5e8dd"
+    },
+    "E-M4-007B": {
+      "path": "docs/performance/runs/E-M4-007B.diagnostics.json.gz",
+      "compressed_sha256": "4c366adcd70479d92568138e55260cf554801a844b25639d7448d47c79c1dcd9"
+    }
+  },
+  "analysis_source_sha": "4a7ac041043d4abbcf5d6e8c194e73a5d6454b63",
+  "analysis_function": "scripts/analyse_efficiency.py:thread_cpu_audit"
 }

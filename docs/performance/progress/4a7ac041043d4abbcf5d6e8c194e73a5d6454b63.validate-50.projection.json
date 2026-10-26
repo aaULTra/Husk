@@ -1,0 +1,289 @@
+{
+  "scenario_version": 1,
+  "scenario_id": "VALIDATE-50-v1",
+  "status": "CONDITIONAL, UNEARNED; NOT THE CURRENT COMPLETION SCORE",
+  "model": "HUSK-ROADMAP-v1",
+  "gate_version": "whole-milestones-1",
+  "actual_source_sha": "4a7ac041043d4abbcf5d6e8c194e73a5d6454b63",
+  "actual_overall_percent": 28.67,
+  "conditional_overall_percent": 52.57,
+  "conditional_additional_points": 23.9,
+  "unearned_gate_ids": [
+    "M1-D3",
+    "M1-D4",
+    "M1-E1",
+    "M1-E2",
+    "M4-D1",
+    "M4-D2",
+    "M4-D3",
+    "M4-E1",
+    "M4-E2",
+    "M7-D1",
+    "M7-D2",
+    "M7-D3",
+    "M7-D4",
+    "M7-E1",
+    "M7-E2",
+    "M9-D1",
+    "M9-D2",
+    "M9-D4",
+    "M9-E1",
+    "M9-E2",
+    "M9-E3"
+  ],
+  "assumptions": [
+    "All21 listed pre-existing gates pass unchanged; this is an unearned scenario, not predicted performance or current progress.",
+    "M1 full correctness/calibration, independent monitoring-off/on overhead and representative repeat baseline must actually be established.",
+    "M4 existing engine-only experiment must demonstrate controlled pacing/work benefit and net energy effect, with display scope validated.",
+    "M7 means strict Adaptive mode3 versus Balanced mode2: admission, self-applied changes, rollback, repeated pacing and measured energy. Mode4 alone cannot close strict Adaptive energy.",
+    "M9 must establish useful scene input, GPU/colour/lifetime/lifecycle correctness, matched smoothness/quality, scaler-inclusive GPU improvement and sustained electrical/battery/temperature benefit.",
+    "External display/GPU/power/temperature evidence and physical test facilities may be required. The IPA cannot supply missing watts, numerical temperature or complete displayed-frame accounting.",
+    "No Duo, M2 full-variant, M5 prewarming or M8 trace gates are assumed passed. Failures remain open or become documented no-benefit decisions without credit for an improvement.",
+    "Keep the active0ec6b2d test unchanged. Do not request a replacement before its returned results are analysed; the existing031d9d2 candidate is parked."
+  ],
+  "actual_milestones": [
+    {
+      "id": "M0",
+      "weight": 2,
+      "track_percent": {
+        "documentation": 100.0
+      },
+      "milestone_percent": 100.0,
+      "overall_contribution_points": 2.0
+    },
+    {
+      "id": "M1",
+      "weight": 12,
+      "track_percent": {
+        "I": 100.0,
+        "D": 50.0,
+        "E": 0.0
+      },
+      "milestone_percent": 45.0,
+      "overall_contribution_points": 5.4
+    },
+    {
+      "id": "M2",
+      "weight": 10,
+      "track_percent": {
+        "I": 75.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 22.5,
+      "overall_contribution_points": 2.25
+    },
+    {
+      "id": "M3",
+      "weight": 18,
+      "track_percent": {
+        "I": 75.0,
+        "D": 25.0,
+        "E": 0.0
+      },
+      "milestone_percent": 30.0,
+      "overall_contribution_points": 5.4
+    },
+    {
+      "id": "M4",
+      "weight": 6,
+      "track_percent": {
+        "I": 100.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 30.0,
+      "overall_contribution_points": 1.8
+    },
+    {
+      "id": "M5",
+      "weight": 8,
+      "track_percent": {
+        "I": 100.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 30.0,
+      "overall_contribution_points": 2.4
+    },
+    {
+      "id": "M6",
+      "weight": 7,
+      "track_percent": {
+        "I": 100.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 30.0,
+      "overall_contribution_points": 2.1
+    },
+    {
+      "id": "M7",
+      "weight": 8,
+      "track_percent": {
+        "I": 100.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 30.0,
+      "overall_contribution_points": 2.4
+    },
+    {
+      "id": "M8",
+      "weight": 7,
+      "track_percent": {
+        "I": 20.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 6.0,
+      "overall_contribution_points": 0.42
+    },
+    {
+      "id": "M9",
+      "weight": 12,
+      "track_percent": {
+        "I": 100.0,
+        "D": 25.0,
+        "E": 0.0
+      },
+      "milestone_percent": 37.5,
+      "overall_contribution_points": 4.5
+    },
+    {
+      "id": "M10",
+      "weight": 10,
+      "track_percent": {
+        "I": 0.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 0.0,
+      "overall_contribution_points": 0.0
+    }
+  ],
+  "conditional_milestones": [
+    {
+      "id": "M0",
+      "weight": 2,
+      "track_percent": {
+        "documentation": 100.0
+      },
+      "milestone_percent": 100.0,
+      "overall_contribution_points": 2.0
+    },
+    {
+      "id": "M1",
+      "weight": 12,
+      "track_percent": {
+        "I": 100.0,
+        "D": 100.0,
+        "E": 100.0
+      },
+      "milestone_percent": 100.0,
+      "overall_contribution_points": 12.0
+    },
+    {
+      "id": "M2",
+      "weight": 10,
+      "track_percent": {
+        "I": 75.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 22.5,
+      "overall_contribution_points": 2.25
+    },
+    {
+      "id": "M3",
+      "weight": 18,
+      "track_percent": {
+        "I": 75.0,
+        "D": 25.0,
+        "E": 0.0
+      },
+      "milestone_percent": 30.0,
+      "overall_contribution_points": 5.4
+    },
+    {
+      "id": "M4",
+      "weight": 6,
+      "track_percent": {
+        "I": 100.0,
+        "D": 100.0,
+        "E": 100.0
+      },
+      "milestone_percent": 100.0,
+      "overall_contribution_points": 6.0
+    },
+    {
+      "id": "M5",
+      "weight": 8,
+      "track_percent": {
+        "I": 100.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 30.0,
+      "overall_contribution_points": 2.4
+    },
+    {
+      "id": "M6",
+      "weight": 7,
+      "track_percent": {
+        "I": 100.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 30.0,
+      "overall_contribution_points": 2.1
+    },
+    {
+      "id": "M7",
+      "weight": 8,
+      "track_percent": {
+        "I": 100.0,
+        "D": 100.0,
+        "E": 100.0
+      },
+      "milestone_percent": 100.0,
+      "overall_contribution_points": 8.0
+    },
+    {
+      "id": "M8",
+      "weight": 7,
+      "track_percent": {
+        "I": 20.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 6.0,
+      "overall_contribution_points": 0.42
+    },
+    {
+      "id": "M9",
+      "weight": 12,
+      "track_percent": {
+        "I": 100.0,
+        "D": 100.0,
+        "E": 100.0
+      },
+      "milestone_percent": 100.0,
+      "overall_contribution_points": 12.0
+    },
+    {
+      "id": "M10",
+      "weight": 10,
+      "track_percent": {
+        "I": 0.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 0.0,
+      "overall_contribution_points": 0.0
+    }
+  ],
+  "ledger_modified": false,
+  "energy_improvement": "UNVERIFIED; no assumed saving",
+  "meaning": "All listed gates must independently pass their unchanged criteria; no forecast or guarantee"
+}

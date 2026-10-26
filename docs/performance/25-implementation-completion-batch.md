@@ -38,3 +38,5 @@ Physical and energy acceptance stays in the existing fixed milestone gates. No p
 B1 core-state coverage/SDKABI; B2 native verification/fallback; B3 included component sampling; B4 structured driver phases; B5 actionable export triage and offline coverage; B6 bounded delayed MetricKit; B7 manual device/game profiles; B8 documented real remaining dependencies; B9 complete automated/native/driver/app/package checks; B10 saved handover/progress.
 
 At source preparation B1–B8 implemented but Apple-specific compilation/correctness still pending; B9/B10 pending. New deviceD1 (schema11 controls/export),D2 (native verification/restart/fallback),D3 (profile/lifecycle/restoration),D4 (sampling/driver/MetricKit attribution) all pending0/4. New benefitE1 (monitor overhead),E2 (matched native stall/net preparation cost),E3 (sustained power/temperature) pending0/3. No changed milestone gates/weights or physical credit. Preserve C6 instructions while the new candidate builds; no installation request now.
+
+[Component field/decision guide](26-component-diagnosis-guide.md) records exactly which evidence can guide each next plan action and the retained limitations.

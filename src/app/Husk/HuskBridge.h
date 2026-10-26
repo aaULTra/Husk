@@ -11,7 +11,8 @@
 #ifndef HUSK_BRIDGE_H
 #define HUSK_BRIDGE_H
 
-#include "husk-tl-component-profile.h"
+#include "../../translation-layer-next/husk-tl-component-profile.h"
+#include "../../translation-layer-next/husk-tl-driver-profile.h"
 #include <stdbool.h>
 #include <stdint.h>
 

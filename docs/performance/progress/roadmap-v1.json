@@ -178,8 +178,10 @@
             "id": "M2-I4",
             "criterion": "State coverage sufficient to distinguish the identified expensive full variants",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Current groups omit layout/render-pass/fixed state; scope must be justified using device variants"
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "Core-v3 source adds tracked layout/render-pass/fixed/sampler/base state and SDK ABI checks; actual expensive device variants/unsupported extension coverage still need justification. No gate pass from source alone."
           }
         ],
         "D": [
@@ -268,8 +270,10 @@
             "id": "M3-I4",
             "criterion": "Practical supported power/temperature capture and attribution workflow established for this host",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Verify Instruments/host attachment and physical measurement availability; documentation alone is insufficient"
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "Opt-in delayed MetricKit host capture implemented; actual host attribution and supported Instruments/electrical/physical temperature route remain unverified. Periodic payload is not instant game power."
           }
         ],
         "D": [
@@ -718,15 +722,19 @@
             "id": "M8-I2",
             "criterion": "Profile confirmed repeated encoding/resource/binding/allocation costs",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Real trace needed before translation changes"
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "Structured driver phases/component sampling implemented; representative repeated encoding/resource/binding/allocation costs still not established."
           },
           {
             "id": "M8-I3",
             "criterion": "Assess sync/frame-in-flight overhead with an isolated candidate or evidence-based rejection",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Three-image swapchain already exists; broader work unverified"
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "Component futex/Vulkan CPU-vs-wall and structured driver drawable/encoding support added; three-image baseline retained. Real sync/frames-in-flight intervention/decision still pending."
           },
           {
             "id": "M8-I4",
@@ -735,16 +743,19 @@
             "evidence": [
               "docs/performance/runs/CORE-BATCH-4.once-benchmark.json",
               "docs/performance/20-core-efficiency-batch.md",
-              "docs/performance/runs/E-M4-007.md"
+              "docs/performance/runs/E-M4-007.md",
+              "docs/performance/25-implementation-completion-batch.md"
             ],
-            "remaining": "E-M4-007 raw-futex/slow-once counters zero during included sessions; completed-once fast path uncounted. Ordinary TaskGraphNP ~3% matched-thread CPU. Representative compatibility cost/energy remains unverified."
+            "remaining": "Bounded included JNI/futex/once-slow CPU-vs-wall sampling source added; previous synthetic once benchmark retained. Representative meaningful compatibility cost/energy still unverified."
           },
           {
             "id": "M8-I5",
             "criterion": "Compatible stable MoltenVK version benchmarking and retained decision",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Do not upgrade speculatively"
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "2026-10-26 upstream latest stable independently reports1.4.2, already bundled; no newer stable candidate exists. Version benchmarking reopens with compatible stable release; no speculative upgrade or gate credit."
           }
         ],
         "D": [
@@ -945,22 +956,28 @@
             "id": "M10-I1",
             "criterion": "Runtime verified Duo capability inventory and independent baseline",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Device unavailable; specifications provisional"
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "Runtime inventory infrastructure coded; actual Duo capabilities and independent baseline still unavailable."
           },
           {
             "id": "M10-I2",
             "criterion": "Separate tested profile/manual override/cache compatibility",
             "status": "pending",
-            "evidence": [],
-            "remaining": "No Duo profile validated"
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "Manual exact-device/game profile save/apply/undo/share/delete infrastructure coded with bounds; no tested Duo profile/defaults or cache baseline."
           },
           {
             "id": "M10-I3",
             "criterion": "Device-specific correctness/measurement tooling checks",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Requires hardware baseline"
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "Portable storage validation and Apple source checks added; device-specific Duo correctness/measurement still requires hardware baseline."
           }
         ],
         "D": [
@@ -1005,6 +1022,6 @@
       }
     }
   ],
-  "source_sha": "c6f7a33bd106fe4657a80356826fe1c5ad57cdbb",
-  "evidence_id": "NATIVE-BATCH-5 Apple237/driver/app/IPA; M5 implementation only; E-M4-007 remains latest physical evidence"
+  "source_sha": "4a7ac041043d4abbcf5d6e8c194e73a5d6454b63",
+  "evidence_id": "IMPLEMENTATION-BATCH-6 source; Apple validation in progress"
 }

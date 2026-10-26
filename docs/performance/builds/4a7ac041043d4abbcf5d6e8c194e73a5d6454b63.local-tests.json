@@ -1,0 +1,193 @@
+{
+  "results": [
+    {
+      "suite": "tests/translation-layer/test_ue4_graphics.py",
+      "tests": 18,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_ue4_resolution_hook.py",
+      "tests": 6,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_source_efficiency.py",
+      "tests": 6,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_compat_sync.py",
+      "tests": 5,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_thread_policy.py",
+      "tests": 36,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_vk_frame_timing.py",
+      "tests": 11,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_present_clock.py",
+      "tests": 8,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_pipeline_store.py",
+      "tests": 9,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_component_profile.py",
+      "tests": 7,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_component_triage.py",
+      "tests": 1,
+      "skipped": 1,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_device_profiles.py",
+      "tests": 1,
+      "skipped": 1,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_driver_profile.py",
+      "tests": 10,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_efficiency.py",
+      "tests": 14,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_cpu_threads.py",
+      "tests": 1,
+      "skipped": 1,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_efficiency_math.py",
+      "tests": 1,
+      "skipped": 1,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_pipeline_core_state.py",
+      "tests": 11,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_pipeline_diagnostics.py",
+      "tests": 11,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_pipeline_feedback.py",
+      "tests": 13,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_game_chrome.py",
+      "tests": 1,
+      "skipped": 1,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_gpu_timing.py",
+      "tests": 10,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_gpu_metal.py",
+      "tests": 1,
+      "skipped": 1,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_gpu_vk_queue.py",
+      "tests": 3,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_render_inventory.py",
+      "tests": 6,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_efficiency_analysis.py",
+      "tests": 22,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_roadmap_progress.py",
+      "tests": 5,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_roadmap_projection.py",
+      "tests": 7,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_comparison_campaign.py",
+      "tests": 21,
+      "skipped": 0,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_spatial.py",
+      "tests": 5,
+      "skipped": 1,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_spatial_lifetime.py",
+      "tests": 1,
+      "skipped": 1,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_native_archive.py",
+      "tests": 2,
+      "skipped": 1,
+      "returncode": 0
+    },
+    {
+      "suite": "tests/translation-layer/test_native_preparation_audit.py",
+      "tests": 8,
+      "skipped": 0,
+      "returncode": 0
+    }
+  ],
+  "duration_seconds": 5.578059911727905,
+  "scope": "Named IPA workflow suites; Linux pass, Apple-only checks deferred; additional real Vulkan SDK ABI24structures/69offsets pass locally against fetched headers.",
+  "source_sha": "4a7ac041043d4abbcf5d6e8c194e73a5d6454b63"
+}
