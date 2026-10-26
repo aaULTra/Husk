@@ -62,6 +62,10 @@ Show implementation/build readiness separately from device and benefit validatio
 
 Prepare substantial consolidated candidates that can advance several existing milestones after successful testing. The user explicitly authorises a conditional50% target. Calculate conditional coverage from named unchanged gates, separately from actual evidence-gated completion; never award assumed performance/energy points. Use the retained VALIDATE-50-v1 scenario/campaign and projection tooling, not a fabricated “theoretical completion” score. Explain external equipment, unimplemented dependencies and failed/inconclusive results. An IPA's successful launch alone cannot pass the scenario. Reuse an already validated IPA when its runtime options cover the campaign; do not rebuild unchanged game code merely to give offline tools a new binary identity. Preserve the active test and analyse its results before requesting replacement tests.
 
+When the user requests a minimum potential progress increment, map it to named existing gates and reproducible fixed-weight arithmetic before claiming coverage. Keep conditional coverage, actual earned credit and measured energy separate; do not weaken gates, assume equipment or turn a successful launch into all-gate acceptance. NATIVE-TEN-v1 records the current10.05point conditional scope; historical VALIDATE-50-v1 remains separate.
+
+Review an optimisation end to end: configuration, added/removed hot-path work, translation/Metal behaviour, resource and threading lifetimes, persistence/rollback and exported evidence. Record the actual review scope and risks. Code review can establish a mechanism and catch defects; it cannot guarantee on-device energy or heat benefits. Include preparation/loading/monitoring overhead in net acceptance.
+
 ## Coding, testing and handover
 
 Use the existing architecture and tests. Preserve API arguments, results, object lifetimes and threading guarantees. Pipeline identification must not hash raw pointers/padding as stable identity or pretend incomplete state is complete. Unsupported feedback must remain unavailable. Never fabricate pipeline objects or precompile indiscriminately.

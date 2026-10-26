@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "batch": "NATIVE-BATCH-5",
+  "source_sha": "35d4aebdeb77a92412459921b2f9cb8f766f789b",
+  "packaged_identity": null,
+  "workflow_run": 40362934029,
+  "job_id": 121712911166,
+  "workflow_url": "https://github.com/aaULTra/Husk/actions/runs/40362934029",
+  "conclusion": "in_progress",
+  "phase": "regression step passed; separate pinned driver compiling",
+  "tests_expected": 237,
+  "suites_expected": 27,
+  "local_tests": {
+    "total": 237,
+    "passed": 230,
+    "apple_deferred": 7
+  },
+  "artifact": null,
+  "upstream_moltenvk": {
+    "version": "1.4.2",
+    "commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+    "expected_combined_patch_sha256": "18b84d2e29b4994a807549d98ba6ff237de193a7dc6716f28adc53ec392512bd",
+    "default_enabled": false
+  },
+  "source_readback_runtime_files": 36,
+  "source_changed_paths": 39,
+  "physical_validation": "pending",
+  "energy_improvement": "unverified",
+  "new_test_requested": false,
+  "conditional_scope": "NATIVE-TEN-v1 +10.05 only if ten existing criteria pass",
+  "runner_capacity_failures": [
+    40357300459,
+    40359358563
+  ],
+  "corrected_test_fixture_failure": 40362541491
+}

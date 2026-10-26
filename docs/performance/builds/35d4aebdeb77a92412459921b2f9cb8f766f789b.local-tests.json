@@ -1,0 +1,198 @@
+{
+  "suites": 27,
+  "total": 237,
+  "skipped": 7,
+  "failures": 0,
+  "records": [
+    {
+      "file": "tests/translation-layer/test_ue4_graphics.py",
+      "exit_code": 0,
+      "tests": 18,
+      "skipped": 0,
+      "seconds": 0.15735219999987748
+    },
+    {
+      "file": "tests/translation-layer/test_ue4_resolution_hook.py",
+      "exit_code": 0,
+      "tests": 6,
+      "skipped": 0,
+      "seconds": 0.13060208999741008
+    },
+    {
+      "file": "tests/translation-layer/test_source_efficiency.py",
+      "exit_code": 0,
+      "tests": 6,
+      "skipped": 0,
+      "seconds": 0.38493487699815887
+    },
+    {
+      "file": "tests/translation-layer/test_compat_sync.py",
+      "exit_code": 0,
+      "tests": 5,
+      "skipped": 0,
+      "seconds": 0.25440916499792365
+    },
+    {
+      "file": "tests/translation-layer/test_thread_policy.py",
+      "exit_code": 0,
+      "tests": 36,
+      "skipped": 0,
+      "seconds": 0.148585106999235
+    },
+    {
+      "file": "tests/translation-layer/test_vk_frame_timing.py",
+      "exit_code": 0,
+      "tests": 11,
+      "skipped": 0,
+      "seconds": 0.5372824180012685
+    },
+    {
+      "file": "tests/translation-layer/test_present_clock.py",
+      "exit_code": 0,
+      "tests": 8,
+      "skipped": 0,
+      "seconds": 0.255386761000409
+    },
+    {
+      "file": "tests/translation-layer/test_pipeline_store.py",
+      "exit_code": 0,
+      "tests": 9,
+      "skipped": 0,
+      "seconds": 0.1791784369997913
+    },
+    {
+      "file": "tests/translation-layer/test_driver_profile.py",
+      "exit_code": 0,
+      "tests": 9,
+      "skipped": 0,
+      "seconds": 0.16699987899846747
+    },
+    {
+      "file": "tests/translation-layer/test_efficiency.py",
+      "exit_code": 0,
+      "tests": 14,
+      "skipped": 0,
+      "seconds": 0.15514388600058737
+    },
+    {
+      "file": "tests/translation-layer/test_cpu_threads.py",
+      "exit_code": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.08059936399877188
+    },
+    {
+      "file": "tests/translation-layer/test_efficiency_math.py",
+      "exit_code": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.06830821399853448
+    },
+    {
+      "file": "tests/translation-layer/test_pipeline_diagnostics.py",
+      "exit_code": 0,
+      "tests": 11,
+      "skipped": 0,
+      "seconds": 0.17254085600143299
+    },
+    {
+      "file": "tests/translation-layer/test_pipeline_feedback.py",
+      "exit_code": 0,
+      "tests": 13,
+      "skipped": 0,
+      "seconds": 0.12326698600008967
+    },
+    {
+      "file": "tests/translation-layer/test_game_chrome.py",
+      "exit_code": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.0628798289981205
+    },
+    {
+      "file": "tests/translation-layer/test_gpu_timing.py",
+      "exit_code": 0,
+      "tests": 10,
+      "skipped": 0,
+      "seconds": 0.1348699409973051
+    },
+    {
+      "file": "tests/translation-layer/test_gpu_metal.py",
+      "exit_code": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.06819983199966373
+    },
+    {
+      "file": "tests/translation-layer/test_gpu_vk_queue.py",
+      "exit_code": 0,
+      "tests": 3,
+      "skipped": 0,
+      "seconds": 0.10982671899910201
+    },
+    {
+      "file": "tests/translation-layer/test_render_inventory.py",
+      "exit_code": 0,
+      "tests": 6,
+      "skipped": 0,
+      "seconds": 0.1344875310023781
+    },
+    {
+      "file": "tests/translation-layer/test_efficiency_analysis.py",
+      "exit_code": 0,
+      "tests": 20,
+      "skipped": 0,
+      "seconds": 0.41737752100016223
+    },
+    {
+      "file": "tests/translation-layer/test_roadmap_progress.py",
+      "exit_code": 0,
+      "tests": 5,
+      "skipped": 0,
+      "seconds": 0.0720663650026836
+    },
+    {
+      "file": "tests/translation-layer/test_roadmap_projection.py",
+      "exit_code": 0,
+      "tests": 7,
+      "skipped": 0,
+      "seconds": 0.1768167580012232
+    },
+    {
+      "file": "tests/translation-layer/test_comparison_campaign.py",
+      "exit_code": 0,
+      "tests": 20,
+      "skipped": 0,
+      "seconds": 0.4204195329984941
+    },
+    {
+      "file": "tests/translation-layer/test_spatial.py",
+      "exit_code": 0,
+      "tests": 5,
+      "skipped": 1,
+      "seconds": 0.42096411799866473
+    },
+    {
+      "file": "tests/translation-layer/test_spatial_lifetime.py",
+      "exit_code": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.06872493399714585
+    },
+    {
+      "file": "tests/translation-layer/test_native_archive.py",
+      "exit_code": 0,
+      "tests": 2,
+      "skipped": 1,
+      "seconds": 0.1369729330035625
+    },
+    {
+      "file": "tests/translation-layer/test_native_preparation_audit.py",
+      "exit_code": 0,
+      "tests": 8,
+      "skipped": 0,
+      "seconds": 0.19873756500237505
+    }
+  ],
+  "passed": 230
+}
