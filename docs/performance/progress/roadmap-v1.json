@@ -54,7 +54,9 @@
             "status": "passed",
             "evidence": [
               "docs/performance/EVIDENCE.md",
-              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json"
             ],
             "remaining": null
           },
@@ -64,7 +66,9 @@
             "status": "passed",
             "evidence": [
               "docs/performance/EVIDENCE.md",
-              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md"
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json"
             ],
             "remaining": null
           },
@@ -76,7 +80,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
               "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
-              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md"
+              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json"
             ],
             "remaining": null
           }
@@ -148,7 +154,9 @@
             "evidence": [
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
-              "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md"
+              "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json"
             ],
             "remaining": null
           },
@@ -159,7 +167,9 @@
             "evidence": [
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
-              "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md"
+              "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json"
             ],
             "remaining": null
           },
@@ -170,7 +180,9 @@
             "evidence": [
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
-              "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md"
+              "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json"
             ],
             "remaining": null
           },
@@ -249,7 +261,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
               "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
-              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md"
+              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json"
             ],
             "remaining": null
           },
@@ -262,7 +276,9 @@
               "tests/translation-layer/test_efficiency_analysis.py",
               "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md",
               "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
-              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md"
+              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json"
             ],
             "remaining": null
           },
@@ -431,7 +447,9 @@
               "docs/performance/23-native-pipeline-and-clock-batch.md",
               "docs/performance/24-native-benefit-review.md",
               "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md",
-              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.ci.json"
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.ci.json",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json"
             ],
             "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           },
@@ -443,7 +461,9 @@
               "docs/performance/23-native-pipeline-and-clock-batch.md",
               "docs/performance/24-native-benefit-review.md",
               "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md",
-              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.ci.json"
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.ci.json",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json"
             ],
             "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           },
@@ -455,7 +475,9 @@
               "docs/performance/23-native-pipeline-and-clock-batch.md",
               "docs/performance/24-native-benefit-review.md",
               "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md",
-              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.ci.json"
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.ci.json",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json"
             ],
             "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           }
@@ -1022,6 +1044,6 @@
       }
     }
   ],
-  "source_sha": "4a7ac041043d4abbcf5d6e8c194e73a5d6454b63",
-  "evidence_id": "IMPLEMENTATION-BATCH-6 source; Apple validation in progress"
+  "source_sha": "0ff0758b658befbe4cc083c9e5e4bf7dfaa40696",
+  "evidence_id": "IMPLEMENTATION-BATCH-6 final Apple261checks/driver/app/IPA; parked; no new physical/energy passes"
 }
