@@ -499,16 +499,24 @@
           {
             "id": "M6-I3",
             "criterion": "Trace-supported buffering/synchronisation or sizing candidate/decision",
-            "status": "pending",
-            "evidence": [],
-            "remaining": "Cost of suboptimal and buffering remains unmeasured"
+            "status": "passed",
+            "evidence": [
+              "docs/performance/20-core-efficiency-batch.md",
+              "docs/performance/runs/E-M4-003.md",
+              "docs/performance/builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md"
+            ],
+            "remaining": "Code/research gate only: historical timestamp mismatch plus pinned native present/feedback source supports isolated clock adapter. Sizing, buffering, async, physical cadence and energy remain open."
           },
           {
             "id": "M6-I4",
             "criterion": "Required candidate-specific correctness checks/build and rollback design",
-            "status": "pending",
-            "evidence": [],
-            "remaining": "No accepted presentation/buffering candidate"
+            "status": "passed",
+            "evidence": [
+              "tests/translation-layer/test_present_clock.py",
+              "tests/translation-layer/test_vk_frame_timing.py",
+              "docs/performance/builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md"
+            ],
+            "remaining": "Implementation checks/build/rollback only. Supported bounded immutable chain, clock mapping, native results and passive feedback tested; hardware acceptance open."
           }
         ],
         "D": [
@@ -682,8 +690,11 @@
             "id": "M8-I4",
             "criterion": "Profile meaningful JNI/Bionic/futex overhead before a targeted change",
             "status": "pending",
-            "evidence": [],
-            "remaining": "No demonstrated dominant compatibility-layer cost"
+            "evidence": [
+              "docs/performance/runs/CORE-BATCH-4.once-benchmark.json",
+              "docs/performance/20-core-efficiency-batch.md"
+            ],
+            "remaining": "Completed-once synthetic CPU mechanism measured and futex correctness fixed; representative guest JNI/Bionic/futex cost profiling remains pending. No whole-game energy evidence."
           },
           {
             "id": "M8-I5",
@@ -706,7 +717,7 @@
             "criterion": "Isolated compatibility/driver candidate preserves graphics/lifecycle",
             "status": "pending",
             "evidence": [],
-            "remaining": "No candidate"
+            "remaining": "CORE-BATCH-4 once/futex candidate built only; physical graphics/lifecycle compatibility comparison pending."
           },
           {
             "id": "M8-D3",
@@ -784,16 +795,23 @@
           {
             "id": "M9-I5",
             "criterion": "Reversible controls and scaler-specific correctness/build/lifecycle checks",
-            "status": "pending",
-            "evidence": [],
-            "remaining": "Reversible controls/input budgets, direct boundary observations, ABI/failure checks and Apple build complete; broader scaler resource/failure/lifecycle checks remain open. QUALITY-BATCH-2 is not a full I5 pass."
+            "status": "passed",
+            "evidence": [
+              "tests/translation-layer/test_spatial_lifetime.py",
+              "tests/translation-layer/test_spatial.py",
+              "docs/performance/builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md"
+            ],
+            "remaining": "Actual-component Apple doubles cover fixed-input reuse, ownership, failure, concurrent serialization, destruction/reconfiguration; physical GPU lifetime, colour, resize/lifecycle remain in D2/D4."
           },
           {
             "id": "M9-I6",
             "criterion": "Separate fixed-budget/dynamic-resolution investigation and retained decision",
-            "status": "pending",
-            "evidence": [],
-            "remaining": "User-controlled and GPU-evidence-driven; not implemented"
+            "status": "passed",
+            "evidence": [
+              "docs/performance/21-fixed-and-dynamic-resolution-decision.md",
+              "docs/performance/builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md"
+            ],
+            "remaining": "Research/retained-decision gate only. Automatic dynamic resolution and temporal MetalFX remain unimplemented/deferred with reopening conditions; no optimal budget or energy benefit established."
           }
         ],
         "D": [
@@ -944,6 +962,6 @@
       }
     }
   ],
-  "source_sha": "9d298c5c7c56af87c715ba2b8ad03111a48dcbac",
-  "evidence_id": "E-M4-005"
+  "source_sha": "031d9d2698f2fbd0439547b2febd45a9c7c2e5b5",
+  "evidence_id": "CORE-BATCH-4; code/research only; latest physical E-M4-006"
 }

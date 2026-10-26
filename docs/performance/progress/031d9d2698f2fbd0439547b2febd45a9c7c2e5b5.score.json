@@ -1,0 +1,131 @@
+{
+  "model": "HUSK-ROADMAP-v1",
+  "gate_version": "whole-milestones-1",
+  "evidence_date": "2026-10-26",
+  "overall_percent": 26.27,
+  "overall_rounded_percent": 26,
+  "m4_scope_percent_excluding_duo": 29.188888888888886,
+  "duo_milestone_percent": 0.0,
+  "milestones": [
+    {
+      "id": "M0",
+      "weight": 2,
+      "track_percent": {
+        "documentation": 100.0
+      },
+      "milestone_percent": 100.0,
+      "overall_contribution_points": 2.0
+    },
+    {
+      "id": "M1",
+      "weight": 12,
+      "track_percent": {
+        "I": 100.0,
+        "D": 50.0,
+        "E": 0.0
+      },
+      "milestone_percent": 45.0,
+      "overall_contribution_points": 5.4
+    },
+    {
+      "id": "M2",
+      "weight": 10,
+      "track_percent": {
+        "I": 75.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 22.5,
+      "overall_contribution_points": 2.25
+    },
+    {
+      "id": "M3",
+      "weight": 18,
+      "track_percent": {
+        "I": 75.0,
+        "D": 25.0,
+        "E": 0.0
+      },
+      "milestone_percent": 30.0,
+      "overall_contribution_points": 5.4
+    },
+    {
+      "id": "M4",
+      "weight": 6,
+      "track_percent": {
+        "I": 100.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 30.0,
+      "overall_contribution_points": 1.8
+    },
+    {
+      "id": "M5",
+      "weight": 8,
+      "track_percent": {
+        "I": 0.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 0.0,
+      "overall_contribution_points": 0.0
+    },
+    {
+      "id": "M6",
+      "weight": 7,
+      "track_percent": {
+        "I": 100.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 30.0,
+      "overall_contribution_points": 2.1
+    },
+    {
+      "id": "M7",
+      "weight": 8,
+      "track_percent": {
+        "I": 100.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 30.0,
+      "overall_contribution_points": 2.4
+    },
+    {
+      "id": "M8",
+      "weight": 7,
+      "track_percent": {
+        "I": 20.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 6.0,
+      "overall_contribution_points": 0.42
+    },
+    {
+      "id": "M9",
+      "weight": 12,
+      "track_percent": {
+        "I": 100.0,
+        "D": 25.0,
+        "E": 0.0
+      },
+      "milestone_percent": 37.5,
+      "overall_contribution_points": 4.5
+    },
+    {
+      "id": "M10",
+      "weight": 10,
+      "track_percent": {
+        "I": 0.0,
+        "D": 0.0,
+        "E": 0.0
+      },
+      "milestone_percent": 0.0,
+      "overall_contribution_points": 0.0
+    }
+  ],
+  "meaning": "Evidence-gated plan completion, not measured energy saved"
+}

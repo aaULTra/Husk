@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "batch": "CORE-BATCH-4",
+  "source_sha": "031d9d2698f2fbd0439547b2febd45a9c7c2e5b5",
+  "packaged_identity": "031d9d2698f2fbd0439547b2febd45a9c7c2e5b5-dirty",
+  "workflow_run": 40326838216,
+  "job_id": 121585629564,
+  "workflow_url": "https://github.com/aaULTra/Husk/actions/runs/40326838216",
+  "conclusion": "success",
+  "tests": {
+    "total": 196,
+    "passed": 196,
+    "skipped": 0,
+    "suites": 23
+  },
+  "local_tests": {
+    "total": 196,
+    "passed": 190,
+    "apple_deferred": 6
+  },
+  "artifact": {
+    "id": 12653115808,
+    "name": "Husk-LiveContainer-IPA",
+    "size_in_bytes": 141868676,
+    "url": "https://api.github.com/repos/aaULTra/Husk/actions/artifacts/12653115808",
+    "archive_download_url": "https://api.github.com/repos/aaULTra/Husk/actions/artifacts/12653115808/zip",
+    "expired": false,
+    "created_at": "2026-10-26T13:09:54Z",
+    "expires_at": "2026-11-02T13:09:49Z",
+    "updated_at": "2026-10-26T13:09:54Z",
+    "digest": "sha256:900959a4c941eda1a43130fd040681cd7ccec390dc745f4d760faf9dacc0c752",
+    "workflow_run": {
+      "id": 40326838216,
+      "repository_id": 1420682562,
+      "head_repository_id": 1420682562,
+      "head_branch": "codex/dungeons-efficient-native",
+      "head_sha": "031d9d2698f2fbd0439547b2febd45a9c7c2e5b5"
+    }
+  },
+  "artifact_download_page": "https://github.com/aaULTra/Husk/actions/runs/40326838216/artifacts/12653115808",
+  "upstream_moltenvk": {
+    "version": "1.4.2",
+    "commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+    "spatial_patch_sha256": "941dbd3931c93eed7787abeaf919815be463d2e4d99dceb76be4edebf83af249",
+    "default_enabled": false
+  },
+  "source_readback_files": 31,
+  "physical_validation": "pending",
+  "energy_improvement": "unverified",
+  "active_device_test": "0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5",
+  "new_test_requested": false
+}
