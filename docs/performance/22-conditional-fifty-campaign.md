@@ -1,5 +1,7 @@
 # VALIDATE-50-v1 — consolidated candidate and conditional acceptance campaign
 
+Latest user steering: [PACING-1](runs/PACING-1.instructions.md) selects031d9d2 usual-versus-engine-only testing now. This supersedes the keep-parked/old-active instructions at this campaign’s original definition; prior files and immutable scenario snapshots remain retained. Actual/conditional scores are unchanged.
+
 2026-10-26. User authorises preparing a substantial build whose successful tests could take the permanent plan to50%, while withholding final acceptance until actual performance/efficiency evidence exists. This is a concrete gate-based scenario, not a forecast, promise of cooling, new score or revision of the fixed weights.
 
 ## Actual versus conditional
