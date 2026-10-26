@@ -1,0 +1,259 @@
+#!/usr/bin/env python3
+"""Preflight paired Husk exports. No automatic optimisation or roadmap acceptance."""
+import argparse
+import gzip
+import hashlib
+import json
+import math
+from pathlib import Path
+
+from analyse_efficiency import audit
+
+RECIPES = {
+    'strict-worker': ('worker_policy', 2, 3, ['M7', 'M3']),
+    'relative-worker': ('worker_policy', 2, 4, ['M7', 'M3']),
+    'engine-only': ('engine_only_limiter', False, True, ['M4']),
+    'async': ('submission_mode', 0, 1, ['M6']),
+    'spatial': ('metalfx_spatial_requested', False, True, ['M9', 'M3']),
+    'presentation-clock': ('clock_correct_presentation', False, True, ['M4', 'M6']),
+}
+REQUIRED_CONFIG = ('engine', 'game', 'launch_width', 'launch_height', 'sharp_graphics',
+                   'efficient_graphics', 'requested_fps', 'worker_policy', 'submission_mode',
+                   'detailed_driver_profiling', 'metalfx_spatial_requested', 'windowed')
+MAX_BYTES = 32 * 1024 * 1024
+CONTEXT_FIELDS = ('route', 'cache_state', 'case', 'ambient_c', 'starting_surface_c')
+
+
+def finite(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def load_export(path):
+    """Bound decompression; hash the original bytes and decoded diagnostic separately."""
+    path = Path(path)
+    if path.stat().st_size > MAX_BYTES:
+        raise ValueError('Input exceeds 32 MiB: ' + str(path))
+    raw = path.read_bytes()
+    if len(raw) > MAX_BYTES:
+        raise ValueError('Input exceeds 32 MiB: ' + str(path))
+    if path.suffix == '.gz':
+        with gzip.open(path, 'rb') as stream:
+            decoded = stream.read(MAX_BYTES + 1)
+    else:
+        decoded = raw
+    if len(decoded) > MAX_BYTES:
+        raise ValueError('Decoded input exceeds 32 MiB: ' + str(path))
+    def invalid_constant(value):
+        raise ValueError('Non-finite JSON number: ' + value)
+    return json.loads(decoded, parse_constant=invalid_constant), {'path': str(path), 'file_sha256': hashlib.sha256(raw).hexdigest(),
+                                'decoded_sha256': hashlib.sha256(decoded).hexdigest()}
+
+
+def included_seconds(data):
+    duration = data.get('duration_seconds')
+    if not finite(duration) or duration <= 0:
+        return None
+    intervals = []
+    for row in data.get('exclusions', []):
+        a, b = row.get('start'), row.get('end')
+        if not finite(a) or not finite(b) or b < a or a < 0 or b > duration + .01:
+            return None
+        intervals.append((max(0, a), min(duration, b)))
+    excluded, end = 0.0, 0.0
+    for a, b in sorted(intervals):
+        excluded += max(0, b - max(a, end))
+        end = max(end, b)
+    return duration - excluded
+
+
+def included_point(data, t):
+    if not finite(t) or not finite(data.get('duration_seconds')) or not 0 <= t <= data['duration_seconds']:
+        return False
+    for row in data.get('exclusions', []):
+        a, b = row.get('start'), row.get('end')
+        if not finite(a) or not finite(b) or b < a or a <= t <= b:
+            return False
+    return True
+
+
+def worker_treatment(data, mode):
+    summary = data.get('worker_policy', {})
+    observations = [r for r in summary.get('last_observed_workers', [])
+                    if r.get('role') == 1 and r.get('mode') == mode and r.get('after_qos') == 0x11
+                    and r.get('set_result') == 0 and r.get('query_result') == 0
+                    and included_point(data, r.get('observed_t'))]
+    samples = [r for r in data.get('samples', []) if r.get('excluded') is False and included_point(data, r.get('t'))]
+    controllers = [r.get('worker_controller', {}) for r in samples]
+    values = [r.get('admissions_since_launch') for r in controllers if finite(r.get('admissions_since_launch'))]
+    return {'included_normal_utility_observations': len(observations),
+            'included_trial_requested_samples': sum(r.get('trial_requested') is True for r in controllers),
+            'included_admission_counter_increase': max(values) - min(values) if values else None,
+            'lifetime_admissions': summary.get('admissions_since_launch'),
+            'lifetime_rollback_requests': summary.get('rollback_requests_since_launch'),
+            'scope': 'Last bounded observations and sampled counters; excluded/pre-session observations do not prove treatment. No core residency or energy.'}
+
+
+def run_metrics(data, analysed):
+    summary = data.get('summary', {})
+    seconds, count = included_seconds(data), summary.get('interval_count')
+    def rate(key):
+        n = summary.get(key)
+        return 1000 * n / count if finite(n) and finite(count) and count > 0 else None
+    return {'included_wall_seconds': seconds, 'host_interval_count': count, **analysed['host'],
+            'reported_swapchain_dimensions': [summary.get('swapchain_width'), summary.get('swapchain_height')],
+            'over20_per1000_host_intervals': rate('above_20_ms'),
+            'over33_per1000_host_intervals': rate('above_33_333333_ms'),
+            'over50_per1000_host_intervals': rate('above_50_ms'),
+            'slow_pipeline_calls_per_included_minute': summary.get('slow_pipeline_calls', 0) * 60 / seconds if seconds else None,
+            'worst_pipeline_ms': summary['worst_pipeline_ns'] / 1e6 if finite(summary.get('worst_pipeline_ns')) else None,
+            'cpu_scope': 'Process CPU, 100% = one logical CPU; not electrical power',
+            'gpu': analysed['gpu'], 'battery': analysed['battery'],
+            'submit_cpu_work': analysed['submit_cpu_work'], 'top_threads': analysed['thread_cpu']['top_threads']}
+
+
+def compare_pair(left, right, recipe, context=None):
+    if recipe not in RECIPES:
+        raise ValueError('Unknown comparison recipe')
+    field, baseline, candidate, plan_ids = RECIPES[recipe]
+    analyses = [audit(left), audit(right)]
+    blockers, warnings = [], []
+    metas = [d.get('metadata', {}) for d in (left, right)]
+    configs = [m.get('launch_configuration', {}) for m in metas]
+    if any(m.get('device_identifier') not in ('iPad16,5', 'iPad16,6') for m in metas):
+        blockers.append('Device is not the M4 reference; other hardware needs its own independent profile')
+    warnings.append('Matching build stamps are metadata, not independent binary/driver hashes')
+    for key in ('build_sha', 'device_identifier', 'os', 'session_id'):
+        if any(not isinstance(m.get(key), str) or not m[key] or m[key] == 'UNAVAILABLE' for m in metas):
+            blockers.append('Missing identity: ' + key)
+        elif key == 'session_id':
+            if metas[0][key] == metas[1][key]:
+                blockers.append('Same session exported twice')
+        elif metas[0][key] != metas[1][key]:
+            blockers.append('Different identity: ' + key)
+    for key in REQUIRED_CONFIG + (field,):
+        if any(key not in c for c in configs):
+            blockers.append('Missing launch configuration: ' + key)
+    changes = [key for key in sorted(set(configs[0]) | set(configs[1])) if configs[0].get(key) != configs[1].get(key)]
+    if configs[0].get(field) != baseline or configs[1].get(field) != candidate:
+        blockers.append('Recipe requires baseline/candidate ' + field + '=' + str(baseline) + '/' + str(candidate))
+    for key in changes:
+        if key != field:
+            blockers.append('Additional changed control: ' + key)
+    defaults = {'worker_policy': 2, 'submission_mode': 0, 'engine_only_limiter': False,
+                'clock_correct_presentation': False, 'metalfx_spatial_requested': False}
+    for index, (data, analysed, config) in enumerate(zip((left, right), analyses, configs)):
+        side = 'baseline' if index == 0 else 'candidate'
+        blockers.extend(side + ': ' + e for e in analysed['errors'])
+        warnings.extend(side + ': ' + w for w in analysed['warnings'])
+        summary = data.get('summary', {})
+        if config.get('engine') != 'ue4' or 'dungeon' not in str(config.get('game', '')).lower():
+            blockers.append(side + ': Dungeons UE4 reference is not selected')
+        if not isinstance(data.get('gpu_sampling', {}).get('requested'), bool) or not isinstance(metas[index].get('cpu_thread_sampling_requested'), bool):
+            warnings.append(side + ': GPU/thread diagnostic activation is unknown')
+        for key, value in defaults.items():
+            if key != field and key in config and config[key] != value:
+                blockers.append(side + ': unrelated experimental control enabled: ' + key)
+        if summary.get('dropped_frame_intervals_cumulative', 0) or summary.get('frame_distribution_complete') is False:
+            blockers.append(side + ': incomplete host-frame distribution')
+        if any(summary.get(k, 0) for k in ('dropped_host_records_cumulative', 'dropped_events_cumulative')) or data.get('dropped_export_records', 0):
+            warnings.append(side + ': host/event/export losses limit attribution')
+        if config.get('requested_fps') != 60 or config.get('launch_width') != 2128 or config.get('launch_height') != 1600:
+            blockers.append(side + ': protected M4 reference configuration is not selected')
+        if config.get('sharp_graphics') is not True or config.get('efficient_graphics') is not True:
+            blockers.append(side + ': Sharp/Efficient reference is not selected')
+        if config.get('detailed_driver_profiling') is not False:
+            blockers.append(side + ': detailed driver profiling is enabled or unknown')
+        for key in ('clock_correct_presentation', 'engine_only_limiter', 'pipeline_identification', 'pipeline_creation_feedback', 'render_target_inventory'):
+            if key not in config:
+                warnings.append(side + ': launch control unavailable: ' + key)
+            elif key != field and config[key] is True:
+                warnings.append(side + ': additional experiment/diagnostic enabled: ' + key)
+        if analysed['conditions']['battery_states'] != [1]:
+            blockers.append(side + ': unplugged battery state not established throughout sampled states')
+        samples = [s for s in data.get('samples', []) if s.get('excluded') is False]
+        if any(s.get('environment', {}).get('low_power_mode') is True for s in samples):
+            blockers.append(side + ': Low Power Mode observed')
+        if included_seconds(data) is None or included_seconds(data) < 120:
+            blockers.append(side + ': invalid exclusions/duration or less than120 included seconds')
+    for key in ('cpu_thread_sampling_requested',):
+        if metas[0].get(key) != metas[1].get(key):
+            blockers.append('Changed diagnostic: ' + key)
+    if left.get('gpu_sampling', {}).get('requested') != right.get('gpu_sampling', {}).get('requested'):
+        blockers.append('Changed diagnostic: gpu_sampling.requested')
+    brightness = [a['conditions']['brightness_values'] for a in analyses]
+    if any(not xs or not all(finite(v) for v in xs) for xs in brightness):
+        blockers.append('Missing valid brightness samples')
+    elif max(v for xs in brightness for v in xs) - min(v for xs in brightness for v in xs) > .001:
+        blockers.append('Brightness varies between/within sessions')
+    durations = [included_seconds(d) for d in (left, right)]
+    if all(durations) and abs(durations[0] - durations[1]) / max(durations) > .1:
+        blockers.append('Included session durations differ by more than10%')
+    treatment = worker_treatment(right, candidate) if recipe.endswith('worker') else None
+    if treatment:
+        if not treatment['included_normal_utility_observations'] or not treatment['included_trial_requested_samples']:
+            blockers.append('Candidate lacks included extra normal-worker treatment evidence')
+        if not treatment['included_admission_counter_increase']:
+            warnings.append('No admission counter increase inside capture; lifetime admissions alone cannot pass admission gate')
+    if recipe == 'relative-worker':
+        warnings.append('Mode4 is a separate treatment; it cannot pass strict Adaptive-versus-Balanced energy gate M7-E1')
+    if recipe == 'spatial':
+        s = right.get('spatial_upscaling', {})
+        if s.get('configured') is not True or not finite(s.get('encoded_calls')) or s['encoded_calls'] <= 0:
+            blockers.append('Candidate has no configured/encoded scaler evidence')
+        if s.get('failures'):
+            blockers.append('Candidate scaler failures were recorded')
+        if (s.get('output_width'), s.get('output_height')) != (2128, 1600):
+            blockers.append('Candidate does not retain selected spatial output')
+        warnings.append('Scaler dimensions/encode counts alone do not establish useful scene identity, colour/lifetime, quality or GPU/energy benefit')
+    context = context or {}
+    gaps = []
+    for key in CONTEXT_FIELDS:
+        rows = [context.get(side, {}).get(key) for side in ('baseline', 'candidate')]
+        if any(v is None or v == '' for v in rows):
+            gaps.append(key)
+        elif rows[0] != rows[1]:
+            warnings.append('User-supplied condition differs: ' + key)
+    clean = all(d.get('gpu_sampling', {}).get('requested') is False and m.get('cpu_thread_sampling_requested') is False
+                and all(c.get(k) is False for k in ('detailed_driver_profiling', 'pipeline_identification', 'pipeline_creation_feedback', 'render_target_inventory'))
+                for d, m, c in zip((left, right), metas, configs))
+    metrics = [run_metrics(d, a) for d, a in zip((left, right), analyses)]
+    delta = {key: metrics[1][key] - metrics[0][key] for key in ('retained_fps', 'p95_ms', 'p99_ms', 'cpu_weighted_percent_one_core',
+               'over20_per1000_host_intervals', 'over33_per1000_host_intervals', 'over50_per1000_host_intervals')
+             if finite(metrics[0].get(key)) and finite(metrics[1].get(key))}
+    return {'comparison_version': 1, 'recipe': recipe, 'plan_ids': plan_ids,
+            'status': 'BLOCKED FOR CONTROLLED INFERENCE' if blockers else 'METADATA PREFLIGHT ONLY; HUMAN/EVIDENCE REVIEW REQUIRED',
+            'blockers': sorted(set(blockers)), 'warnings': sorted(set(warnings)), 'changed_launch_fields': changes,
+            'baseline': metrics[0], 'candidate': metrics[1], 'candidate_minus_baseline': delta,
+            'worker_treatment': treatment, 'detailed_diagnostics_off_both': clean,
+            'user_supplied_context': context, 'unrecorded_context': gaps,
+            'context_provenance': 'User supplied, not independently measured or verified by this tool',
+            'power_watts': None, 'physical_temperature_c': None, 'displayed_frames': None,
+            'energy_improvement': 'UNVERIFIED', 'roadmap_gates_automatically_passed': [],
+            'limitations': ['One pair is descriptive; repeat important small effects at least3 times with matched conditions.',
+                           'Full-session percentiles cannot be averaged into pooled percentiles or establish causality.',
+                           'GPU sampled unions and overlapping work durations are not GPU utilisation or whole-session execution.',
+                           'Unplugged flat/coarse battery readings are not zero watts or precise electrical savings.',
+                           'Independent monitoring-off traces, physical correctness/quality and supported power/temperature evidence remain external/reviewed tasks.']}
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('baseline', type=Path)
+    p.add_argument('candidate', type=Path)
+    p.add_argument('--recipe', choices=RECIPES, required=True)
+    p.add_argument('--context', type=Path, help='Optional user-reported matched conditions; never taken as direct telemetry')
+    p.add_argument('--output', type=Path)
+    args = p.parse_args()
+    left, lp = load_export(args.baseline)
+    right, rp = load_export(args.candidate)
+    result = compare_pair(left, right, args.recipe, json.loads(args.context.read_text()) if args.context else None)
+    result['inputs'] = {'baseline': lp, 'candidate': rp}
+    payload = json.dumps(result, indent=2, allow_nan=False) + '\n'
+    if args.output:
+        args.output.write_text(payload)
+    else:
+        print(payload, end='')
+
+
+if __name__ == '__main__':
+    main()

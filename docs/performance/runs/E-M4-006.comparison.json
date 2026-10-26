@@ -1,0 +1,165 @@
+{
+  "comparison_version": 1,
+  "recipe": "spatial",
+  "plan_ids": [
+    "M9",
+    "M3"
+  ],
+  "status": "BLOCKED FOR CONTROLLED INFERENCE",
+  "blockers": [
+    "Included session durations differ by more than10%"
+  ],
+  "warnings": [
+    "Matching build stamps are metadata, not independent binary/driver hashes",
+    "Scaler dimensions/encode counts alone do not establish useful scene identity, colour/lifetime, quality or GPU/energy benefit",
+    "baseline: Balanced run; additional Adaptive normal-worker caps were not requested",
+    "baseline: GPU sampled coverage has losses or unresolved handlers",
+    "baseline: GPU/thread diagnostic activation is unknown",
+    "baseline: Render inventory adds diagnostic observation work; not a monitoring-off energy comparison",
+    "baseline: Render inventory has lost observations; absent sizes are not evidence of absent render targets",
+    "baseline: additional experiment/diagnostic enabled: render_target_inventory",
+    "baseline: launch control unavailable: clock_correct_presentation",
+    "candidate: Balanced run; additional Adaptive normal-worker caps were not requested",
+    "candidate: GPU raw export cap reached; use bounded aggregate windows when available, not raw totals as full-session coverage",
+    "candidate: GPU sampled coverage has losses or unresolved handlers",
+    "candidate: GPU/thread diagnostic activation is unknown",
+    "candidate: Render inventory adds diagnostic observation work; not a monitoring-off energy comparison",
+    "candidate: Render inventory has lost observations; absent sizes are not evidence of absent render targets",
+    "candidate: additional experiment/diagnostic enabled: render_target_inventory",
+    "candidate: host/event/export losses limit attribution",
+    "candidate: launch control unavailable: clock_correct_presentation"
+  ],
+  "changed_launch_fields": [
+    "metalfx_spatial_requested"
+  ],
+  "baseline": {
+    "included_wall_seconds": 433.42960800000037,
+    "host_interval_count": 24391,
+    "retained_fps": 56.4141549186075,
+    "p95_ms": 20.9,
+    "p99_ms": 21,
+    "worst_ms": 557.325,
+    "slow_pipeline_calls": 62,
+    "cpu_weighted_percent_one_core": 61.75820393145806,
+    "reported_swapchain_dimensions": [
+      2128,
+      1600
+    ],
+    "over20_per1000_host_intervals": 205.5266286745111,
+    "over33_per1000_host_intervals": 1.475954245418392,
+    "over50_per1000_host_intervals": 1.4349555163789922,
+    "slow_pipeline_calls_per_included_minute": 8.582708544451807,
+    "worst_pipeline_ms": 317.739,
+    "cpu_scope": "Process CPU, 100% = one logical CPU; not electrical power",
+    "gpu": {
+      "status": "MEASURED: sampled command-buffer GPU intervals; partial coverage",
+      "records": 8957,
+      "sample_clipped_interval_union_seconds": 18.984276000011505,
+      "exclusion_audit": {
+        "status": "ESTIMATED: conservative direct brackets / legacy anchor mapping; raw measurements preserved",
+        "direct_exclusion_count": 4,
+        "anchor_mapped_exclusion_count": 0,
+        "direct_boundary_uncertainty_seconds": 2.291666532983072e-06,
+        "clock_offset_change_seconds": -0.012114374998418498,
+        "included_interval_union_seconds_estimated": 18.984276000011505,
+        "records_overlapping_exclusions": 0,
+        "scope": "Partial sampled buffers, not GPU utilisation, per-frame cost or power"
+      },
+      "scope": "Partial sampled command buffers; not utilisation, displayed frames or watts"
+    },
+    "battery": {
+      "coarse_pp_per_hour": null,
+      "status": "UNRESOLVED: no reported battery decrease; not zero energy",
+      "power_watts": null
+    },
+    "submit_cpu_work": {},
+    "top_threads": []
+  },
+  "candidate": {
+    "included_wall_seconds": 870.359547,
+    "host_interval_count": 48413,
+    "retained_fps": 55.62765969712106,
+    "p95_ms": 20.9,
+    "p99_ms": 21.2,
+    "worst_ms": 416.445,
+    "slow_pipeline_calls": 40,
+    "cpu_weighted_percent_one_core": 75.47078937404653,
+    "reported_swapchain_dimensions": [
+      1696,
+      1280
+    ],
+    "over20_per1000_host_intervals": 298.18437196620744,
+    "over33_per1000_host_intervals": 0.6403238799496003,
+    "over50_per1000_host_intervals": 0.5163902257658067,
+    "slow_pipeline_calls_per_included_minute": 2.7574810987854885,
+    "worst_pipeline_ms": 224.747,
+    "cpu_scope": "Process CPU, 100% = one logical CPU; not electrical power",
+    "gpu": {
+      "status": "MEASURED: sampled command-buffer GPU intervals; partial coverage",
+      "records": 16384,
+      "sample_clipped_interval_union_seconds": 30.442942875000767,
+      "exclusion_audit": {
+        "status": "ESTIMATED: conservative direct brackets / legacy anchor mapping; raw measurements preserved",
+        "direct_exclusion_count": 2,
+        "anchor_mapped_exclusion_count": 0,
+        "direct_boundary_uncertainty_seconds": 6.666664376098197e-07,
+        "clock_offset_change_seconds": -0.024080812499960302,
+        "included_interval_union_seconds_estimated": 30.442942875000767,
+        "records_overlapping_exclusions": 0,
+        "scope": "Partial sampled buffers, not GPU utilisation, per-frame cost or power"
+      },
+      "scope": "Partial sampled command buffers; not utilisation, displayed frames or watts"
+    },
+    "battery": {
+      "coarse_pp_per_hour": 64.2775246139364,
+      "status": "ESTIMATED: coarse percentage-point drain; not measured power",
+      "power_watts": null
+    },
+    "submit_cpu_work": {},
+    "top_threads": []
+  },
+  "candidate_minus_baseline": {
+    "retained_fps": -0.7864952214864402,
+    "p95_ms": 0.0,
+    "p99_ms": 0.1999999999999993,
+    "cpu_weighted_percent_one_core": 13.71258544258847,
+    "over20_per1000_host_intervals": 92.65774329169633,
+    "over33_per1000_host_intervals": -0.8356303654687918,
+    "over50_per1000_host_intervals": -0.9185652906131855
+  },
+  "worker_treatment": null,
+  "detailed_diagnostics_off_both": false,
+  "user_supplied_context": {},
+  "unrecorded_context": [
+    "route",
+    "cache_state",
+    "case",
+    "ambient_c",
+    "starting_surface_c"
+  ],
+  "context_provenance": "User supplied, not independently measured or verified by this tool",
+  "power_watts": null,
+  "physical_temperature_c": null,
+  "displayed_frames": null,
+  "energy_improvement": "UNVERIFIED",
+  "roadmap_gates_automatically_passed": [],
+  "limitations": [
+    "One pair is descriptive; repeat important small effects at least3 times with matched conditions.",
+    "Full-session percentiles cannot be averaged into pooled percentiles or establish causality.",
+    "GPU sampled unions and overlapping work durations are not GPU utilisation or whole-session execution.",
+    "Unplugged flat/coarse battery readings are not zero watts or precise electrical savings.",
+    "Independent monitoring-off traces, physical correctness/quality and supported power/temperature evidence remain external/reviewed tasks."
+  ],
+  "inputs": {
+    "baseline": {
+      "path": "docs/performance/runs/E-M4-006B.diagnostics.json.gz",
+      "file_sha256": "f9cb654ad2dc9071754c9242daa8cb2638c5b50f8ee491d5388379681a557b96",
+      "decoded_sha256": "1000d0dca44ffb399fda54cde874f553d31d0e11fb17d190c09c8a44ac9d0cdb"
+    },
+    "candidate": {
+      "path": "docs/performance/runs/E-M4-006A.diagnostics.json.gz",
+      "file_sha256": "bd73edff9b233b6eb2b457ead64013d70784217068c65e03e4fa1a84d79f4035",
+      "decoded_sha256": "4b539fa15715f2513e5b95145259b7fa4414d789d0356ecd4ab4347ca8cfbfb6"
+    }
+  }
+}

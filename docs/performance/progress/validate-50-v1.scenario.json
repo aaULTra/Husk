@@ -1,0 +1,42 @@
+{
+  "id": "VALIDATE-50-v1",
+  "model": "HUSK-ROADMAP-v1",
+  "gate_version": "whole-milestones-1",
+  "conditional_gate_ids": [
+    "M1-D3",
+    "M1-D4",
+    "M1-E1",
+    "M1-E2",
+    "M4-D1",
+    "M4-D2",
+    "M4-D3",
+    "M4-E1",
+    "M4-E2",
+    "M7-D1",
+    "M7-D2",
+    "M7-D3",
+    "M7-D4",
+    "M7-E1",
+    "M7-E2",
+    "M9-D1",
+    "M9-D2",
+    "M9-D4",
+    "M9-E1",
+    "M9-E2",
+    "M9-E3"
+  ],
+  "runtime_candidate_source": "031d9d2698f2fbd0439547b2febd45a9c7c2e5b5",
+  "active_device_test_source": "0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5",
+  "assumptions": [
+    "All21 listed pre-existing gates pass unchanged; this is an unearned scenario, not predicted performance or current progress.",
+    "M1 full correctness/calibration, independent monitoring-off/on overhead and representative repeat baseline must actually be established.",
+    "M4 existing engine-only experiment must demonstrate controlled pacing/work benefit and net energy effect, with display scope validated.",
+    "M7 means strict Adaptive mode3 versus Balanced mode2: admission, self-applied changes, rollback, repeated pacing and measured energy. Mode4 alone cannot close strict Adaptive energy.",
+    "M9 must establish useful scene input, GPU/colour/lifetime/lifecycle correctness, matched smoothness/quality, scaler-inclusive GPU improvement and sustained electrical/battery/temperature benefit.",
+    "External display/GPU/power/temperature evidence and physical test facilities may be required. The IPA cannot supply missing watts, numerical temperature or complete displayed-frame accounting.",
+    "No Duo, M2 full-variant, M5 prewarming or M8 trace gates are assumed passed. Failures remain open or become documented no-benefit decisions without credit for an improvement.",
+    "Keep the active0ec6b2d test unchanged. Do not request a replacement before its returned results are analysed; the existing031d9d2 candidate is parked."
+  ],
+  "baseline_ledger": "docs/performance/progress/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.ledger.json",
+  "target_at_definition_percent": 50.17
+}

@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-26. Status: CORE-BATCH-4 source031d9d2 built with196/196 Apple checks, pinned driver/app/IPA passed; compatibility fixes, isolated presentation clocks and scaler reuse/resource checks ready as a parked candidate. Active user-device test remains0ec6b2d EFFICIENCY-BATCH-3 worker comparison; no new results or replacement test requested. Overall weighted roadmap26.27%; all energy gates open.
+Updated: 2026-10-26. Status: CORE-BATCH-4 source031d9d2 built with196/196 Apple checks, pinned driver/app/IPA passed; compatibility fixes, isolated presentation clocks and scaler reuse/resource checks ready as a parked candidate. Active user-device test remains0ec6b2d EFFICIENCY-BATCH-3 worker comparison; no new results or replacement test requested. Overall weighted roadmap26.27%; all energy gates open. VALIDATE-50-v1 now records a separately calculated conditional50.17% path through21 existing gates; no extra earned credit or replacement IPA.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -34,6 +34,16 @@ Persist each future IPA handover at docs/performance/builds/<source-sha>.md with
 Scoring model **HUSK-ROADMAP-v1**: M0 2%, M1 12%, M2 10%, M3 18%, M4 6%, M5 8%, M6 7%, M7 8%, M8 7%, M9 12%, M10 10% (total 100%). Weights reflect objective importance, scope and evidence risk rather than lines of code. Within M1–M10, score implementation/build gates at 30%, device correctness/pacing gates at 30%, and relevant benefit/energy evidence gates at 40%. M0 is documentation-specific. Formula, gates, no-benefit handling and scope rules: [progress contract](docs/performance/ROADMAP_PROGRESS.md).
 
 The first whole-milestone gate baseline was established by AUDIT-BATCH-2 at 21.17%. Update the current ledger and save an immutable snapshot with every later IPA. Earlier handovers remain historical; their subtask percentages are not whole-milestone scores. Every future build handover must contain a numeric overall percentage, component breakdown, change/first-baseline label, scoring version and remaining evidence. Never describe coding-only 100% as completion of an energy objective. Always show Duo pending separately; no iPad result validates it.
+
+### Conditional acceptance target — VALIDATE-50-v1
+
+User authorises preparing a consolidated candidate whose successful tests could reach50%. [Gate-by-gate campaign and external requirements](docs/performance/22-conditional-fifty-campaign.md), [scenario](docs/performance/progress/validate-50-v1.scenario.json), [immutable calculation](docs/performance/progress/validate-50-v1.projection.json). Existing031d9d2 runtime already contains the independent controls; reuse its196-check Apple artifact instead of rebuilding unchanged app code for offline tools. Active0ec6b2d test remains unchanged; analyse it first.
+
+Actual **26.27%** stays earned. Conditional **50.17%** would require **21 currently unpassed gates**: M1-D3/D4/E1/E2 (+6.60points), M4-D1/D2/D3/E1/E2 (+4.20), M7-D1/D2/D3/D4/E1/E2 (+5.60), M9-D1/D2/D4/E1/E2/E3 (+7.50). Sum+23.90; fixed weights/criteria unchanged. M7 means strict Adaptive versus Balanced; mode4 alone cannot close strict energy. Conditional M4-only55.74%,Duo0; actual M4-only29.19%,Duo0.
+
+These are prepared runtime options plus an unearned evidence scenario, not guaranteed effects or a claim all physical test facilities are available. Actual scene/display/GPU/monitor-off/power/temperature evidence may require external tools whose host attachment/attribution remains unverified. An ordinary successful play session cannot pass all gates. Failed/inconclusive/no-benefit options stay recorded without improvement credit. Existing shader/cache/preparation, M3 deeper attribution, sizing/async/buffering, translation/driver, dynamic/temporal and independent Duo work remain open.
+
+Offline tools now calculate the conditional scenario without mutating the ledger and preflight same-build paired exports for confounds/treatment/losses/provenance. They grant no gates, watts, temperature or energy benefit. Historical E-M4-006 remains uncontrolled. No additional device test is requested now; staged minimal checks and focused follow-up are chosen only after the active pair returns.
 
 ### Delivery cadence — faster approach adopted
 
@@ -420,3 +430,12 @@ K1–K8 implementation/build/handover8/8=100%; new physicalD1–D4 0/4, benefitE
 Overall **26.27%(~26%),+2.25points** since0ec6b2d24.02%; **HUSK-ROADMAP-v1/whole-milestones-1**, unchanged weights/criteria. M6+1.05,M9+1.20. M4-only29.19%(~29%),Duo0. Largest remaining contributions M3 12.60,Duo10,M5 8,M2 7.75,M9 7.50. [Immutable ledger](docs/performance/progress/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.ledger.json)/[score](docs/performance/progress/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.score.json). No measured reduction in electrical power, heat or drain; no physical acceptance for the new binary.
 
 No replacement test requested now:0ec6b2d remains active; analyse its matched Balanced/mode4 report+JSON first. Deferred CORE smoke/clock/scaler procedures and full rollback are saved in the handover. Preserve all unfinished shader/cache/prewarming, independent pacing/sizing/async, strict Adaptive energy, CPU/GPU/power/thermal attribution, monitoring overhead, encoding/JNI/futex/driver, dynamic-resolution and separate Duo investigations.
+
+
+### 2026-10-26 — VALIDATE-50-v1 prepared, actual score unchanged
+
+Concrete conditional target accepted as a delivery method:21 existing M1/M4/M7/M9 gates would take26.27% to50.17% if all unchanged criteria pass. [Full campaign](docs/performance/22-conditional-fifty-campaign.md).25 new offline checks (18 paired comparisons,7 projection), plus5 ledger/18 analyser regressions pass:48 relevant checks. Future IPA workflow includes both suites. Source ledger/weights/device/energy status remain unchanged; no new IPA/runtime/default change. Current031d9d2 driver/app artifact remains the prepared candidate and retains196-check Apple evidence;0ec6b2d remains active user test.
+
+New checker rejects confounded controls/identity, invalid or lost frame/exclusion data, mismatched diagnostics/brightness/charging and absent included treatment; fingerprints source/decoded plain/gzip evidence and preserves unavailable context. Mode4 cannot earn strict Adaptive energy; snapshots/native events cannot invent core residency, displayed frames or watts. Projection refuses source-ledger/scenario overwrite and never writes hypothetical passed gates. Re-audited existing E-M4-006 OFF/ON archives: unequal duration still blocks controlled inference, detailed diagnostics remain disclosed, energy UNVERIFIED. Original evidence/history retained.
+
+Next: analyse current0ec6b2d pair when returned, then choose shortest specific correctness/treatment/capture stage. No bulk testing assignment or immediate replacement. Keep unsupported external/physical facilities and all unmet gates explicit. A larger percentage is contingent on real effects, not merely theoretical configuration or successful launch.

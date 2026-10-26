@@ -58,6 +58,10 @@ Analyse supplied/existing exports before asking for another run. Request the sho
 
 Show implementation/build readiness separately from device and benefit validation and from the overall weighted score. Retain the fixed scoring model, acceptance standards, protected baseline, device separation and unfinished investigations. Faster delivery never means awarding unverified performance or energy credit.
 
+## Conditional acceptance targets — standing user requirement
+
+Prepare substantial consolidated candidates that can advance several existing milestones after successful testing. The user explicitly authorises a conditional50% target. Calculate conditional coverage from named unchanged gates, separately from actual evidence-gated completion; never award assumed performance/energy points. Use the retained VALIDATE-50-v1 scenario/campaign and projection tooling, not a fabricated “theoretical completion” score. Explain external equipment, unimplemented dependencies and failed/inconclusive results. An IPA's successful launch alone cannot pass the scenario. Reuse an already validated IPA when its runtime options cover the campaign; do not rebuild unchanged game code merely to give offline tools a new binary identity. Preserve the active test and analyse its results before requesting replacement tests.
+
 ## Coding, testing and handover
 
 Use the existing architecture and tests. Preserve API arguments, results, object lifetimes and threading guarantees. Pipeline identification must not hash raw pointers/padding as stable identity or pretend incomplete state is complete. Unsupported feedback must remain unavailable. Never fabricate pipeline objects or precompile indiscriminately.
