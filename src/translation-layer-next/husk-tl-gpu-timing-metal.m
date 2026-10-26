@@ -83,6 +83,10 @@ void tl_gput_native_start(bool requested){
     if(requested)for(id queue in queues){HuskGPUQueueTag *tag=objc_getAssociatedObject(queue,&queue_key);tag.hooked=install(queue);}
     publish();pthread_mutex_unlock(&registry_mu);
 }
+void tl_gput_native_exclude(bool value,double *before,double *after){
+    double a=CACurrentMediaTime();tl_gput_exclude(value);double b=CACurrentMediaTime();
+    if(before)*before=a;if(after)*after=b;
+}
 void tl_gput_native_forget(void *device){
     pthread_mutex_lock(&registry_mu);
     for(NSInteger i=(NSInteger)queues.count-1;i>=0;i--){id queue=queues[(NSUInteger)i];HuskGPUQueueTag *tag=objc_getAssociatedObject(queue,&queue_key);if(tag.device==device){objc_setAssociatedObject(queue,&queue_key,nil,OBJC_ASSOCIATION_RETAIN_NONATOMIC);[queues removeObjectAtIndex:(NSUInteger)i];}}

@@ -15,13 +15,22 @@ typedef struct {
     uint32_t input_width, input_height, output_width, output_height;
     uint64_t images_created, encoded, failures;
 } tl_spatial_stats;
+/* Optional independent ABI: configuration is not a texture observation. */
+typedef struct {
+    uint32_t version,size,input_width,input_height,output_width,output_height;
+    uint32_t input_format,output_format,color_processing,observed_images;
+    uint64_t unsupported_swapchains,allocation_failures,encode_validation_failures;
+} tl_spatial_observations;
 typedef int (*tl_spatial_configure_fn)(const tl_spatial_config *);
 typedef int (*tl_spatial_stats_fn)(tl_spatial_stats *);
+typedef int (*tl_spatial_observations_fn)(tl_spatial_observations *);
 bool tl_spatial_dimensions(int width,int height,int percent,tl_spatial_config *out);
 void husk_ue4_set_spatial_upscaling(bool enabled);
+void husk_ue4_set_spatial_input_percent(int percent);
 bool tl_vk_spatial_prepare(const char *project,int *width,int *height);
 bool tl_vk_spatial_active(void);
 void tl_vk_spatial_snapshot(tl_spatial_stats *out);
+bool tl_vk_spatial_observations(tl_spatial_observations *out);
 void tl_vk_spatial_touch(float *x,float *y);
 #ifdef __cplusplus
 }

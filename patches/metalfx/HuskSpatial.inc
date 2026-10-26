@@ -9,10 +9,14 @@ static std::mutex huskSpatialConfigLock;
 static tl_spatial_config huskSpatialConfig={};
 static std::atomic<uint64_t> huskSpatialCreated{0},huskSpatialEncoded{0},huskSpatialFailures{0};
 static std::atomic<uint32_t> huskSpatialLive{0};
+static std::atomic<uint64_t> huskSpatialUnsupported{0},huskSpatialResources{0},huskSpatialEncodeFailures{0};
+static std::mutex huskSpatialObservationLock;
+static tl_spatial_observations huskSpatialObserved={};
 struct HuskSpatialImage {
     id<MTLTexture> input=nil;
     id<MTLFXSpatialScaler> scaler=nil;
     std::mutex lock;
+    bool observed=false;
     ~HuskSpatialImage(){[input release];[scaler release];--huskSpatialLive;}
 };
 static id<MTLFXSpatialScaler> huskNewScaler(id<MTLDevice> device,MTLPixelFormat format,const tl_spatial_config& c){
@@ -34,7 +38,8 @@ int vkHuskSpatialConfigure(const tl_spatial_config* request){
     if(!request||request->version!=1||request->size!=sizeof(*request)||request->reserved||request->enabled>1)return 0;
     std::lock_guard<std::mutex> guard(huskSpatialConfigLock);
     if(huskSpatialLive.load())return 0;
-    if(!request->enabled){huskSpatialConfig={};return 1;}
+    if(!request->enabled){huskSpatialConfig={};
+        std::lock_guard<std::mutex> observe(huskSpatialObservationLock);huskSpatialObserved={};return 1;}
     if(request->input_width<64||request->input_height<64||request->output_width>8192||request->output_height>8192||
        request->output_width<=request->input_width||request->output_height<=request->input_height||
        request->output_width>request->input_width*2||request->output_height>request->input_height*2)return 0;
@@ -44,7 +49,8 @@ int vkHuskSpatialConfigure(const tl_spatial_config* request){
         bool supported=probe!=nil;[probe release];[device release];
         if(!supported){++huskSpatialFailures;return 0;}
     }
-    huskSpatialConfig=*request;return 1;
+    huskSpatialConfig=*request;
+    std::lock_guard<std::mutex> observe(huskSpatialObservationLock);huskSpatialObserved={};return 1;
 }
 extern "C" __attribute__((visibility("default")))
 int vkHuskSpatialSnapshot(tl_spatial_stats* out){
@@ -56,6 +62,16 @@ int vkHuskSpatialSnapshot(tl_spatial_stats* out){
         huskSpatialCreated.load(),huskSpatialEncoded.load(),huskSpatialFailures.load()};
     return 1;
 }
+extern "C" __attribute__((visibility("default")))
+int vkHuskSpatialObservations(tl_spatial_observations* out){
+    if(!out||out->version!=1||out->size!=sizeof(*out))return 0;
+    std::lock_guard<std::mutex> guard(huskSpatialObservationLock);
+    *out=huskSpatialObserved;out->version=1;out->size=sizeof(*out);
+    out->unsupported_swapchains=huskSpatialUnsupported.load();
+    out->allocation_failures=huskSpatialResources.load();
+    out->encode_validation_failures=huskSpatialEncodeFailures.load();
+    return 1;
+}
 static int huskSpatialPlan(const VkSwapchainCreateInfoKHR* ci,tl_spatial_config* out){
     std::lock_guard<std::mutex> guard(huskSpatialConfigLock);
     if(!huskSpatialConfig.enabled)return 0;
@@ -65,14 +81,14 @@ static int huskSpatialPlan(const VkSwapchainCreateInfoKHR* ci,tl_spatial_config*
        (ci->imageFormat!=VK_FORMAT_B8G8R8A8_UNORM&&ci->imageFormat!=VK_FORMAT_B8G8R8A8_SRGB)||
        ci->preTransform!=VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR||
        ci->compositeAlpha!=VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR||ci->flags||ci->pNext){
-        ++huskSpatialFailures;return -1;
+        ++huskSpatialFailures;++huskSpatialUnsupported;return -1;
     }
     *out=c;return 1;
 }
 void* huskSpatialNewImage(id<MTLDevice> device,MTLPixelFormat format,MTLTextureUsage guestUsage,const tl_spatial_config& c){
     if(!c.enabled)return nullptr;
     auto* state=new(std::nothrow) HuskSpatialImage();
-    if(!state){++huskSpatialFailures;return nullptr;}
+    if(!state){++huskSpatialFailures;++huskSpatialResources;return nullptr;}
     ++huskSpatialLive;
     state->scaler=huskNewScaler(device,format,c);
     if(state->scaler){
@@ -84,20 +100,34 @@ void* huskSpatialNewImage(id<MTLDevice> device,MTLPixelFormat format,MTLTextureU
         state->input=[device newTextureWithDescriptor:desc];
         state->input.label=@"Husk M9 lower-resolution input";
     }
-    if(!state->scaler||!state->input){++huskSpatialFailures;delete state;return nullptr;}
+    if(!state->scaler||!state->input){++huskSpatialFailures;++huskSpatialResources;delete state;return nullptr;}
     ++huskSpatialCreated;return state;
 }
 id<MTLTexture> huskSpatialInput(void* raw){return raw?((HuskSpatialImage*)raw)->input:nil;}
 bool huskSpatialEncode(void* raw,id<MTLTexture> output,id<MTLCommandBuffer> command){
     auto* state=(HuskSpatialImage*)raw;
-    if(!state||!command||!output){++huskSpatialFailures;return false;}
+    if(!state||!command||!output){++huskSpatialFailures;++huskSpatialEncodeFailures;return false;}
     std::lock_guard<std::mutex> guard(state->lock);
     id<MTLFXSpatialScaler> scaler=state->scaler;
-    if(output.width!=scaler.outputWidth||output.height!=scaler.outputHeight||
+    if(state->input.width!=scaler.inputWidth||state->input.height!=scaler.inputHeight||
+       state->input.pixelFormat!=scaler.colorTextureFormat||
+       output.width!=scaler.outputWidth||output.height!=scaler.outputHeight||
        output.pixelFormat!=scaler.outputTextureFormat||
-       (output.usage&scaler.outputTextureUsage)!=scaler.outputTextureUsage){++huskSpatialFailures;return false;}
+       (output.usage&scaler.outputTextureUsage)!=scaler.outputTextureUsage){++huskSpatialFailures;++huskSpatialEncodeFailures;return false;}
     scaler.colorTexture=state->input;scaler.outputTexture=output;
     scaler.inputContentWidth=state->input.width;scaler.inputContentHeight=state->input.height;
-    [scaler encodeToCommandBuffer:command];++huskSpatialEncoded;return true;
+    [scaler encodeToCommandBuffer:command];++huskSpatialEncoded;
+    if(!state->observed){
+        std::lock_guard<std::mutex> observe(huskSpatialObservationLock);
+        huskSpatialObserved.input_width=(uint32_t)state->input.width;
+        huskSpatialObserved.input_height=(uint32_t)state->input.height;
+        huskSpatialObserved.output_width=(uint32_t)output.width;
+        huskSpatialObserved.output_height=(uint32_t)output.height;
+        huskSpatialObserved.input_format=(uint32_t)state->input.pixelFormat;
+        huskSpatialObserved.output_format=(uint32_t)output.pixelFormat;
+        huskSpatialObserved.color_processing=(uint32_t)scaler.colorProcessingMode;
+        huskSpatialObserved.observed_images++;state->observed=true;
+    }
+    return true;
 }
 void huskSpatialDeleteImage(void* raw){delete (HuskSpatialImage*)raw;}

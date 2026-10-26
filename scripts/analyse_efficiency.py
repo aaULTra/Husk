@@ -25,19 +25,35 @@ def interval_union(rows):
 
 
 def gpu_exclusion_audit(data):
-    """Estimated cross-clock clipping; raw exported records remain untouched."""
-    alignment = data.get('metadata', {}).get('gpu_clock_alignment', {})
-    fields = [alignment.get('monotonic_anchor_seconds'), alignment.get('media_anchor_seconds'),
-              data.get('metadata', {}).get('monotonic_origin_seconds')]
-    if not all(isinstance(v, (int, float)) and math.isfinite(v) for v in fields):
-        return {'status': 'UNAVAILABLE: no valid cross-clock alignment',
-                'included_interval_union_seconds_estimated': None, 'records_overlapping_exclusions': None}
-    offset = fields[0] - fields[1] - fields[2]
-    exclusions = []
+    """Clip using conservative direct brackets, or explicit legacy clock estimate."""
+    def finite(*values):
+        return all(isinstance(v, (int, float)) and math.isfinite(v) for v in values)
+    metadata = data.get('metadata', {})
+    alignment = metadata.get('gpu_clock_alignment', {})
+    mono, media, origin = (alignment.get('monotonic_anchor_seconds'),
+                           alignment.get('media_anchor_seconds'), metadata.get('monotonic_origin_seconds'))
+    offset = mono - media - origin if finite(mono, media, origin) else None
+    exclusions, direct, mapped, uncertainty = [], 0, 0, 0.0
     for row in data.get('exclusions', []):
-        lo, hi = row.get('start'), row.get('end')
-        if isinstance(lo, (int, float)) and isinstance(hi, (int, float)) and math.isfinite(lo) and math.isfinite(hi) and hi > lo:
-            exclusions.append((lo-offset, hi-offset))
+        bounds = [row.get(k) for k in ('gpu_media_start_before_seconds', 'gpu_media_start_after_seconds',
+                                       'gpu_media_end_before_seconds', 'gpu_media_end_after_seconds')]
+        if finite(*bounds) and bounds[0] <= bounds[1] <= bounds[2] <= bounds[3]:
+            # Exclude the whole uncertainty bracket; never silently count its edge as gameplay.
+            exclusions.append((bounds[0], bounds[3])); direct += 1
+            uncertainty += bounds[1] - bounds[0] + bounds[3] - bounds[2]
+        else:
+            lo, hi = row.get('start'), row.get('end')
+            if offset is None or not finite(lo, hi) or hi < lo:
+                return {'status': 'UNAVAILABLE: exclusion has no valid direct brackets or clock alignment',
+                        'included_interval_union_seconds_estimated': None, 'records_overlapping_exclusions': None}
+            if hi > lo:
+                exclusions.append((lo-offset, hi-offset)); mapped += 1
+    if offset is None and not direct:
+        return {'status': 'UNAVAILABLE: no valid cross-clock alignment or direct brackets',
+                'included_interval_union_seconds_estimated': None, 'records_overlapping_exclusions': None}
+    end = metadata.get('gpu_clock_alignment_end', {})
+    end_mono, end_media = end.get('monotonic_anchor_seconds'), end.get('media_anchor_seconds')
+    drift = end_mono - end_media - (mono - media) if finite(end_mono, end_media, mono, media) else None
     retained, overlapping = [], 0
     for row in data.get('gpu_records', []):
         values = [row.get(k) for k in ('gpu_start_media_seconds', 'gpu_end_media_seconds',
@@ -63,14 +79,16 @@ def gpu_exclusion_audit(data):
         overlapping += int(hit)
         retained.extend({'gpu_start_media_seconds': x, 'gpu_end_media_seconds': y,
                          'sample_start_media_seconds': x, 'sample_end_media_seconds': y} for x, y in pieces)
-    return {'status': 'ESTIMATED: anchor-mapped exclusions; raw measurements preserved',
+    return {'status': 'ESTIMATED: conservative direct brackets / legacy anchor mapping; raw measurements preserved',
+            'direct_exclusion_count': direct, 'anchor_mapped_exclusion_count': mapped,
+            'direct_boundary_uncertainty_seconds': uncertainty, 'clock_offset_change_seconds': drift,
             'included_interval_union_seconds_estimated': interval_union(retained),
             'records_overlapping_exclusions': overlapping,
             'scope': 'Partial sampled buffers, not GPU utilisation, per-frame cost or power'}
 
 
 def audit(data):
-    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6):
+    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7):
         raise ValueError('Unsupported diagnostic schema; preserve source for a version-aware audit')
     summary, metadata = data.get('summary', {}), data.get('metadata', {})
     windows, samples = data.get('windows', []), data.get('samples', [])
@@ -111,7 +129,7 @@ def audit(data):
         warnings.append('GPU sampled coverage has losses or unresolved handlers')
     exclusion_audit = gpu_exclusion_audit(data)
     if exclusion_audit['records_overlapping_exclusions']:
-        warnings.append('GPU records overlap exported exclusions after estimated clock mapping; use corrected analysis, not raw union, for included scope')
+        warnings.append('GPU records overlap exported exclusions at direct/estimated clock boundaries; use corrected analysis, not raw union, for included scope')
     inventory = data.get('render_inventory', {})
     if inventory.get('active'):
         warnings.append('Render inventory adds diagnostic observation work; not a monitoring-off energy comparison')
@@ -131,7 +149,7 @@ def audit(data):
     cpu = [(s.get('process_cpu_percent_one_core'), s.get('cpu_sample_elapsed_seconds')) for s in samples if not s.get('excluded')]
     cpu = [(v, dt) for v, dt in cpu if isinstance(v, (int, float)) and isinstance(dt, (int, float)) and dt > 0]
     cpu_mean = sum(v * dt for v, dt in cpu) / sum(dt for _, dt in cpu) if cpu else None
-    return {'analysis_version': 2, 'build': metadata.get('build_sha'), 'schema_version': data['schema_version'],
+    return {'analysis_version': 3, 'build': metadata.get('build_sha'), 'schema_version': data['schema_version'],
             'configuration': metadata.get('launch_configuration', {}), 'errors': errors, 'warnings': warnings,
             'host': {'retained_fps': cadence, 'p95_ms': summary.get('p95_ms'), 'p99_ms': summary.get('p99_ms'),
                      'worst_ms': summary.get('worst_ms'), 'slow_pipeline_calls': summary.get('slow_pipeline_calls'),

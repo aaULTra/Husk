@@ -5,7 +5,12 @@
 #include <stdint.h>
 /* Requested base fields only; no GPU reads or proof of scene/HUD contents. */
 typedef struct { uint32_t kind,width,height,depth,format,usage,samples; uint64_t count; } tl_ri_group;
-typedef struct { bool requested,active; uint64_t observed_images,observed_render_areas,dropped; } tl_ri_stats;
+typedef struct {
+    bool requested,active;
+    uint64_t observed_images,observed_render_areas,dropped;
+    uint64_t dropped_capacity,dropped_contention,hash_probes;
+    uint32_t asset_groups,target_groups,area_groups;
+} tl_ri_stats;
 void husk_ue4_set_render_inventory(bool value);
 void tl_ri_activate(const char *project);
 bool tl_ri_active(void);

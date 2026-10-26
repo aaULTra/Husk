@@ -42,5 +42,18 @@ class AnalysisTests(unittest.TestCase):
    d=json.loads(gzip.decompress((ROOT/'docs/performance/runs'/f'E-M4-005{label}.diagnostics.json.gz').read_bytes()));a=m.audit(d)
    self.assertEqual(a['errors'],[]);self.assertTrue(a['spatial_upscaling']['configured']);self.assertEqual(a['spatial_upscaling']['failures'],0)
    self.assertEqual(a['gpu']['exclusion_audit']['records_overlapping_exclusions'],overlaps);self.assertIsNone(a['battery']['coarse_pp_per_hour']);self.assertTrue(a['energy_benefit'].startswith('UNVERIFIED'))
+ def test_direct_gpu_brackets_override_anchor_and_work_without_one(self):
+  row=dict(gpu_start_media_seconds=100,gpu_end_media_seconds=103,sample_start_media_seconds=100,sample_end_media_seconds=103)
+  exclusion=dict(start=1000,end=2000,gpu_media_start_before_seconds=100.5,gpu_media_start_after_seconds=100.6,gpu_media_end_before_seconds=101.4,gpu_media_end_after_seconds=101.5)
+  d={'schema_version':7,'gpu_records':[row],'exclusions':[exclusion]}
+  a=m.gpu_exclusion_audit(d);self.assertAlmostEqual(a['included_interval_union_seconds_estimated'],2);self.assertEqual(a['direct_exclusion_count'],1);self.assertAlmostEqual(a['direct_boundary_uncertainty_seconds'],.2)
+  d['metadata']={'monotonic_origin_seconds':1,'gpu_clock_alignment':{'monotonic_anchor_seconds':3,'media_anchor_seconds':4}}
+  self.assertEqual(m.gpu_exclusion_audit(d)['included_interval_union_seconds_estimated'],2);self.assertEqual(m.audit(d)['errors'],[])
+ def test_malformed_exclusion_cannot_silently_count_as_gameplay(self):
+  d={'exclusions':[{'gpu_media_start_before_seconds':10,'gpu_media_start_after_seconds':9,'gpu_media_end_before_seconds':11,'gpu_media_end_after_seconds':12}]}
+  self.assertTrue(m.gpu_exclusion_audit(d)['status'].startswith('UNAVAILABLE'))
+ def test_end_anchor_exposes_clock_offset_change_without_correcting_raw_rows(self):
+  d={'metadata':{'monotonic_origin_seconds':1000,'gpu_clock_alignment':{'monotonic_anchor_seconds':1000,'media_anchor_seconds':100},'gpu_clock_alignment_end':{'monotonic_anchor_seconds':1100.01,'media_anchor_seconds':200}}}
+  self.assertAlmostEqual(m.gpu_exclusion_audit(d)['clock_offset_change_seconds'],.01)
 if __name__=='__main__':unittest.main()
 

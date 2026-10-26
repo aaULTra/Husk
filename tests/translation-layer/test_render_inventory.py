@@ -41,13 +41,25 @@ int exercise(int mode){
  if(n!=2||s.observed_images!=1||s.observed_render_areas!=2||g[0].width!=1784||g[1].count!=2)return 8;
  return 0;
 }
-int bounded(void){husk_ue4_set_render_inventory(true);tl_ri_activate("Dungeons");image_info p={.type=14,.height=100,.depth=1};for(unsigned i=1;i<=300;i++){p.width=i;tl_ri_image(&p);}tl_ri_stats s;tl_ri_group g[256];return tl_ri_snapshot(g,256,&s)==256&&s.dropped==44&&s.observed_images==300?0:1;}
-int contended(void){husk_ue4_set_render_inventory(true);tl_ri_activate("Dungeons");image_info p={.type=14,.width=100,.height=100};pthread_mutex_lock(&mu);tl_ri_image(&p);pthread_mutex_unlock(&mu);tl_ri_stats s;tl_ri_snapshot(NULL,0,&s);return s.dropped==1&&!s.observed_images?0:1;}
+int bounded(void){husk_ue4_set_render_inventory(true);tl_ri_activate("Dungeons");image_info p={.type=14,.height=100,.depth=1};for(unsigned i=1;i<=300;i++){p.width=i;tl_ri_image(&p);}tl_ri_stats s;tl_ri_group g[256];return tl_ri_snapshot(g,256,&s)==64&&s.asset_groups==64&&s.dropped_capacity==236&&s.dropped==236&&s.observed_images==300?0:1;}
+int contended(void){husk_ue4_set_render_inventory(true);tl_ri_activate("Dungeons");image_info p={.type=14,.width=100,.height=100};pthread_mutex_lock(&mu);tl_ri_image(&p);pthread_mutex_unlock(&mu);tl_ri_stats s;tl_ri_snapshot(NULL,0,&s);return s.dropped==1&&s.dropped_contention==1&&s.observed_images==1?0:1;}
+int reserved(void){
+ husk_ue4_set_render_inventory(true);tl_ri_activate("Dungeons");
+ image_info p={.type=14,.height=100,.depth=1};
+ for(unsigned i=1;i<=300;i++){p.width=i;tl_ri_image(&p);}
+ p.width=1696;p.height=1280;p.usage=0x10;tl_ri_image(&p);tl_ri_image(&p);
+ begin_info b={.type=43,.width=1696,.height=1280};tl_ri_render_area(&b);
+ tl_ri_stats s;tl_ri_group g[256];unsigned n=tl_ri_snapshot(g,256,&s);
+ if(n!=66||s.target_groups!=1||s.area_groups!=1||g[64].count!=2||g[65].width!=1696)return 1;
+ if(s.hash_probes>4000||s.observed_images!=302||s.observed_render_areas!=1)return 2;
+ return 0;
+}
 '''
   (p/'test.c').write_text(harness);subprocess.run([os.environ.get('CC','cc'),'-std=c11','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(ROOT/'src/translation-layer-next'),str(p/'test.c'),'-o',str(p/'test.so')],check=True);cls.lib=ctypes.CDLL(str(p/'test.so'))
  def test_disabled_lookup_does_not_interpose_or_read_input(self):self.assertEqual(self.lib.exercise(0),0)
  def test_success_failure_and_command_arguments_preserved(self):self.assertEqual(self.lib.exercise(1),0)
  def test_only_exact_dungeons_project_activates(self):self.assertEqual(self.lib.exercise(2),0)
  def test_registry_capacity_and_loss_are_disclosed(self):self.assertEqual(self.lib.bounded(),0)
+ def test_assets_cannot_starve_targets_or_areas_and_existing_counts_survive(self):self.assertEqual(self.lib.reserved(),0)
  def test_render_thread_never_waits_for_diagnostic_mutex(self):self.assertEqual(self.lib.contended(),0)
 if __name__=='__main__':unittest.main()

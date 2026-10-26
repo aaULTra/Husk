@@ -126,6 +126,7 @@ struct TLAppSettings: Codable, Equatable {
     var pipelineIdentification = false
     var pipelineFeedback = false
     var spatialUpscaling = false
+    var spatialInputPercent = 80
     var renderTargetInventory = false
     var driverPhaseProfiling = false
     var workerScheduling: WorkerScheduling = .balanced
@@ -210,6 +211,8 @@ struct TLAppSettings: Codable, Equatable {
         pipelineIdentification = try c.decodeIfPresent(Bool.self, forKey: .pipelineIdentification) ?? false
         pipelineFeedback = try c.decodeIfPresent(Bool.self, forKey: .pipelineFeedback) ?? false
         spatialUpscaling = try c.decodeIfPresent(Bool.self, forKey: .spatialUpscaling) ?? false
+        let inputPercent = try c.decodeIfPresent(Int.self, forKey: .spatialInputPercent) ?? 80
+        spatialInputPercent = [80, 85, 90, 95].contains(inputPercent) ? inputPercent : 80
         renderTargetInventory = try c.decodeIfPresent(Bool.self, forKey: .renderTargetInventory) ?? false
         driverPhaseProfiling = try c.decodeIfPresent(Bool.self, forKey: .driverPhaseProfiling) ?? false
         workerScheduling = try c.decodeIfPresent(WorkerScheduling.self, forKey: .workerScheduling) ?? .balanced
@@ -324,7 +327,15 @@ struct TLAppSettingsView: View {
                     Picker("Vulkan Submission", selection: $settings.vulkanSubmission) {
                         ForEach(TLAppSettings.VulkanSubmission.allCases) { Text($0.title).tag($0) }
                     }
-                    Toggle("MetalFX Spatial · 80% Input (Experimental)", isOn: $settings.spatialUpscaling)
+                    Toggle("MetalFX Spatial (Experimental)", isOn: $settings.spatialUpscaling)
+                    if settings.spatialUpscaling {
+                        Picker("MetalFX Input Budget", selection: $settings.spatialInputPercent) {
+                            ForEach([80, 85, 90, 95], id: \.self) { percent in
+                                Text("\(percent)% of output dimensions").tag(percent)
+                            }
+                        }
+                        Text("80% keeps the tested prototype. Larger inputs retain more original detail but may cost more GPU work. Your selected output stays unchanged; restart after changing.").font(.caption)
+                    }
                     Text("Renders fewer pixels and upscales to your selected output. Includes HUD/text. Requires supported hardware and the experimental driver; fully restart. Visual quality, stability and energy benefit need testing. Off restores the original driver and rendering.").font(.caption)
                     Toggle("Engine-only 60 FPS Limiter (Diagnostic)", isOn: $settings.engineOnlyLimiter)
                     Text("Off keeps the existing engine + host limiter. On requests engine-only pacing at 60 FPS; verify actual cadence in a short test. Thermal fallback caps remain active. Fully restart after changes.").font(.caption)

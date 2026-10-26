@@ -40,6 +40,10 @@ int main(){@autoreleasepool{
  assert(a.handler&&!b.handler&&game.calls==2&&host.calls==1);
  a.GPUStartTime=CACurrentMediaTime();a.GPUEndTime=a.GPUStartTime+0.001;a.status=MTLCommandBufferStatusCompleted;a.handler(a);
  tl_gput_stats s;tl_gput_snapshot(&s);assert(s.completed==1&&s.registered_queues==1&&s.hooked_queues==1);
+ double before=0,after=0;tl_gput_native_exclude(true,&before,&after);assert(before>0&&after>=before);
+ TestBuffer *excluded=[game commandBufferWithDescriptor:@5];assert(!excluded.handler);
+ tl_gput_native_exclude(false,&before,&after);assert(after>=before);
+ TestBuffer *resumed=[game commandBufferWithDescriptor:@6];assert(resumed.handler);
  tl_gput_native_forget((void *)1);TestBuffer *removed=[game commandBufferWithDescriptor:@4];assert(!removed.handler);
  tl_gput_snapshot(&s);assert(s.registered_queues==0);
  tl_gput_end();return 0;

@@ -24,6 +24,8 @@ void tl_gput_snapshot(tl_gput_stats *out);
 void tl_gput_queue_state(uint32_t registered, uint32_t hooked, uint32_t failed);
 /* ObjC adapter, never transfers ownership of Vulkan/Metal objects. */
 void tl_gput_native_start(bool requested);
+/* Media-clock bracket of the actual native exclusion transition (UI path). */
+void tl_gput_native_exclude(bool excluded,double *media_before,double *media_after);
 void tl_gput_native_register(void *device, void *metal_queue);
 void tl_gput_native_forget(void *device);
 #endif

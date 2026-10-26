@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated: 2026-10-25. Status: M9-SPATIAL-v1 experimental MetalFX IPA built with 161 passing checks; weighted roadmap ~24% after E-M4-005 (+2.25 evidence points); two MetalFX sessions reviewed; broad correctness/lifecycle and all energy-benefit gates remain open.
+Updated: 2026-10-26. Status: M9-SPATIAL-v1 experimental MetalFX IPA built with 161 passing checks; weighted roadmap ~24% after E-M4-005 (+2.25 evidence points); two MetalFX sessions reviewed; broad correctness/lifecycle and all energy-benefit gates remain open.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -39,7 +39,7 @@ The first whole-milestone gate baseline was established by AUDIT-BATCH-2 at 21.1
 
 Standing user instruction: consolidate feasible substantial implementation and independent options into fewer reviewable IPAs; reuse diagnostics and add them only for a specific decision or proven defect. Analyse existing captures first, request the shortest useful physical test and reuse its evidence across gates where valid. Keep comparisons to one behavioural change, preserve rollback, complete required checks, and distinguish implementation readiness from device/benefit acceptance and weighted progress. Enforcement: [AGENTS.md](AGENTS.md); delivery procedure: [IPA_HANDOVER.md](docs/performance/IPA_HANDOVER.md).
 
-The user is now starting the M9-SPATIAL-v1 IPA from source `9d298c5c7c56af87c715ba2b8ad03111a48dcbac` / [run 40244864869](https://github.com/aaULTra/Husk/actions/runs/40244864869). No results received yet. Keep this candidate and [its focused procedure](docs/performance/builds/9d298c5c7c56af87c715ba2b8ad03111a48dcbac.md) stable while testing; investigate reported exports before asking for another installation or repeat. A confirmed blocking correctness/measurement defect can justify a replacement. Independent engineering can continue without invalidating the active test.
+The two returned M9-SPATIAL-v1 sessions are reviewed in [E-M4-005](docs/performance/runs/E-M4-005.md). Actual scaler-boundary path and corrected subjective quality feedback support bounded M3/M9 gates; no energy benefit is established. Continue QUALITY-BATCH-2 from these findings before requesting another general capture. Preserve the original candidate/evidence and all unfinished work.
 
 ## 3. Current implementation and evidence
 
@@ -360,3 +360,12 @@ Inventory ON saturates 256 groups (351366/355489 drops), retaining no useful sce
 User requests maximum useful logging alongside next substantive changes. Honour decision value with bounded/opt-in capture and disclosed overhead. Next consolidated M9/M1 batch: measured input/output texture properties, optional higher-detail input budgets, reserved render-target/area capacity with bounded hash lookup and classified losses, direct GPU media-clock exclusion brackets and end alignment. Preserve current candidate and analyse these exports before another general test. All earlier M2–M10 investigations stay tracked.
 
 Offline analysis v2 now warns about inventory losses/observation overhead and estimates exclusion-aware GPU unions while preserving raw rows. **11 offline tests pass**, all three E-M4-004/005 datasets reconcile. No new runtime source/IPA in this evidence commit; next implementation batch is separate.
+
+
+### QUALITY-BATCH-2 — E-M4-005 follow-through
+
+[Design and fixed increment gates](docs/performance/18-quality-resolution-and-clock-batch.md). Sequence: two-session evidence -> actual scaler texture properties and selectable detail budgets -> better inventory/clock evidence -> focused correctness and matched GPU/energy acceptance. Input controls 80/85/90/95% preserve 2128 × 1600 output and tested 80% choice; original-driver OFF restoration remains. New optional observation ABI records actual texture sizes/formats/colour mode after validated encode, with separate unsupported/resource/encode failures. Does not prove internal UE 3D resolution or numerical image equivalence.
+
+Inventory reserves 64 asset, 96 attachment/storage and 96 legacy-area groups in a bounded 512-slot hash table; repeated retained groups still accumulate after category saturation. Capacity/contention losses and hash work are disclosed. Direct media-clock exclusion brackets plus end anchor resolve the specific old cross-clock ambiguity; offline schema-1–7 analysis conservatively clips bracket edges and preserves legacy estimated mapping/raw records. No readbacks, queue-idle waits or enlarged sampling budgets.
+
+Local required suites: **165 pass, 4 Apple-only pending (169 total)**. Apple driver/app/package validation pending before candidate delivery. Q1–Q4 implemented; Q5 pending. No new physical/benefit gates closed; fixed whole-plan score remains **24.02% (~24%)**, M4-only ~27%, Duo 0%. The 2.25-point increase from the prior IPA comes solely from reviewed E-M4-005 evidence, not this code. Adaptive energy versus Balanced, first/repeat/restarted pipeline identity/feedback, cumulative/no-pipeline stalls, broad lifecycle, monitoring overhead and all M2–M10 work remain open.

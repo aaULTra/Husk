@@ -78,9 +78,13 @@ void tl_vk_configure(const char *path, const char *frame_dir, int frame_every)
 }
 
 static bool spatial_requested;
+static int spatial_input_percent=80;
 static atomic_bool spatial_prepared;
 static float spatial_touch_x=1.0f,spatial_touch_y=1.0f;
 void husk_ue4_set_spatial_upscaling(bool enabled){spatial_requested=enabled;}
+void husk_ue4_set_spatial_input_percent(int percent){
+    spatial_input_percent=(percent==80||percent==85||percent==90||percent==95)?percent:80;
+}
 bool tl_vk_spatial_active(void){return atomic_load_explicit(&spatial_prepared,memory_order_acquire);}
 void tl_vk_spatial_touch(float *x,float *y){
     if(tl_vk_spatial_active()){if(x)*x*=spatial_touch_x;if(y)*y*=spatial_touch_y;}
@@ -147,7 +151,7 @@ bool tl_vk_spatial_prepare(const char *project,int *width,int *height){
     if(!spatial_requested)return false;
     tl_spatial_config config;
     if(!project||strcmp(project,"Dungeons")||!tl_ue4_sharp_graphics_enabled()||
-       !width||!height||!tl_spatial_dimensions(*width,*height,80,&config)||!vk_ready()){
+       !width||!height||!tl_spatial_dimensions(*width,*height,spatial_input_percent,&config)||!vk_ready()){
         tl_log_line("[M9-SPATIAL] preflight unavailable; original dimensions retained");return false;
     }
     tl_spatial_configure_fn configure=(tl_spatial_configure_fn)dlsym(V.lib,"vkHuskSpatialConfigure");
@@ -158,9 +162,15 @@ bool tl_vk_spatial_prepare(const char *project,int *width,int *height){
     spatial_touch_y=(float)config.input_height/config.output_height;
     *width=(int)config.input_width;*height=(int)config.input_height;
     atomic_store_explicit(&spatial_prepared,true,memory_order_release);
-    tl_log_line("[M9-SPATIAL] configured experimental input %ux%u -> output %ux%u; 80%% dimension budget; actual encoding/quality/energy pending; restart with option OFF restores baseline",
-                config.input_width,config.input_height,config.output_width,config.output_height);
+    tl_log_line("[M9-SPATIAL] configured experimental input %ux%u -> output %ux%u; %d%% dimension budget; actual encoding/quality/energy pending; restart with option OFF restores baseline",
+                config.input_width,config.input_height,config.output_width,config.output_height,spatial_input_percent);
     return true;
+}
+bool tl_vk_spatial_observations(tl_spatial_observations *out){
+    if(!out)return false;
+    *out=(tl_spatial_observations){.version=1,.size=sizeof(*out)};
+    tl_spatial_observations_fn read=V.lib?(tl_spatial_observations_fn)dlsym(V.lib,"vkHuskSpatialObservations"):NULL;
+    return read&&read(out);
 }
 
 /* MoltenVK's own list of instance extensions */

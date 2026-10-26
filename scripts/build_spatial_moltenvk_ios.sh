@@ -40,6 +40,7 @@ codesign --remove-signature "$OUT/HuskMoltenVK" 2>/dev/null || true
 cp "$SRC/HuskSpatialBuild.json" "$OUT/"
 nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialConfigure$'
 nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialSnapshot$'
+nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialObservations$'
 test -s "$HUSK_ROOT/build/ios-arm64/lib/MoltenVK.framework/MoltenVK"
 echo "M9-SPATIAL separate driver built; original donor framework preserved"
 

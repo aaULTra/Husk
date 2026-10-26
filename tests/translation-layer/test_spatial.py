@@ -15,10 +15,13 @@ class SpatialTests(unittest.TestCase):
         self.compile_run(r'''
 #include "husk-tl-spatial.h"
 #include <assert.h>
-int main(void){tl_spatial_config c={0};assert(sizeof(c)==32&&sizeof(tl_spatial_stats)==56);
+int main(void){tl_spatial_config c={0};assert(sizeof(c)==32&&sizeof(tl_spatial_stats)==56&&sizeof(tl_spatial_observations)==64);
  assert(tl_spatial_dimensions(2128,1600,80,&c));assert(c.input_width==1696&&c.input_height==1280);
  assert(c.output_width==2128&&c.output_height==1600&&c.version==1&&c.enabled==1);
- assert(c.input_width%8==0&&c.input_height%8==0);return 0;}
+ assert(c.input_width%8==0&&c.input_height%8==0);
+ int percents[]={85,90,95},widths[]={1808,1912,2016},heights[]={1360,1440,1520};
+ for(int i=0;i<3;i++){assert(tl_spatial_dimensions(2128,1600,percents[i],&c));assert(c.input_width==(unsigned)widths[i]&&c.input_height==(unsigned)heights[i]);assert(c.output_width==2128&&c.output_height==1600);}
+ return 0;}
 ''',extra=[TL/"husk-tl-spatial.c"])
     def test_invalid_dimensions_leave_original_request_untouched(self):
         self.compile_run(r'''
@@ -53,6 +56,8 @@ int main(void){
  int w=2128,h=1600;float x=1064,y=800;
  assert(!tl_vk_spatial_prepare((void*)1,NULL,NULL)&&!calls);
  husk_ue4_set_spatial_upscaling(true);
+ husk_ue4_set_spatial_input_percent(95);assert(spatial_input_percent==95);
+ husk_ue4_set_spatial_input_percent(5);assert(spatial_input_percent==80);
  assert(!tl_vk_spatial_prepare("Other",&w,&h));assert(w==2128&&h==1600&&!calls);
  sharp=0;assert(!tl_vk_spatial_prepare("Dungeons",&w,&h));sharp=1;
  driver_present=0;assert(!tl_vk_spatial_prepare("Dungeons",&w,&h));assert(w==2128&&h==1600);
@@ -61,6 +66,7 @@ int main(void){
  driver_accepts=1;assert(tl_vk_spatial_prepare("Dungeons",&w,&h)&&w==1696&&h==1280);
  tl_vk_spatial_touch(&x,&y);assert(x==848&&y==640&&tl_vk_spatial_active());
  tl_spatial_stats s;tl_vk_spatial_snapshot(&s);assert(s.version==1&&s.size==sizeof(s)&&s.configured==0);
+ tl_spatial_observations o;assert(!tl_vk_spatial_observations(&o)&&o.version==1&&o.size==64);
  return 0;}
 ''',extra=[TL/"husk-tl-spatial.c"])
     def test_real_driver_swapchain_guards(self):
@@ -73,7 +79,7 @@ int main(void){
 #include <cassert>
 static std::mutex huskSpatialConfigLock;
 static tl_spatial_config huskSpatialConfig={};
-static std::atomic<unsigned> huskSpatialFailures{0};
+static std::atomic<unsigned> huskSpatialFailures{0},huskSpatialUnsupported{0};
 enum{VK_COLOR_SPACE_SRGB_NONLINEAR_KHR=0,VK_FORMAT_B8G8R8A8_UNORM=44,VK_FORMAT_B8G8R8A8_SRGB=50,
  VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR=1,VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR=1};
 struct VkSwapchainCreateInfoKHR{struct{unsigned width,height;}imageExtent;unsigned imageArrayLayers,imageColorSpace,imageFormat,preTransform,compositeAlpha,flags;void*pNext;};
@@ -111,7 +117,9 @@ int main(){@autoreleasepool{
  tl_spatial_config c={1,sizeof(c),0,0,0,0,0,0};assert(vkHuskSpatialConfigure(&c)==1);
  c.version=2;assert(!vkHuskSpatialConfigure(&c));c.version=1;c.enabled=1;assert(!vkHuskSpatialConfigure(&c));
  tl_spatial_stats s={1,sizeof(s),0,0,0,0,0,0,0,0,0};assert(vkHuskSpatialSnapshot(&s)&&!s.configured);
- assert(!huskSpatialEncode(nullptr,nil,nil));assert(vkHuskSpatialSnapshot(&s)&&s.failures==1);
+ tl_spatial_observations o={};o.version=1;o.size=sizeof(o);assert(vkHuskSpatialObservations(&o)&&!o.observed_images);
+ o.version=2;assert(!vkHuskSpatialObservations(&o));o.version=1;
+ assert(!huskSpatialEncode(nullptr,nil,nil));assert(vkHuskSpatialObservations(&o)&&o.encode_validation_failures==1);assert(vkHuskSpatialSnapshot(&s)&&s.failures==1);
  c.enabled=0;assert(!huskSpatialNewImage(nil,MTLPixelFormatBGRA8Unorm,MTLTextureUsageRenderTarget,c));
  return 0;}}
 '''

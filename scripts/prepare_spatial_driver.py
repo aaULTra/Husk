@@ -92,7 +92,7 @@ def prepare(src):
     inputs=[Path(__file__),ROOT/"patches/metalfx/HuskSpatial.inc",ROOT/"patches/metalfx/HuskSpatialDriver.h",ROOT/"src/translation-layer-next/husk-tl-spatial.h"]
     digest=hashlib.sha256()
     for path in inputs:digest.update(path.read_bytes())
-    manifest={"schema":1,"upstream_commit":PIN,"upstream_version":"1.4.2","husk_spatial_patch_sha256":digest.hexdigest(),"feature":"M9-SPATIAL-v1","default_enabled":False}
+    manifest={"schema":1,"upstream_commit":PIN,"upstream_version":"1.4.2","husk_spatial_patch_sha256":digest.hexdigest(),"feature":"M9-SPATIAL-v2","default_enabled":False}
     (src/"HuskSpatialBuild.json").write_text(json.dumps(manifest,indent=2)+"\n")
     print(json.dumps(manifest))
 if __name__=="__main__":prepare(Path(sys.argv[1]).resolve())

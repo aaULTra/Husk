@@ -23,6 +23,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     private var samples: [[String: Any]] = [], windows: [[String: Any]] = [], events: [[String: Any]] = []
     private var origin = 0.0, windowAt = 0.0, lastCPUAt = 0.0, lastCPU = -1.0, lastMemoryAt = -10.0, lastBatteryAt = -30.0
     private var excludedAt: Double?, excludedReason = "", exclusions: [[String: Any]] = []
+    private var gpuExcludedStart: (Double, Double)?
     private var dropped = 0, previousBatteryMonitoring = false
     private var gameVisible = false
     private var panelVisible = false
@@ -60,7 +61,7 @@ final class EfficiencyDiagnostics: ObservableObject {
         samples = []; windows = []; events = []; exclusions = []; files = []; dropped = 0
         gpuRows = []; gpuExportDrops = 0
         stoppedReport = nil; canExport = false; origin = now; windowAt = origin; lastCPUAt = origin; lastCPU = -1
-        lastMemoryAt = origin - 10; lastBatteryAt = origin - 30; excludedAt = nil; excludedReason = ""
+        lastMemoryAt = origin - 10; lastBatteryAt = origin - 30; excludedAt = nil; excludedReason = ""; gpuExcludedStart = nil
         lastBattery = nil; battery = EfficiencyMath.Battery(); environment = [:]
         interrupted = false; phase = "Unmarked"
         let device = UIDevice.current
@@ -93,11 +94,7 @@ final class EfficiencyDiagnostics: ObservableObject {
         tl_em_start(); tl_gput_native_start(gpuSampling)
         // Bracket a host-clock read with media-clock reads. Raw values remain
         // authoritative; this mapping supports estimated host/GPU correlation.
-        let mediaBefore = CACurrentMediaTime(), monotonicAnchor = now, mediaAfter = CACurrentMediaTime()
-        metadata["gpu_clock_alignment"] = ["media_anchor_seconds": (mediaBefore + mediaAfter) / 2,
-                                           "monotonic_anchor_seconds": monotonicAnchor,
-                                           "read_bracket_seconds": mediaAfter - mediaBefore,
-                                           "mapping": "estimated host/GPU correlation; raw clocks retained; lifecycle spans excluded"]
+        metadata["gpu_clock_alignment"] = gpuClockAlignment()
         running = true; refreshExclusion(); event("phase", phase); sample()
         timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.sample() }
@@ -128,13 +125,30 @@ final class EfficiencyDiagnostics: ObservableObject {
     private func transitionExclusion(_ reason: String) {
         guard reason != excludedReason else { return }
         let t = now
+        var mediaBefore = 0.0, mediaAfter = 0.0
+        tl_em_exclude(!reason.isEmpty)
+        tl_gput_native_exclude(!reason.isEmpty, &mediaBefore, &mediaAfter)
         if let start = excludedAt {
-            append(["start": start - origin, "end": t - origin, "reason": excludedReason], to: &exclusions, limit: 2048)
+            append(exclusionRow(start, t, mediaBefore, mediaAfter), to: &exclusions, limit: 2048)
         }
         excludedReason = reason; excludedAt = reason.isEmpty ? nil : t
-        tl_em_exclude(!reason.isEmpty); tl_gput_exclude(!reason.isEmpty)
+        gpuExcludedStart = reason.isEmpty ? nil : (mediaBefore, mediaAfter)
         lastCPU = -1; battery.resetAnchor()
         event("exclusion", reason.isEmpty ? "included gameplay resumed" : reason)
+    }
+    private func gpuClockAlignment() -> [String: Any] {
+        let a = CACurrentMediaTime(), host = now, b = CACurrentMediaTime()
+        return ["media_anchor_seconds": (a + b) / 2, "monotonic_anchor_seconds": host,
+                "read_bracket_seconds": b - a,
+                "mapping": "ESTIMATED host/GPU correlation; direct exclusion media brackets take precedence; end anchor exposes drift"]
+    }
+    private func exclusionRow(_ start: Double, _ end: Double, _ mediaBefore: Double, _ mediaAfter: Double) -> [String: Any] {
+        var row: [String: Any] = ["start": start - origin, "end": end - origin, "reason": excludedReason]
+        if let begin = gpuExcludedStart {
+            row["gpu_media_start_before_seconds"] = begin.0; row["gpu_media_start_after_seconds"] = begin.1
+            row["gpu_media_end_before_seconds"] = mediaBefore; row["gpu_media_end_after_seconds"] = mediaAfter
+        }
+        return row
     }
     private func stats(_ s: tl_em_stats) -> [String: Any] {
         var calls = s.host_calls, times = s.host_ns
@@ -271,6 +285,10 @@ final class EfficiencyDiagnostics: ObservableObject {
         }
         return ["requested": s.requested, "active": s.active, "observed_image_creations": s.observed_images,
                 "observed_legacy_render_areas": s.observed_render_areas, "dropped_observations": s.dropped,
+                "dropped_capacity": s.dropped_capacity, "dropped_contention": s.dropped_contention,
+                "hash_lookup_probes": s.hash_probes, "retained_asset_groups": s.asset_groups,
+                "retained_target_groups": s.target_groups, "retained_area_groups": s.area_groups,
+                "capacity_by_category": ["assets": 64, "targets": 96, "areas": 96],
                 "groups_since_launch": rows, "plan_ids": ["M9", "GAP-03"],
                 "scope": "Requested base fields/legacy render areas since launch; not actual scene/HUD pixels, executed GPU passes, texture identity or replay state; swapchain images and newer renderpass paths may be absent",
                 "metalfx_integration": "separate opt-in prototype; requested inventory does not prove internal scene resolution", "benefit_validation": "unverified"]
@@ -278,6 +296,17 @@ final class EfficiencyDiagnostics: ObservableObject {
     private func spatialReport() -> [String: Any] {
         var s = tl_spatial_stats()
         tl_vk_spatial_snapshot(&s)
+        var observed = tl_spatial_observations()
+        let observationAPI = tl_vk_spatial_observations(&observed)
+        let textures: [String: Any] = ["status": observationAPI && observed.observed_images > 0 ? "MEASURED: actual texture properties at validated encode" : "UNAVAILABLE: no actual texture observation",
+            "input_width": observed.input_width, "input_height": observed.input_height,
+            "output_width": observed.output_width, "output_height": observed.output_height,
+            "input_metal_format": observed.input_format, "output_metal_format": observed.output_format,
+            "color_processing_mode": observed.color_processing, "observed_images": observed.observed_images,
+            "unsupported_swapchains": observed.unsupported_swapchains,
+            "resource_preparation_failures": observed.allocation_failures,
+            "encode_validation_failures": observed.encode_validation_failures,
+            "scope": "Once per image; actual MetalFX boundary textures, not internal UE scene resolution, displayed pixels or perceptual quality"]
         var build: Any = "UNAVAILABLE: experimental driver absent"
         if let root = Bundle.main.privateFrameworksPath,
            let data = try? Data(contentsOf: URL(fileURLWithPath: root + "/HuskMoltenVK.framework/HuskSpatialBuild.json")),
@@ -287,7 +316,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "input_width": s.input_width, "input_height": s.input_height,
                 "output_width": s.output_width, "output_height": s.output_height,
                 "images_created": s.images_created, "encoded_calls": s.encoded, "failures": s.failures,
-                "patch": "M9-SPATIAL-v1", "energy_benefit": "UNVERIFIED"]
+                "texture_observations": textures, "patch": "M9-SPATIAL-v2", "energy_benefit": "UNVERIFIED"]
     }
     private func pipelineFeedbackReport() -> [String: Any] {
         var s = tl_pf_stats(); tl_pf_snapshot(&s)
@@ -322,13 +351,17 @@ final class EfficiencyDiagnostics: ObservableObject {
     }
     func stop() {
         guard running else { return }
-        sample(forceBattery: true); tl_em_stop(); tl_gput_end(); collectGPU(); drainEvents(); collectWindow()
-        if let start = excludedAt { append(["start": start - origin, "end": now - origin, "reason": excludedReason], to: &exclusions, limit: 2048) }
+        sample(forceBattery: true)
+        var mediaBefore = 0.0, mediaAfter = 0.0
+        tl_gput_native_exclude(true, &mediaBefore, &mediaAfter)
+        metadata["gpu_clock_alignment_end"] = gpuClockAlignment()
+        tl_em_stop(); tl_gput_end(); collectGPU(); drainEvents(); collectWindow()
+        if let start = excludedAt { append(exclusionRow(start, now, mediaBefore, mediaAfter), to: &exclusions, limit: 2048) }
         timer?.invalidate(); timer = nil
         observers.forEach { NotificationCenter.default.removeObserver($0) }; observers = []
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
-        stoppedReport = ["schema_version": 6, "metadata": metadata, "duration_seconds": now - origin,
+        stoppedReport = ["schema_version": 7, "metadata": metadata, "duration_seconds": now - origin,
                          "summary": stats(total), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
@@ -376,6 +409,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 let feedback = report["pipeline_feedback_request"] as? [String: Any] ?? [:]
                 let inventory = report["render_inventory"] as? [String: Any] ?? [:]
                 let spatial = report["spatial_upscaling"] as? [String: Any] ?? [:]
+                let textures = spatial["texture_observations"] as? [String: Any] ?? [:]
                 let worker = report["worker_policy"] as? [String: Any] ?? [:]
                 let gpu = report["gpu_sampling"] as? [String: Any] ?? [:]
                 let text = """
@@ -406,8 +440,10 @@ final class EfficiencyDiagnostics: ObservableObject {
                 M2 driver feedback request active/devices/injected: \(feedback["active"] ?? false) / \(feedback["enabled_devices"] ?? 0) / \(feedback["injected_pipeline_infos"] ?? 0)
                 Stage cache feedback is separate from full pipeline reuse; no guaranteed compilation avoidance.
                 M9 render inventory active/images/legacy areas: \(inventory["active"] ?? false) / \(inventory["observed_image_creations"] ?? 0) / \(inventory["observed_legacy_render_areas"] ?? 0)
+                Inventory capacity/contention losses: \(inventory["dropped_capacity"] ?? 0) / \(inventory["dropped_contention"] ?? 0); hash probes \(inventory["hash_probes"] ?? 0)
                 Render inventory is partial requested state; internal scene resolution remains unverified.
                 M9 spatial configured: \(spatial["configured"] ?? false); input \(spatial["input_width"] ?? 0) × \(spatial["input_height"] ?? 0) -> output \(spatial["output_width"] ?? 0) × \(spatial["output_height"] ?? 0)
+                M9 texture observation: \(textures["status"] ?? "UNAVAILABLE"); input \(textures["input_width"] ?? 0) × \(textures["input_height"] ?? 0) -> output \(textures["output_width"] ?? 0) × \(textures["output_height"] ?? 0)
                 M9 spatial encode calls / failures: \(spatial["encoded_calls"] ?? 0) / \(spatial["failures"] ?? 0); successful calls do not prove visual/energy benefit.
                 M7 worker policy requested/active: \(worker["requested_mode"] ?? 0) / \(worker["active_mode"] ?? 0)
                 Adaptive requested / reason: \(worker["trial_requested"] ?? false) / \(worker["waiting_reason"] ?? "UNAVAILABLE")
