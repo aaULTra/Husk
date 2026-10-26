@@ -109,8 +109,8 @@ int main(int argc,char**argv){assert(argc==2);@autoreleasepool{
  for(unsigned i=0;i<12;i++)huskArchiveCapture((id<MTLDevice>)device,d,false,20000000,true);
  assert(vkHuskArchiveSnapshot(&stats)&&stats.pending==8&&stats.descriptors_dropped>0);
  NSString *path=[huskArchivePath copy];NSString *directory=[path stringByDeletingLastPathComponent];
- for(unsigned i=0;i<6;i++){NSString *old=[directory stringByAppendingPathComponent:[NSString stringWithFormat:@"native-%016llx.metalarc",(unsigned long long)i]];assert([@"old"writeToFile:old atomically:YES encoding:NSUTF8StringEncoding error:NULL]);}
- NSString *unrelated=[directory stringByAppendingPathComponent:@"notes.keep"];assert([@"keep"writeToFile:unrelated atomically:YES encoding:NSUTF8StringEncoding error:NULL]);
+ for(unsigned i=0;i<6;i++){NSString *old=[directory stringByAppendingPathComponent:[NSString stringWithFormat:@"native-%016llx.metalarc",(unsigned long long)i]];assert([@"old" writeToFile:old atomically:YES encoding:NSUTF8StringEncoding error:NULL]);}
+ NSString *unrelated=[directory stringByAppendingPathComponent:@"notes.keep"];assert([@"keep" writeToFile:unrelated atomically:YES encoding:NSUTF8StringEncoding error:NULL]);
  huskArchivePrune(directory,path);assert([[NSFileManager defaultManager]fileExistsAtPath:unrelated]);assert(vkHuskArchiveSnapshot(&stats)&&stats.evicted_files>=3);
  NSData*before=[NSData dataWithContentsOfFile:path];
  failWrite=true;assert(vkHuskArchivePrepare()==-1);assert([[NSData dataWithContentsOfFile:path]isEqual:before]);failWrite=false;
@@ -123,7 +123,7 @@ int main(int argc,char**argv){assert(argc==2);@autoreleasepool{
  Descriptor*asyncDescriptor=[Descriptor new];device.defer=YES;dispatch_semaphore_t done=dispatch_semaphore_create(0);
  huskArchiveNewRender((id<MTLDevice>)device,(MTLRenderPipelineDescriptor*)asyncDescriptor,^(id s,NSError*e){assert(s&&!e);dispatch_semaphore_signal(done);});[asyncDescriptor release];
  assert(dispatch_semaphore_wait(done,dispatch_time(DISPATCH_TIME_NOW,5*NSEC_PER_SEC))==0);
- vkHuskArchiveForget();assert([@"badarchive"writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:NULL]);assert(vkHuskArchiveConfigure(&c));
+ vkHuskArchiveForget();assert([@"badarchive" writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:NULL]);assert(vkHuskArchiveConfigure(&c));
  huskArchiveNewRender((id<MTLDevice>)device,(MTLRenderPipelineDescriptor*)d,^(id s,NSError*e){assert(s&&!e);complete++;});assert(vkHuskArchiveSnapshot(&stats)&&stats.read_failures&&!stats.restored_bytes);
  vkHuskArchiveForget();[d release];[device release];[path release];c.enabled=0;assert(vkHuskArchiveConfigure(&c));assert(descriptorsFreed>8);return 0;
 }}
