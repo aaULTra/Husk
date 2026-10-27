@@ -4,6 +4,42 @@ from pathlib import Path
 import subprocess,tempfile,unittest,sys,importlib.util
 ROOT=Path(__file__).resolve().parents[2];TL=ROOT/'src/translation-layer-next'
 class ArchiveHostTests(unittest.TestCase):
+ def test_inspection_separates_launch_configuration_probe_failure_and_empty_without_side_effects(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d);(p/'inspect.c').write_text(r'''
+#include "husk-tl-native-archive.h"
+#include <assert.h>
+static int config_calls,prepare_calls,snapshot_calls,fail_snapshot,accept_config=1,native_supported,pending;
+void tl_log_line(const char*f,...){(void)f;}
+static int configure(const tl_na_config*c){(void)c;config_calls++;return accept_config;}
+static int snapshot(tl_na_stats*s){snapshot_calls++;s->supported=native_supported;s->pending=pending;s->restored_bytes=17;return !fail_snapshot;}
+static int prepare(void){prepare_calls++;return 1;}
+static void forget(void){}
+int main(void){
+ tl_na_control c;tl_na_stats s;
+ tl_vk_archive_inspect(0,&s);tl_vk_archive_inspect(&c,0);
+ tl_vk_archive_inspect(&c,&s);assert(c.mode==0&&!c.api_available&&!c.snapshot_valid&&!s.requested);
+ husk_ue4_set_native_archive(1);tl_vk_archive_inspect(&c,&s);assert(c.mode==1&&!s.requested);
+ husk_ue4_set_native_archive(2);tl_vk_archive_inspect(&c,&s);
+ assert(c.mode==2&&c.configuration==TL_NA_CONFIG_NOT_ATTEMPTED&&!c.snapshot_valid&&s.requested);
+ tl_npa_configure("Other","cache",true);tl_vk_archive_inspect(&c,&s);assert(c.configuration==TL_NA_CONFIG_WRONG_PROJECT);
+ tl_npa_configure("Dungeons","cache",false);tl_vk_archive_inspect(&c,&s);assert(c.configuration==TL_NA_CONFIG_GRAPHICS_DISABLED);
+ tl_npa_configure("Dungeons","cache",true);tl_vk_archive_inspect(&c,&s);assert(c.configuration==TL_NA_CONFIG_API_MISSING&&!c.api_available);
+ tl_npa_set_api((tl_npa_api){configure,snapshot,prepare,forget});accept_config=0;
+ tl_npa_configure("Dungeons","cache",true);tl_vk_archive_inspect(&c,&s);assert(c.configuration==TL_NA_CONFIG_REJECTED&&c.api_available&&!c.snapshot_valid);
+ accept_config=1;tl_npa_configure("Dungeons","cache",true);tl_vk_archive_inspect(&c,&s);
+ assert(c.configuration==TL_NA_CONFIG_ACCEPTED&&c.snapshot_valid&&!s.supported&&!s.pending);
+ native_supported=1;tl_vk_archive_inspect(&c,&s);assert(c.snapshot_valid&&s.supported&&!s.pending&&s.restored_bytes==17);
+ pending=3;tl_npa_device((void*)1);int previous_configs=config_calls;
+ for(int i=0;i<10;i++){tl_vk_archive_inspect(&c,&s);assert(s.pending==3&&c.device_observed&&!s.preparing);}
+ assert(config_calls==previous_configs&&!prepare_calls&&snapshot_calls>=12);
+ fail_snapshot=1;tl_vk_archive_inspect(&c,&s);assert(!c.snapshot_valid&&s.requested&&!s.supported&&!s.pending&&!s.restored_bytes);
+ fail_snapshot=0;assert(tl_vk_archive_begin_prepare());tl_vk_archive_inspect(&c,&s);assert(s.preparing);
+ tl_npa_forget((void*)1);tl_vk_archive_inspect(&c,&s);assert(c.configuration==TL_NA_CONFIG_DEVICE_ENDED&&!c.snapshot_valid&&!c.device_observed&&!s.preparing);
+ assert(config_calls==previous_configs&&!prepare_calls);return 0;
+}
+''')
+   exe=p/'check';subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror','-I',str(TL),str(p/'inspect.c'),str(TL/'husk-tl-native-archive.c'),'-pthread','-o',str(exe)],check=True);subprocess.run([str(exe)],check=True)
  def test_scoped_configuration_singleflight_reservation_and_teardown(self):
   with tempfile.TemporaryDirectory() as d:
    source=(TL/'husk-tl-unity-app.c').read_text();resume='void husk_unity_set_paused(bool paused)'+source.split('void husk_unity_set_paused(bool paused)',1)[1].split('\n}',1)[0]+'\n}'

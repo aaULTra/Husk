@@ -51,6 +51,9 @@ final class EfficiencyDiagnostics: ObservableObject {
     @Published private(set) var nativePreparing = false
     @Published private(set) var archiveMessage = "Native archive is off or not yet inspected"
     @Published private(set) var archiveFiles: [URL] = []
+    @Published private(set) var archiveInspectionFiles: [URL] = []
+    private var archiveInspectionSequence = 0
+    private var lastArchiveInspection: [String: Any]?
     private var stoppedReport: [String: Any]?
 
     private var now: Double { tl_em_clock() }
@@ -482,8 +485,16 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "clock_errors": stats.clock_errors, "components": records,
                 "scope": "One in64 entries per thread/component, deterministic not a whole-component cost estimate. Completed included scopes only; crossing epochs omitted and late completions may follow snapshot. Wall includes waits; caller CPU excludes other threads/compiler processes. Nested scopes overlap: do not sum or infer watts/core residency. Present scope includes host limiter; exact native API timings remain separate. Zero samples is not zero cost."]
     }
+    private func archiveInspection() -> (tl_na_stats, tl_na_control, NativeArchivePresentation.Status) {
+        var a = tl_na_stats(), control = tl_na_control()
+        tl_vk_archive_inspect(&control, &a)
+        let status = NativeArchivePresentation.status(mode: Int(control.mode), configuration: Int(control.configuration),
+            apiAvailable: control.api_available != 0, snapshotValid: control.snapshot_valid != 0,
+            supported: a.supported != 0, pending: a.pending, preparing: a.preparing != 0)
+        return (a, control, status)
+    }
     private func nativeArchiveReport() -> [String: Any] {
-        var a = tl_na_stats(); tl_vk_archive_snapshot(&a)
+        let (a, control, status) = archiveInspection()
         var priority = tl_na_priority(); let priorityAvailable = tl_vk_archive_priority(&priority)
         let selection: [String: Any] = ["available": priorityAvailable, "eligible_slow_calls": priority.eligible,
             "higher_cost_replacements": priority.replaced, "lower_cost_or_preparing_rejections": priority.rejected,
@@ -494,6 +505,11 @@ final class EfficiencyDiagnostics: ObservableObject {
             p.withMemoryRebound(to: CChar.self, capacity: 64) { String(cString: $0) }
         }
         return ["plan_ids": ["M2", "M5", "M3"], "requested": a.requested != 0,
+            "host_control": ["launch_mode": control.mode, "configuration_state": control.configuration,
+                "driver_api_available": control.api_available != 0, "snapshot_valid": control.snapshot_valid != 0,
+                "vulkan_device_observed": control.device_observed != 0, "status_code": status.code,
+                "status_message": status.message],
+            "last_user_inspection": lastArchiveInspection.map { $0 as Any } ?? NSNull(),
             "supported": a.supported != 0, "preparing": a.preparing != 0, "pending": a.pending,
             "verification_requested": a.verification_requested != 0, "verification_attempts": a.verification_attempts,
             "metal_archive_requirement_satisfied_calls": a.archive_requirement_satisfied, "verification_failed_calls": a.verification_failures,
@@ -509,12 +525,64 @@ final class EfficiencyDiagnostics: ObservableObject {
             "energy_benefit": "UNVERIFIED"]
     }
     func inspectNativeArchive() {
-        var a = tl_na_stats(); tl_vk_archive_snapshot(&a)
-        archiveMessage = a.supported != 0 ? "Captured pending: \(a.pending); restored: \(a.restored_bytes) bytes; archive reuse benefit unverified" : "Archive unavailable/off, or no native pipeline support probe yet. Enable Archive mode and restart first."
+        let (a, control, status) = archiveInspection()
+        recordArchiveInspection(action: "inspect", stats: a, control: control, status: status)
+    }
+    private func recordArchiveInspection(action: String, stats: tl_na_stats, control: tl_na_control,
+                                         status: NativeArchivePresentation.Status) {
+        archiveInspectionSequence += 1
+        let utc = ISO8601DateFormatter().string(from: Date())
+        archiveMessage = NativeArchivePresentation.acknowledgement(sequence: archiveInspectionSequence, utc: utc,
+            status: status, pending: control.snapshot_valid != 0 ? stats.pending : nil,
+            restored: control.snapshot_valid != 0 ? stats.restored_bytes : nil)
+        lastArchiveInspection = ["schema_version": 1, "plan_ids": ["M1", "M2", "M5"], "subsystem": "native_pipeline_archive",
+            "action": action, "sequence": archiveInspectionSequence, "utc": utc, "observed_monotonic_seconds": now,
+            "status_code": status.code, "status_message": status.message, "launch_mode": control.mode,
+            "configuration_state": control.configuration, "driver_api_available": control.api_available != 0,
+            "snapshot_valid": control.snapshot_valid != 0, "vulkan_device_observed": control.device_observed != 0,
+            "native_support_confirmed": stats.supported != 0,
+            "pending": control.snapshot_valid != 0 ? stats.pending as Any : NSNull(),
+            "captured": control.snapshot_valid != 0 ? stats.descriptors_captured as Any : NSNull(),
+            "restored_bytes": control.snapshot_valid != 0 ? stats.restored_bytes as Any : NSNull(), "preparing": stats.preparing != 0,
+            "phase": running ? phase : "outside_test", "game_view_attached": gameVisible,
+            "application_active": UIApplication.shared.applicationState == .active,
+            "scope": "Read-only inspection/action status; no capture activation, preparation, cache-hit or energy claim"]
+        if running { event("runtime", "[M2/M5 native-archive] \(action) inspection \(archiveInspectionSequence), status \(status.code), pending \(stats.pending)") }
+    }
+    func exportNativeArchiveInspection() {
+        archiveInspectionFiles = []
+        if lastArchiveInspection == nil { inspectNativeArchive() }
+        guard let inspection = lastArchiveInspection else { return }
+        do {
+            let receipt: [String: Any] = ["schema_version": 1, "type": "native_archive_inspection",
+                "exported_utc": ISO8601DateFormatter().string(from: Date()),
+                "build_sha": Bundle.main.object(forInfoDictionaryKey: "HuskBuildCommit") as? String ?? "UNAVAILABLE",
+                "configuration": attached, "inspection": inspection,
+                "device_capabilities": EfficiencyDeviceInventory.snapshot(), "os": UIDevice.current.systemVersion,
+                "driver_build": spatialReport()["driver_build"] ?? "UNAVAILABLE"]
+            let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("PipelineInspection")
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let file = dir.appendingPathComponent(UUID().uuidString + ".json")
+            try EfficiencyMath.json(receipt).write(to: file, options: .atomic)
+            archiveInspectionFiles = [file]
+        } catch { archiveMessage = "Inspection export failed: \(error.localizedDescription). Existing test exports are unchanged." }
     }
     func prepareNativeArchive() {
-        guard !running, !exporting, !nativePreparing, gameVisible, UIApplication.shared.applicationState == .active else { return }
-        guard tl_vk_archive_begin_prepare() else { inspectNativeArchive(); return }
+        let (a, control, _) = archiveInspection()
+        if let reason = NativeArchivePresentation.preparationBlocker(running: running, exporting: exporting,
+            preparing: nativePreparing, gameVisible: gameVisible, active: UIApplication.shared.applicationState == .active) {
+            recordArchiveInspection(action: "prepare_blocked", stats: a, control: control,
+                status: .init(code: "prepare_blocked", message: reason)); return
+        }
+        guard tl_vk_archive_begin_prepare() else {
+            let (fresh, freshControl, freshStatus) = archiveInspection()
+            recordArchiveInspection(action: "prepare_not_started", stats: fresh, control: freshControl,
+                status: .init(code: "prepare_not_started_" + freshStatus.code,
+                    message: "Preparation did not start. " + (freshStatus.code == "ready" ? "Capture changed or another preparation reserved it. Inspect again; no compilation was started by this request." : freshStatus.message)))
+            return
+        }
+        recordArchiveInspection(action: "prepare_started", stats: a, control: control,
+            status: .init(code: "prepare_started", message: "Preparation reserved; the game will pause while captured requests are prepared."))
         nativePreparing = true; archiveMessage = "Game paused while captured native pipelines are prepared. One compiler call cannot be interrupted."
         let started = now, before = nativeArchiveReport()
         let preparationIdentity = metadata.filter { ["session_id", "build_sha", "device_identifier", "os"].contains($0.key) }
@@ -759,6 +827,7 @@ struct EfficiencyDiagnosticsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var sharing = false
     @State private var archiveSharing = false
+    @State private var inspectionSharing = false
     var body: some View {
         NavigationView {
             Form {
@@ -783,10 +852,18 @@ struct EfficiencyDiagnosticsView: View {
                     Button("Share exported files") { sharing = true }.disabled(monitor.files.isEmpty)
                 } header: { Text("Performance & Efficiency Diagnostics") }
                 Section {
-                    Text(monitor.archiveMessage)
+                    Text(monitor.archiveMessage).textSelection(.enabled)
+                    Text("Inspect refreshes status; it is not an enable switch. Enable capture in Game Graphics → Native Pipeline Cache → Archive Enabled, then fully restart Husk.")
+                        .font(.caption)
                     Button("Inspect captured native pipelines") { monitor.inspectNativeArchive() }.disabled(monitor.nativePreparing)
+                    Button("Share archive inspection") {
+                        monitor.exportNativeArchiveInspection()
+                        inspectionSharing = !monitor.archiveInspectionFiles.isEmpty
+                    }.disabled(monitor.nativePreparing)
                     Button("Pause game and prepare captured pipelines") { monitor.prepareNativeArchive() }
                         .disabled(monitor.running || monitor.exporting || monitor.nativePreparing)
+                    if monitor.running { Text("Stop and export the lightweight test before preparing pipelines.").font(.caption) }
+                    else if monitor.exporting { Text("Wait for the export to finish before preparing pipelines.").font(.caption) }
                     Button("Share preparation receipt") { archiveSharing = true }.disabled(monitor.archiveFiles.isEmpty || monitor.nativePreparing)
                     Text("Archive mode must be enabled before launch. Only up to eight observed slow native requests are prepared. This costs CPU/time while the game pauses and cannot remove the same first-ever hitch. No power saving is assumed.")
                 } header: { Text("Native Pipeline Preparation · Experimental") }
@@ -803,6 +880,7 @@ struct EfficiencyDiagnosticsView: View {
         .onAppear { monitor.panel(true); monitor.inspectNativeArchive() }.onDisappear { monitor.panel(false) }
         .sheet(isPresented: $sharing) { EfficiencyShare(items: monitor.files) }
         .sheet(isPresented: $archiveSharing) { EfficiencyShare(items: monitor.archiveFiles) }
+        .sheet(isPresented: $inspectionSharing) { EfficiencyShare(items: monitor.archiveInspectionFiles) }
     }
 }
 private struct EfficiencyShare: UIViewControllerRepresentable {

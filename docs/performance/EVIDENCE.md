@@ -1,5 +1,7 @@
 # Husk performance evidence register
 
+2026-10-27 inspection feedback issue: user reports Inspect produces no visible change, exact device/build/capture state unknown. Source confirms unchanged-message acknowledgement and silent preparation-guard defects. [M1→M2→M5 correction](33-native-inspection-feedback.md) adds explicit state/acknowledgement/export; device validation and Apple build pending. No FPS/energy result or roadmap gate awarded.
+
 Updated: 2026-10-26. Source of priorities: [PROJECT_PLAN.md](../../PROJECT_PLAN.md).
 
 ## Provenance and limitations

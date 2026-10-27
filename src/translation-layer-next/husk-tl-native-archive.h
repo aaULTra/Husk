@@ -41,6 +41,16 @@ bool tl_vk_archive_begin_prepare(void);
 int tl_vk_archive_prepare(void);
 bool tl_vk_archive_preparing(void);
 void tl_vk_archive_snapshot(tl_na_stats *out);
+/* Host-only inspection contract. Does not change the optional driver ABI or
+ * trigger driver loading, pipeline compilation, cache writes or preparation. */
+enum { TL_NA_CONFIG_NOT_ATTEMPTED=0, TL_NA_CONFIG_ACCEPTED=1,
+ TL_NA_CONFIG_WRONG_PROJECT=2, TL_NA_CONFIG_GRAPHICS_DISABLED=3,
+ TL_NA_CONFIG_API_MISSING=4, TL_NA_CONFIG_REJECTED=5,
+ TL_NA_CONFIG_DEVICE_ENDED=6 };
+typedef struct {
+ uint32_t mode,configuration,api_available,snapshot_valid,device_observed;
+} tl_na_control;
+void tl_vk_archive_inspect(tl_na_control *control,tl_na_stats *stats);
 #ifdef __cplusplus
 }
 #endif
