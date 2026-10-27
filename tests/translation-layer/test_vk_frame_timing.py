@@ -38,7 +38,6 @@ class VulkanTimingTests(unittest.TestCase):
 #include "husk-tl-thread-policy.h"
 #include "husk-tl-driver-profile.h"
 #include "husk-tl-swapchain-budget.h"
-#include "husk-tl-vulkan-routing.h"
 #include "husk-tl-efficiency.h"
 #include "husk-tl-present-clock.h"
 #include "husk-tl-native-archive.h"

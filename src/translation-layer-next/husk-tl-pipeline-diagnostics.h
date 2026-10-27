@@ -25,7 +25,6 @@ enum { TL_PI_SAMPLER=1, TL_PI_DESCRIPTOR_LAYOUT, TL_PI_PIPELINE_LAYOUT,
        TL_PI_RENDER_PASS, TL_PI_PIPELINE };
 typedef struct { uint64_t id[4], shader_hashes[4]; unsigned known[4], sampled, count, shader_stages; uint32_t stage_bits[4], coverage[4], full_core[4]; } tl_pi_request;
 void husk_ue4_set_pipeline_diagnostics(bool enabled);
-bool tl_pi_active(void);
 void tl_pi_shader(void *device, uint64_t module, const tl_pi_module_ci *ci);
 void tl_pi_forget_shader(void *device, uint64_t module);
 void tl_pi_forget_device(void *device);

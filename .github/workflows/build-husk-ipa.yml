@@ -48,7 +48,6 @@ jobs:
           python3 tests/translation-layer/test_ue4_graphics.py -v
           python3 tests/translation-layer/test_ue4_resolution_hook.py -v
           python3 tests/translation-layer/test_source_efficiency.py -v
-          python3 tests/translation-layer/test_runtime_audio.py -v
           python3 tests/translation-layer/test_runtime_input_vulkan.py -v
           python3 tests/translation-layer/test_compat_sync.py -v
           python3 tests/translation-layer/test_publication_wait.py -v

@@ -62,12 +62,11 @@ int main(int argc,char**argv){assert(argc==2);tl_pad_sink sink={key,motion};tl_p
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
-#include "husk-tl-vulkan-routing.h"
 static int identification,inventory;static void host(void){}
 static void *gdpa(void*d,const char*n){(void)d;(void)n;return(void*)host;}
 static void *gipa(void*d,const char*n){(void)d;(void)n;return(void*)host;}
 static struct{void *lib;void*(*gipa)(void*,const char*);}V={(void*)1,gipa};
-static bool vk_ready(void){return true;}static bool tl_pi_active(void){return identification;}static bool tl_ri_active(void){return inventory;}
+static bool vk_ready(void){return true;}static bool tl_ri_active(void){return inventory;}
 static void resolve_feature_hooks(void*i){(void)i;}
 #define LOG(...) do{}while(0)
 static void *lookup(void*l,const char*n){(void)l;return !strcmp(n,"vkGetDeviceProcAddr")?(void*)gdpa:(void*)host;}
@@ -78,22 +77,14 @@ int main(void){const char*pure[]={"vkCreateShaderModule","vkDestroyShaderModule"
  for(unsigned enabled=0;enabled<2;enabled++){identification=enabled;
   for(unsigned i=0;i<sizeof(pure)/sizeof(*pure);i++){
    void *a=w_vkGetInstanceProcAddr((void*)1,pure[i]),*b=w_vkGetDeviceProcAddr((void*)1,pure[i]),*c=tl_vk_resolve(pure[i]);
-   assert(a==b&&b==c);assert(enabled?a!=(void*)host:a==(void*)host);
+   assert(a==b&&b==c);assert(a!=(void*)host);
   }
  }
  identification=0;const char*functional[]={"vkCreateGraphicsPipelines","vkCreateComputePipelines","vkCreatePipelineCache","vkDestroyPipelineCache","vkMergePipelineCaches","vkGetDeviceQueue","vkQueueSubmit","vkQueuePresentKHR","vkAcquireNextImageKHR","vkDestroyDevice","vkCreateDevice","vkCmdBindVertexBuffers"};
  for(unsigned i=0;i<sizeof(functional)/sizeof(*functional);i++)assert(tl_vk_resolve(functional[i])!=(void*)host);
  inventory=0;assert(tl_vk_resolve("vkCmdBeginRenderPass")==host);inventory=1;assert(tl_vk_resolve("vkCmdBeginRenderPass")!=host);
  assert(!w_vkGetInstanceProcAddr(NULL,NULL)&&!w_vkGetDeviceProcAddr(NULL,NULL));
- const char*bind="vkCmdBindVertexBuffers";
- assert(w_vkGetDeviceProcAddr((void*)5,bind)!=(void*)host);
- tl_vk_route_device((void*)5,false);assert(w_vkGetDeviceProcAddr((void*)5,bind)==(void*)host);
- assert(w_vkGetInstanceProcAddr((void*)5,bind)!=(void*)host&&tl_vk_resolve(bind)!=(void*)host);
- tl_vk_route_device((void*)6,true);assert(w_vkGetDeviceProcAddr((void*)6,bind)!=(void*)host);
- tl_vk_route_forget((void*)5);assert(w_vkGetDeviceProcAddr((void*)5,bind)!=(void*)host);
- tl_vk_route_device((void*)5,true);assert(w_vkGetDeviceProcAddr((void*)5,bind)!=(void*)host);
- for(uintptr_t i=10;i<30;i++)tl_vk_route_device((void*)i,false);
- assert(w_vkGetDeviceProcAddr((void*)29,bind)!=(void*)host);return 0;}
+ return 0;}
 '''
   (p/'vulkan.c').write_text(source);cls.pad=p/'pad';cls.vk=p/'vulkan'
   for name,exe in [('pad',cls.pad),('vulkan',cls.vk)]:subprocess.run([os.environ.get('CC','cc'),'-std=c11','-O2','-Wall','-Wextra','-Werror','-pthread','-I',str(TL),str(p/(name+'.c')),'-lm','-o',str(exe)],check=True)
@@ -104,5 +95,5 @@ int main(void){const char*pure[]={"vkCreateShaderModule","vkDestroyShaderModule"
  def test_trigger_hysteresis_is_preserved(self):self.case('trigger')
  def test_mapping_epoch_forces_correct_republication(self):self.case('mapping')
  def test_frontend_neutralisation_releases_buttons_and_axes_before_disconnect(self):self.case('neutral')
- def test_all_proc_lookup_paths_bypass_only_disabled_observational_wrappers(self):subprocess.run([str(self.vk)],check=True,timeout=5)
+ def test_all_proc_lookup_paths_retain_compatible_wrappers(self):subprocess.run([str(self.vk)],check=True,timeout=5)
 if __name__=='__main__':unittest.main()

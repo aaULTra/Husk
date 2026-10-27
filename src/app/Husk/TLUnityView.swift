@@ -390,7 +390,6 @@ final class TLUnityUIView: UIView, UIKeyInput {
             if engine == .java { attachWebHost(fresh: false) }
             return
         }
-        NativeAudioSession.shared.start()
         // The game plays through the silent switch, like the guest's own audio, and mixes with other audio. Unity games too:
         // they used to be left out, from before they had sound, and played through a session that was never set up.
         do {

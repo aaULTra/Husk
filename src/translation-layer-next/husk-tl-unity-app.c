@@ -608,8 +608,6 @@ void husk_unity_touch(int phase, int id, float x, float y)
     else if (A.engine == ENGINE_GAMEACTIVITY) tl_ga_touch(phase, id, x, y);
     else if (A.engine == ENGINE_COCOS) tl_cocos_touch(phase, id, x, y); else tl_unity_touch(phase, id, x, y);
 }
-void husk_unity_audio_interrupted(bool interrupted) { tl_audio_set_interrupted(interrupted); }
-void husk_unity_audio_recover(bool force) { if (force) tl_audio_recover(); else tl_audio_recover_if_needed(); }
 void husk_unity_set_paused(bool paused)
 {
     int state=atomic_load(&A.state);

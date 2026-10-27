@@ -22,12 +22,6 @@ void tl_audio_install(void);
 
 /* Silence the output and stop the clock while the game is not on screen (writers block until resumed). */
 void tl_audio_set_paused(bool paused);
-/* Audio-system interruption is independent of game/view visibility. */
-void tl_audio_set_interrupted(bool interrupted);
-/* Rebuild an invalid output after OS interruption/reset, preserving pause bits.
- * Call from a worker: disposal may wait for audio callbacks to quiesce. */
-void tl_audio_recover(void);
-void tl_audio_recover_if_needed(void);
 
 #ifdef __cplusplus
 }

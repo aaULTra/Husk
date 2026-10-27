@@ -38,7 +38,6 @@ static uint64_t bytes(uint64_t h, const void *p, size_t n) {
 }
 static uint64_t number(uint64_t h, uint64_t n) { return bytes(h, &n, sizeof(n)); }
 void husk_ue4_set_pipeline_diagnostics(bool value) { atomic_store(&enabled, value); }
-bool tl_pi_active(void) { return atomic_load_explicit(&enabled, memory_order_relaxed); }
 void tl_pi_shader(void *device, uint64_t module, const tl_pi_module_ci *ci) {
     if (!atomic_load(&enabled) || !ci || !ci->code || !ci->size || ci->size > 16u*1024u*1024u) return;
     uint64_t hash = bytes(14695981039346656037ULL, ci->code, ci->size);
