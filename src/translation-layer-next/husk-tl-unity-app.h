@@ -172,6 +172,9 @@ typedef struct husk_unity_perf { double fps, mean_ms, max_ms; } husk_unity_perf;
 void husk_unity_perf_snapshot(husk_unity_perf *out);          /* since the last call */
 void husk_unity_touch(int phase, int id, float x, float y);   /* phase 0 down, 1 move, 2 up, 3 cancel */
 void husk_unity_set_paused(bool paused);
+/* Host audio-session events; invoke on a worker, without changing game state. */
+void husk_unity_audio_interrupted(bool interrupted);
+void husk_unity_audio_recover(bool force);
 
 /* The app's package name from its manifest into `out`; false if it cannot be read. */
 bool husk_unity_package_name(const char *apk, char *out, unsigned long out_len);

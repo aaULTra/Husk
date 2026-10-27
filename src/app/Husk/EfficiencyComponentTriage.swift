@@ -62,7 +62,7 @@ enum EfficiencyComponentTriage {
             let observed = number(waits["wait_entries_since_launch"]) ?? 0
             add("initialization_parking", ["M8", "M3"], "OBSERVATION", observed > 0 ? "Parked initialization waits were observed since launch; active polling is bypassed for those waits." : "No parked initialization waits were observed; no saving opportunity demonstrated.", "Separate startup/excluded work from gameplay and compare CPU and wall with the option OFF. Counts alone do not establish power or cooling.", waits)
         }
-        let gpu = object(report["gpu_sampling"]), gpuRecords = (report["gpu_records"] as? [Any])?.count ?? 0
+        let gpu = object(report["gpu_sampling"]), gpuRecords = ((report["gpu_records"] as? [Any])?.count ?? 0) + ((report["gpu_recent_records"] as? [Any])?.count ?? 0)
         coverage.append(["component": "gpu_execution", "status": gpuRecords > 0 ? "PARTIAL_COMMAND_BUFFER_TIMESTAMPS" : "DISABLED_UNAVAILABLE_OR_NO_VALID_RECORDS", "retained_records": gpuRecords, "collector": gpu])
         let meta = object(report["metadata"])
         coverage.append(["component": "cpu_threads", "status": meta["cpu_thread_sampling_requested"] as? Bool == true ? "SAMPLED_COUNTERS_REQUIRE_IDENTITY_AND_EXCLUSION_AUDIT" : "DISABLED_OR_UNAVAILABLE"])

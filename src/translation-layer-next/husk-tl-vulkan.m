@@ -4,6 +4,7 @@
 #include "husk-tl-queue-options.h"
 #include "husk-tl-swapchain-budget.h"
 #include "husk-tl-vulkan.h"
+#include "husk-tl-vulkan-routing.h"
 
 #import <QuartzCore/QuartzCore.h>
 #import <QuartzCore/CAMetalLayer.h>
@@ -769,6 +770,7 @@ static void w_vkDestroyPipelineCache(void *device, uint64_t cache, const void *a
 }
 static void w_vkDestroyDevice(void *device, const void *alloc)
 {
+    tl_vk_route_forget(device);
     tl_sb_forget(device);
     tl_npa_forget(device);
     tl_dp_forget(device);
@@ -1251,6 +1253,7 @@ static int w_vkCreateDevice(void *pd, const vk_device_ci *ci, const void *alloc,
     if (!dxvk_game()) {
         int result = tl_pf_create_device(pd, ci, alloc, out, g_real_create_device, g_real_enum_dev_ext);
         if (result == VK_SUCCESS && out && *out) {
+            tl_vk_route_device(*out,false);
             tl_sb_device(pd,*out);
         tl_dp_device(*out);
         tl_npa_device(*out);
@@ -1305,6 +1308,7 @@ static int w_vkCreateDevice(void *pd, const vk_device_ci *ci, const void *alloc,
     if (f2) reclaim(f2->f, saved2);
     tl_log_line("vulkan: vkCreateDevice(%u extensions) -> %d", ci->extCount, r);
     if (r == VK_SUCCESS && out && *out) {
+        tl_vk_route_device(*out,true);
         tl_dp_device(*out);
         tl_npa_device(*out);
         make_null_buffer(pd, *out);
@@ -1378,6 +1382,16 @@ static const struct { const char *name; void *fn; } k_over[] = {
 
 static void *overridden(const char *name)
 {
+    /* These wrappers only retain optional identity metadata. Resolve the real
+     * entry point directly when launch-time identification is OFF. Functional
+     * cache/queue/presentation and feature-compatibility wrappers stay active. */
+    if (!tl_pi_active() && (!strcmp(name,"vkCreateShaderModule") || !strcmp(name,"vkDestroyShaderModule") ||
+        !strcmp(name,"vkCreateSampler") || !strcmp(name,"vkDestroySampler") ||
+        !strcmp(name,"vkCreateDescriptorSetLayout") || !strcmp(name,"vkDestroyDescriptorSetLayout") ||
+        !strcmp(name,"vkCreatePipelineLayout") || !strcmp(name,"vkDestroyPipelineLayout") ||
+        !strcmp(name,"vkCreateRenderPass") || !strcmp(name,"vkCreateRenderPass2") ||
+        !strcmp(name,"vkCreateRenderPass2KHR") || !strcmp(name,"vkDestroyRenderPass") ||
+        !strcmp(name,"vkDestroyPipeline"))) return NULL;
     /* Default-off inventory does not interpose per-render-pass calls at all. */
     if ((!strcmp(name,"vkCreateImage") || !strcmp(name,"vkCmdBeginRenderPass")) && !tl_ri_active()) return NULL;
     for (size_t i = 0; i < sizeof(k_over) / sizeof(k_over[0]); i++) if (!strcmp(k_over[i].name, name)) return k_over[i].fn;
@@ -1398,7 +1412,7 @@ static void *w_vkGetInstanceProcAddr(void *instance, const char *name)
 static void *w_vkGetDeviceProcAddr(void *device, const char *name)
 {
     if (!name || !vk_ready()) return NULL;
-    void *fn = overridden(name);
+    void *fn = tl_vk_route_direct_vertex(device,name) ? NULL : overridden(name);
     if (fn) return fn;
     typedef void *(*pfn_gdpa)(void *, const char *);
     static pfn_gdpa mvk_gdpa;

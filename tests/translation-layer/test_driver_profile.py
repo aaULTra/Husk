@@ -23,6 +23,7 @@ class DriverProfileTests(unittest.TestCase):
 #include <stdio.h>
 #include "husk-tl-driver-profile.c"
 #include "husk-tl-swapchain-budget.h"
+#include "husk-tl-vulkan-routing.h"
 static void tl_npa_device(void *device){(void)device;}
 static char output[32768];
 static unsigned used, api_calls, event_count;

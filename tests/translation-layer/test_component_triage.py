@@ -30,6 +30,9 @@ let text=EfficiencyComponentTriage.text(t);assert(text.contains("[M2/M5 pipeline
 assert(text.contains("Failed attempts are not necessarily archive misses"))
 let after=try JSONSerialization.data(withJSONObject:input,options:[.sortedKeys]);assert(after == before)
 assert(JSONSerialization.isValidJSONObject(t))
+let retained=EfficiencyComponentTriage.build(["gpu_records":[1,2],"gpu_recent_records":[3,4,5]])
+let coverage=retained["coverage"] as! [[String:Any]]
+assert(coverage.first{$0["component"] as? String == "gpu_execution"}!["retained_records"] as? Int == 5)
 let invalid=EfficiencyComponentTriage.build(["summary":["slow_pipeline_calls":true,"worst_pipeline_ns":Double.nan],"windows":[["interval_count":120,"p95_ms":Double.infinity,"slow_pipeline_calls":0]]])
 assert(!has(invalid,"pipeline_creation") && !has(invalid,"non_pipeline_pacing"))
 let nested=EfficiencyComponentTriage.build(["component_sampling":["requested":true,"components":[["component":"once_slow_path_including_initializer","completed_sampled_calls":4,"sampled_wall_ns":40,"sampled_caller_cpu_ns":30]]]])

@@ -156,6 +156,27 @@ precondition(RuntimeLogEvidence.fatalSignal(["=== CRASH: signal 999"]) == nil)
             subprocess.run(['swiftc',str(APP/'NativeGameLifecycle.swift'),str(APP/'RuntimeLogEvidence.swift'),str(p/'Diagnosis.swift'),str(p/'main.swift'),'-o',str(p/'test')],check=True)
             subprocess.run([str(p/'test')],check=True,timeout=15)
 
+    def test_touch_coordinates_fixed_target_resizing_offsets_and_invalid_geometry(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)
+            (p/'main.swift').write_text(r'''import Foundation
+let output=CGSize(width:2128,height:1600)
+for bounds in [CGRect(x:0,y:0,width:1376,height:1032), CGRect(x:5,y:9,width:688,height:516), CGRect(x:0,y:0,width:1000,height:700)] {
+ let centre=CGPoint(x:bounds.midX,y:bounds.midY)
+ let p=NativeTouchCoordinates.map(centre,bounds:bounds,surface:output)!
+ precondition(p.x==1064 && p.y==800)
+ let edge=NativeTouchCoordinates.map(CGPoint(x:bounds.maxX,y:bounds.maxY),bounds:bounds,surface:output)!
+ precondition(edge.x==2128 && edge.y==1600)
+}
+let b=CGRect(x:0,y:0,width:100,height:100)
+precondition(NativeTouchCoordinates.map(CGPoint(x:-10,y:120),bounds:b,surface:output)!.x < 0)
+precondition(NativeTouchCoordinates.map(.zero,bounds:.zero,surface:output)==nil)
+precondition(NativeTouchCoordinates.map(CGPoint(x:CGFloat.infinity,y:0),bounds:b,surface:output)==nil)
+precondition(NativeTouchCoordinates.map(.zero,bounds:b,surface:CGSize(width:CGFloat.nan,height:1))==nil)
+''')
+            subprocess.run(['swiftc',str(APP/'NativeTouchCoordinates.swift'),str(p/'main.swift'),'-o',str(p/'test')],check=True)
+            subprocess.run([str(p/'test')],check=True,timeout=15)
+
     def test_actual_touch_adapter_cancels_every_pointer_and_ignores_late_events(self):
         source = (APP/'TLUnityView.swift').read_text()
         methods = '\n'.join(function(source, x) for x in ['private func id(for touch:', 'private func send(', 'private func cancelActiveTouches()'])
@@ -176,6 +197,8 @@ class Adapter {
  var pointerPositions:[Int32:CGPoint]=[:]
  var engine:Engine = .ue4
  var contentScaleFactor:CGFloat = 2
+ var bounds=CGRect(x:0,y:0,width:100,height:100)
+ var touchSurfaceSize=CGSize(width:200,height:200)
  /* METHODS */
  func sendEvent(_ touches:Set<UITouch>,_ phase:Int32){send(touches,phase:phase)}
  func cancel(){cancelActiveTouches()}
@@ -192,7 +215,7 @@ a.sendEvent([one],0);precondition(events.last!.1==0);a.sendEvent([one],2);precon
 '''.replace('/* METHODS */',methods)
         with tempfile.TemporaryDirectory() as d:
             p=Path(d);(p/'main.swift').write_text(harness)
-            subprocess.run(['swiftc',str(p/'main.swift'),'-o',str(p/'test')],check=True)
+            subprocess.run(['swiftc',str(APP/'NativeTouchCoordinates.swift'),str(p/'main.swift'),'-o',str(p/'test')],check=True)
             subprocess.run([str(p/'test')],check=True,timeout=15)
 
 if __name__=='__main__': unittest.main()

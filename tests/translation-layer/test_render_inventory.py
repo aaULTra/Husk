@@ -12,6 +12,7 @@ class RenderInventoryTests(unittest.TestCase):
   lookup=src[src.index('static void *overridden('):src.index('static void *w_vkGetInstanceProcAddr(void *instance, const char *name)\n{')]
   harness=r'''
 #include "husk-tl-render-inventory.c"
+static bool tl_pi_active(void){return false;}
 #define VK_SUCCESS 0
 static struct{void *lib;}V={(void *)1};
 static int status,calls,begins,errors;

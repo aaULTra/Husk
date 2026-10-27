@@ -27,19 +27,24 @@ static struct {
     bool trigger_key[TL_PADS][2];
     int64_t down_ms[TL_PADS][TL_PAD_BUTTONS + 2];
     tl_pad_sink sink;
+    uint64_t revision, seen_revision[TL_PADS];
     int dpad_mode;                        /* 0: the hat, 1: the D-pad keys, 2: both (TL_PAD_DPAD) */
-} P = { .lock = PTHREAD_MUTEX_INITIALIZER, .dpad_mode = -1 };
+} P = { .lock = PTHREAD_MUTEX_INITIALIZER, .dpad_mode = -1, .revision = 1 };
 
 static int64_t now_ms(void) { struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts); return (int64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000; }
 
 /* A controller is usually connected (and updated) before the game starts, so TL_PAD_DPAD, which the engine's driver sets just before it installs its sink, is read again here. */
-void tl_pad_set_sink(const tl_pad_sink *sink) { pthread_mutex_lock(&P.lock); if (sink) P.sink = *sink; else memset(&P.sink, 0, sizeof(P.sink)); P.dpad_mode = -1; pthread_mutex_unlock(&P.lock); }
+void tl_pad_set_sink(const tl_pad_sink *sink) { pthread_mutex_lock(&P.lock); if (sink) P.sink = *sink; else memset(&P.sink, 0, sizeof(P.sink)); P.dpad_mode = -1; ++P.revision; pthread_mutex_unlock(&P.lock); }
 
-bool tl_pad_connected(int slot) { return slot >= 0 && slot < TL_PADS && P.connected[slot]; }
+bool tl_pad_connected(int slot) {
+    if (slot < 0 || slot >= TL_PADS) return false;
+    pthread_mutex_lock(&P.lock); bool connected = P.connected[slot]; pthread_mutex_unlock(&P.lock);
+    return connected;
+}
 
 bool tl_pad_read(int slot, tl_pad_state *out)
 {
-    if (slot < 0 || slot >= TL_PADS) return false;
+    if (slot < 0 || slot >= TL_PADS || !out) return false;
     pthread_mutex_lock(&P.lock);
     bool ok = P.connected[slot];
     if (ok) *out = P.last[slot];
@@ -52,6 +57,7 @@ void tl_pad_connect(int slot, const char *name)
     if (slot < 0 || slot >= TL_PADS) return;
     pthread_mutex_lock(&P.lock);
     P.connected[slot] = true;
+    P.seen_revision[slot] = 0;
     snprintf(P.name[slot], sizeof(P.name[slot]), "%s", name && name[0] ? name : "controller");
     memset(&P.last[slot], 0, sizeof(P.last[slot]));
     memset(P.axes[slot], 0, sizeof(P.axes[slot]));
@@ -65,6 +71,7 @@ void tl_pad_disconnect(int slot)
     if (slot < 0 || slot >= TL_PADS) return;
     pthread_mutex_lock(&P.lock);
     P.connected[slot] = false;
+    P.seen_revision[slot] = 0;
     pthread_mutex_unlock(&P.lock);
     tl_log_line("pad: controller %d disconnected", slot);
 }
@@ -80,13 +87,20 @@ void tl_pad_update(int slot, const tl_pad_state *s)
     float axes[MAX_AXES];
     bool moved = false;
     tl_pad_sink sink;
-    int64_t down_ms, ms = now_ms();
+    int64_t down_ms, ms;
 
+    if (!s) return;
     pthread_mutex_lock(&P.lock);
     if (!P.connected[slot]) { pthread_mutex_unlock(&P.lock); return; }
+    const tl_pad_state *last = &P.last[slot];
+    bool republish = P.seen_revision[slot] != P.revision;
+    if (!republish && last->buttons == s->buttons &&
+        last->lx == s->lx && last->ly == s->ly && last->rx == s->rx && last->ry == s->ry &&
+        last->lt == s->lt && last->rt == s->rt) { pthread_mutex_unlock(&P.lock); return; }
+    ms = now_ms();
     if (P.dpad_mode < 0) { const char *m = getenv("TL_PAD_DPAD"); P.dpad_mode = m && !strcmp(m, "keys") ? 1 : m && !strcmp(m, "both") ? 2 : 0; }
     tl_pad_state *old = &P.last[slot];
-    uint32_t changed = old->buttons ^ s->buttons;
+    uint32_t changed = republish ? s->buttons : old->buttons ^ s->buttons;
     for (int b = 0; b < TL_PAD_BUTTONS; b++) {
         if (!(changed & (1u << b))) continue;
         if (b >= TL_PAD_DPAD_UP && P.dpad_mode == 0) continue;
@@ -98,7 +112,7 @@ void tl_pad_update(int slot, const tl_pad_state *s)
     const float trig[2] = { s->lt, s->rt };
     for (int t = 0; t < 2; t++) {
         bool was = P.trigger_key[slot][t], now = was ? trig[t] > 0.3f : trig[t] > 0.55f;
-        if (now == was) continue;
+        if (now == was && (!republish || !now)) continue;
         P.trigger_key[slot][t] = now;
         if (now) P.down_ms[slot][TL_PAD_BUTTONS + t] = ms;
         keys[nkeys].action = now ? 0 : 1; keys[nkeys].keycode = 104 + t; keys[nkeys].down = P.down_ms[slot][TL_PAD_BUTTONS + t]; nkeys++;
@@ -111,9 +125,11 @@ void tl_pad_update(int slot, const tl_pad_state *s)
         axes[AXIS_HAT_X] = ((s->buttons >> TL_PAD_DPAD_RIGHT) & 1) ? 1.0f : ((s->buttons >> TL_PAD_DPAD_LEFT) & 1) ? -1.0f : 0.0f;
         axes[AXIS_HAT_Y] = ((s->buttons >> TL_PAD_DPAD_DOWN) & 1) ? 1.0f : ((s->buttons >> TL_PAD_DPAD_UP) & 1) ? -1.0f : 0.0f;
     }
-    for (int a = 0; a < MAX_AXES; a++) if (fabsf(axes[a] - P.axes[slot][a]) >= 0.004f) { moved = true; break; }
+    moved = republish;
+    for (int a = 0; !moved && a < MAX_AXES; a++) if (fabsf(axes[a] - P.axes[slot][a]) >= 0.004f) { moved = true; break; }
     if (moved) memcpy(P.axes[slot], axes, sizeof(axes));
     *old = *s;
+    P.seen_revision[slot] = P.revision;
     sink = P.sink;
     down_ms = ms;
     pthread_mutex_unlock(&P.lock);
@@ -141,7 +157,7 @@ static int slot_of(const jobj *o) { return o && o->native ? (int)(intptr_t)o->na
 
 static jobj *device_object(int slot)
 {
-    if (slot < 0 || slot >= TL_PADS || !P.connected[slot]) return NULL;
+    if (slot < 0 || slot >= TL_PADS || !tl_pad_connected(slot)) return NULL;
     if (!g_dev[slot]) { g_dev[slot] = tl_jni_new_object(tl_jni_class("android/view/InputDevice")); g_dev[slot]->native = (void *)(intptr_t)(slot + 1); }
     return tl_jni_ref(g_dev[slot]);
 }
@@ -149,7 +165,7 @@ static jobj *device_object(int slot)
 static void ID_getDeviceIds(tl_jcall *c)
 {
     int ids[TL_PADS], n = 0;
-    for (int s = 0; s < TL_PADS; s++) if (P.connected[s]) ids[n++] = DEVICE_BASE + s;
+    for (int s = 0; s < TL_PADS; s++) if (tl_pad_connected(s)) ids[n++] = DEVICE_BASE + s;
     jobj *a = tl_jni_new_prim_array('I', (uint32_t)n);
     if (n) memcpy(a->arr.data, ids, (size_t)n * sizeof(int));
     c->ret = vl(a);

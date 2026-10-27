@@ -73,6 +73,8 @@ final class TLUnityUIView: UIView, UIKeyInput {
     /// Active touches by UITouch identity, each given a small stable id like Android's pointer ids.
     private var pointers: [ObjectIdentifier: Int32] = [:]
     private var pointerPositions: [Int32: CGPoint] = [:]
+    private var touchSurfaceSize: CGSize = .zero
+    private var touchBounds: CGRect = .zero
     private static weak var nativeLifecycleView: TLUnityUIView?
     static func reconcileNativeLifecycle() {
         guard let view = nativeLifecycleView else { husk_unity_set_paused(true); return }
@@ -290,9 +292,13 @@ final class TLUnityUIView: UIView, UIKeyInput {
         super.layoutSubviews()
         stats.frame = CGRect(x: bounds.width - 148, y: bounds.height - 22, width: 142, height: 16)
         if let webHost, webHost.frame != frame { webHost.frame = frame }
-        guard bounds.width > 0, bounds.height > 0 else { return }
-        let rawW = Int((bounds.width * contentScaleFactor).rounded())
-        let rawH = Int((bounds.height * contentScaleFactor).rounded())
+        if touchBounds != bounds { cancelActiveTouches(); touchBounds = bounds }
+        let pixelWidth = bounds.width * contentScaleFactor
+        let pixelHeight = bounds.height * contentScaleFactor
+        guard pixelWidth.isFinite, pixelHeight.isFinite, pixelWidth >= 1, pixelHeight >= 1,
+              pixelWidth < CGFloat(Int32.max), pixelHeight < CGFloat(Int32.max) else { return }
+        let rawW = Int(pixelWidth.rounded())
+        let rawH = Int(pixelHeight.rounded())
         let align = engine == .ue4 && sharpGraphics
         let w = align && rawW >= 8 ? rawW & ~7 : rawW
         let h = align && rawH >= 8 ? rawH & ~7 : rawH
@@ -301,7 +307,10 @@ final class TLUnityUIView: UIView, UIKeyInput {
         if !(engine == .ue4 && launched) { (layer as? CAMetalLayer)?.drawableSize = CGSize(width: w, height: h) }
         // Flutter lays itself out again at any size, as an Android view does when its window changes: a window being resized, the
         // screen turning.
-        if engine == .flutter, launched { husk_flutter_resize(Int32(w), Int32(h)) }
+        if engine == .flutter, launched {
+            touchSurfaceSize = CGSize(width: w, height: h)
+            husk_flutter_resize(Int32(w), Int32(h))
+        }
         // A landscape game is told its size once, when it starts, so it must not start while the screen is still
         // turning: wait for a surface that is wider than it is tall.
         // Unity games too: Fruit Ninja is a landscape one. If the screen has not turned after two seconds it is not going to,
@@ -359,6 +368,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
     private func launch(width: Int, height: Int) {
         launched = true
         launchedSize = bounds.size
+        touchSurfaceSize = CGSize(width: width, height: height)
         if engine == .ue4 {
             EfficiencyDiagnostics.shared.attach([
                 "engine": "ue4", "game": (apk as NSString).lastPathComponent,
@@ -380,6 +390,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
             if engine == .java { attachWebHost(fresh: false) }
             return
         }
+        NativeAudioSession.shared.start()
         // The game plays through the silent switch, like the guest's own audio, and mixes with other audio. Unity games too:
         // they used to be left out, from before they had sound, and played through a session that was never set up.
         do {
@@ -802,9 +813,12 @@ final class TLUnityUIView: UIView, UIKeyInput {
     private func send(_ touches: Set<UITouch>, phase: Int32) {
         for t in touches {
             if phase != 0, pointers[ObjectIdentifier(t)] == nil { continue }
-            let p = t.location(in: self)
+            guard let p = NativeTouchCoordinates.map(t.location(in: self), bounds: bounds, surface: touchSurfaceSize) else {
+                cancelActiveTouches()
+                return
+            }
             let pid = id(for: t)
-            var x = Float(p.x * contentScaleFactor), y = Float(p.y * contentScaleFactor)
+            var x = Float(p.x), y = Float(p.y)
             if engine == .ue4 { tl_vk_spatial_touch(&x, &y) }
             pointerPositions[pid] = CGPoint(x: CGFloat(x), y: CGFloat(y))
             husk_unity_touch(phase, pid, x, y)

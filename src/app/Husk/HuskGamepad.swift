@@ -63,6 +63,9 @@ final class HuskGamepads: ObservableObject {
     private func sync() {
         let present = GCController.controllers().filter { $0.extendedGamepad != nil }
         for (id, slot) in slotOf where !present.contains(where: { ObjectIdentifier($0) == id }) {
+            // MainActor serialises physical updates: deliver releases while
+            // the slot still exists, then disconnect it from the guest.
+            husk_gamepad_update(Int32(slot), 0, 0, 0, 0, 0, 0, 0)
             husk_gamepad_disconnect(Int32(slot))
             controllerIn[slot] = nil
             slotOf[id] = nil
@@ -87,6 +90,7 @@ final class HuskGamepads: ObservableObject {
             RunLoop.main.add(t, forMode: .common)
             timer = t
         }
+        if active { poll() } // held controls are restored immediately on return
     }
 
     private func poll() {
