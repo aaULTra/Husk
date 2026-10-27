@@ -1,0 +1,344 @@
+{
+  "source_sha": "5b7620237dc50906959e6a0aecf290f1e7ef6f11",
+  "packaged_identity": "5b7620237dc50906959e6a0aecf290f1e7ef6f11-dirty",
+  "run_id": 40440914065,
+  "job_id": 121980774558,
+  "conclusion": "success",
+  "checks": 365,
+  "suites": 40,
+  "skips": 0,
+  "metal_compiler_smoke_check": "passed",
+  "early_app_and_final_app": "passed",
+  "driver_build": "pinned1.4.2passed",
+  "driver_exports": [
+    "_vkHuskArchiveConfigure",
+    "_vkHuskArchiveForget",
+    "_vkHuskArchivePrepare",
+    "_vkHuskArchivePriority",
+    "_vkHuskArchiveSnapshot",
+    "_vkHuskDisplayConfigure",
+    "_vkHuskDisplaySnapshot",
+    "_vkHuskSpatialBindings",
+    "_vkHuskSpatialConfigure",
+    "_vkHuskSpatialObservations",
+    "_vkHuskSpatialSnapshot"
+  ],
+  "vulkan_observer_sdk_abi": {
+    "structures": 31,
+    "offsets": 96,
+    "result": "passed"
+  },
+  "artifact_id": 12707130409,
+  "artifact_link": "https://github.com/aaULTra/Husk/actions/runs/40440914065/artifacts/12707130409",
+  "expires_at": "2026-11-03T03:04:27Z",
+  "package_verification": {
+    "artifact_zip_sha256": "d03396b62069060e76d4f468cfa9b024a87263ac67633fccf2c3f7058c578996",
+    "artifact_zip_bytes": 142013679,
+    "inner_ipa_sha256": "124c4cb9334354ef25d962b5519525e1dc991637b2f0c21519dedaf82e2921f7",
+    "inner_ipa_bytes": 142013549,
+    "zip_crc_checks": "outer and inner passed",
+    "source_stamp": "5b7620237dc50906959e6a0aecf290f1e7ef6f11-dirty",
+    "build_date": "2026-10-27 03:04 UTC",
+    "bundle_identifier": "com.husk.app",
+    "bundle_version": "129",
+    "minimum_os": "15.5",
+    "original_and_experimental_drivers_present": true,
+    "driver_manifest": {
+      "schema": 1,
+      "upstream_commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+      "upstream_version": "1.4.2",
+      "husk_spatial_patch_sha256": "922e9a51b70f00117b91f30456c3f7d3a76eb2d1986de018aae728743afb7278",
+      "husk_native_pipeline_patch_sha256": "922e9a51b70f00117b91f30456c3f7d3a76eb2d1986de018aae728743afb7278",
+      "native_archive_abi": 2,
+      "native_archive_cache_schema": 2,
+      "native_archive_compatibility_id": "a734100aa2a773b1e782c33b541593c02e7bba35aa28a5524ea30f2025202c50",
+      "native_archive_compatibility_inputs": {
+        "schema": 2,
+        "upstream_commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+        "spirv_cross_revision": "6c09849fe88c48eaed08413aa022aaa136a3a057",
+        "compiler_contract": "husk-native-default-mvk-compiler-contract-v1",
+        "archive_format_owner": "Metal binary archive"
+      },
+      "feature": "M9-SPATIAL-v3+M5-NATIVE-ARCHIVE-v1+M4-DISPLAY-v1",
+      "default_enabled": false
+    },
+    "scope": "Independent static package inspection; not on-device execution or energy evidence"
+  },
+  "changed_source_runtime_test_build_readback": [
+    {
+      "path": ".github/workflows/build-husk-ipa.yml",
+      "sha256": "370a091b48aebbf884ce96ff716fdd56019119c697a672ab33773808e5c90e0f"
+    },
+    {
+      "path": "patches/metalfx/HuskArchive.inc",
+      "sha256": "4576ea920d9de84c9ee6b53c281e0e049d248703526f44b37777fe95c650d585"
+    },
+    {
+      "path": "patches/metalfx/HuskDisplay.inc",
+      "sha256": "00e79f60c4a264447dc36cb290faadda016433b6523989d0bbcde70a2b264d9e"
+    },
+    {
+      "path": "patches/metalfx/HuskSpatial.inc",
+      "sha256": "74d6cff49c80e5260c88563b2e02ed3254d613802497d2d30045e996d53b3979"
+    },
+    {
+      "path": "patches/metalfx/HuskSpatialDriver.h",
+      "sha256": "f0bcb085090130df878eeca5c3919a736981fd169819279f3900bc1151ddfb43"
+    },
+    {
+      "path": "scripts/analyse_efficiency.py",
+      "sha256": "a99f4b387f251ddc1064257280a4b26954b31b7ad3b0191c51a4178b9a5e1352"
+    },
+    {
+      "path": "scripts/benchmark_initialization_waits.py",
+      "sha256": "0c3a311a922b691e349c617baf5ba6e1108a8820a3755aa1acc856ef0b16bc79"
+    },
+    {
+      "path": "scripts/benchmark_once.py",
+      "sha256": "dc2ddd5217f74a2597a05ea0ba0a527d385701209f03baf764453adb196d15bc"
+    },
+    {
+      "path": "scripts/build_spatial_moltenvk_ios.sh",
+      "sha256": "d210a23eb097dea275da9fc67a1eb237a28f3c668b3ae2ba100457aacbcfb6d2"
+    },
+    {
+      "path": "scripts/compare_efficiency.py",
+      "sha256": "44e9be4ef57b24c57524e8eeaa42b538b38a585f383bd7c592c9b07e471c8f5b"
+    },
+    {
+      "path": "scripts/external_efficiency.py",
+      "sha256": "ace35c771aa481a671284e0713ee8933c24f27cd1842f72793537ff3fafa7adc"
+    },
+    {
+      "path": "scripts/prepare_spatial_driver.py",
+      "sha256": "9b095127ed7458042d66aec80a896245090a677a36fff2ac50aa627bf424e031"
+    },
+    {
+      "path": "scripts/roadmap_progress.py",
+      "sha256": "8bded2725eb97613d88809968ca1c9dee0fcf38a861fddfc1ad3cd824844f122"
+    },
+    {
+      "path": "scripts/verify_vulkan_observer_abi.py",
+      "sha256": "5e741afde341cf2a258bcd21a0eb72cb7de7f77db2d285fac9459fbf9e18e217"
+    },
+    {
+      "path": "src/app/Husk/ApkMetadata.swift",
+      "sha256": "e218ed4f564891f756e5a2c2c666a9082e1ce63511349c66fe2cc5c9ec16c1bd"
+    },
+    {
+      "path": "src/app/Husk/AppWindows.swift",
+      "sha256": "6a1bc3d68422f976b7f90cc799df1bb470c6d0c4bd866683f0c2bae623d9f6b2"
+    },
+    {
+      "path": "src/app/Husk/BundleUnpacker.swift",
+      "sha256": "f86ca8cf33a708c1633d09b5c2cd2ffb974be8b7ab494ab6e631fdc8790310cc"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyComponentTriage.swift",
+      "sha256": "550c9311102750e8b44f35aba2bc05e4ed392c10922cb89f88cfa3c9c6007d01"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyDiagnostics.swift",
+      "sha256": "4b30ceaf1f4dbb5b3315295e2bd32f32c0d3ff88f7e4978519bb9471d8c00de9"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyMath.swift",
+      "sha256": "fe355149cfaab7e41c66724f4fd77743a243bc743cd132dd1a805140f3f302af"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyMetricKit.swift",
+      "sha256": "e606278c70b5a7973879c91d55f88d2a319f6e0ab2021e53c8f46ff498fb22c1"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyProfileStore.swift",
+      "sha256": "b84f0219760e554bc386525f9fb981b7f9bd62c1d31c44fc7280b35ae03143b4"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyProfilesView.swift",
+      "sha256": "68c548159febf8f2ad92fa030d4235e7ef2c0db3098d0f7ba91ef5acb1524961"
+    },
+    {
+      "path": "src/app/Husk/HuskBridge.h",
+      "sha256": "95ecdbfe18994bb92060279a80f4228981fd28e3845cd31af0f619e3e10200f5"
+    },
+    {
+      "path": "src/app/Husk/HuskExecutionOptions.swift",
+      "sha256": "1114cf14450068d220f22de52de2c310650b392155bd23cbf7aaf48c9c841efa"
+    },
+    {
+      "path": "src/app/Husk/TLAppSettings.swift",
+      "sha256": "588017b6e2354043b39a4729cf7eec4ef1cf52e8120af77daab0ae94a53cd28e"
+    },
+    {
+      "path": "src/app/Husk/TLUnityView.swift",
+      "sha256": "f3a9455e45bd596f79e869770fa5b1c1a0d72b2ead975460acc770e4c90e00c8"
+    },
+    {
+      "path": "src/app/Husk/TranslationLayer.swift",
+      "sha256": "03f5c9d991ef05b427adff8cf974fb00ee8d22a80922197ec69e42b356e4fd55"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-bionic-pthread.c",
+      "sha256": "05175ea60a1420d13fefc173a2f2bb1730d7298984fce39aa7a7abec534c85ad"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-bionic-str.c",
+      "sha256": "7fb35987234aa2b384402c3b6a7b72491d24060243c43920cbd75cbfc5f3e5ee"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-display.h",
+      "sha256": "c56c522a6d31778940b4879ab9570b58db3de185d196d5dede2941e1ff8b8360"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-display.m",
+      "sha256": "ec3d87209da8138bb63b5151bf9fe24e9c11f2c46329a67ecb90801e030cc00c"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-dvm-internal.h",
+      "sha256": "062c567f236d174e2dfa51a5821a5cbb6181ce7f821d43720b52138ac268c4f6"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-dvm.c",
+      "sha256": "9f610b11719aa4861cd9b5bf9465f48a8fcdec206076783b4ce1e0ca5196c079"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-efficiency.c",
+      "sha256": "921295e702f9c4e369ac9d853a27b2d50c6294465e4f64e1039d10c25e2a4f27"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-jni.c",
+      "sha256": "65a71f1eb06e52ac4553603c30c344891b68a70752ec0eb9a1da0eb16bf9d1c8"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-native-archive.h",
+      "sha256": "20e540830001763d640d160e1dc269f7440a7408bf83eb99e6b128e3c3ecb097"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-pipeline-diagnostics.c",
+      "sha256": "f3f27cc96aeb0d9aa31fc893f03c32c9c4e622b7e9e0a401dd3a08cb5f16e09f"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-pipeline-objects.h",
+      "sha256": "5536c1248c94d966b0360189d3d6c694564be176f38c035b8ddcc65ab7ca77cd"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-publication-wait.c",
+      "sha256": "a424882e5db63bece67b32868d39de48bb027c78d552f7e42893430bbd5dbbc9"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-publication-wait.h",
+      "sha256": "c6e40ca23f34d07e614eb1651b0066acff04d9673deb334d7fb299037a1b5eb8"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-queue-options.c",
+      "sha256": "40065a538a8e19d2952f455cdbcca3001cdb2c102f46878e96103ee1ad630e69"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-queue-options.h",
+      "sha256": "b719050f83882aa661eeb343a0a930f817ba563fe0851e2f5238ad6c5811239b"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-spatial.h",
+      "sha256": "e339f4e4822c5b8290d0baa5f5e0fc5dd27e21324d4c303918f62bdb0a8da20b"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-swapchain-budget.c",
+      "sha256": "e3056deb7e52dc43f5204a11cc6778e8a5e11d6eaaea67f31c966d9a85584942"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-swapchain-budget.h",
+      "sha256": "9218377938ba83f35b2d0be229e9d251bb81ef46c40739e29c7ae07fd7bd39ba"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-vulkan.m",
+      "sha256": "c0ef726725d3db077ea9e76cda6fad6d29581fb50fb6fd8cb6165f25300f2b77"
+    },
+    {
+      "path": "tests/translation-layer/test_apk_order.py",
+      "sha256": "b37735d57c1f1fb6ce5e717620caf59b549dd9b662bc320d736ba07360b77a4d"
+    },
+    {
+      "path": "tests/translation-layer/test_archive_compatibility.py",
+      "sha256": "5eee38a1c8ea5b88d00ce5b8964d71f1ff1bf1ca5895b791dafbb6198b1d9020"
+    },
+    {
+      "path": "tests/translation-layer/test_comparison_campaign.py",
+      "sha256": "cbc3fec45198a5ed458a4a41f220c8db63a865b1b155536913b09ead39c715d1"
+    },
+    {
+      "path": "tests/translation-layer/test_compat_sync.py",
+      "sha256": "e0adb1167af5dbd7e328710a18a397bee5478d6a3074d0698bb0bc734a8e24d7"
+    },
+    {
+      "path": "tests/translation-layer/test_cpu_threads.py",
+      "sha256": "c96939cf9f915d44170a8afb23dd4f13501e0cceab97d1205abdcb1a26e29c7f"
+    },
+    {
+      "path": "tests/translation-layer/test_device_profiles.py",
+      "sha256": "3eb65572de65c8c2e85467053a84d6a5a3405298404aeeb4391f58fbba185e28"
+    },
+    {
+      "path": "tests/translation-layer/test_driver_profile.py",
+      "sha256": "e3ef60eb48b6578a30f94edfae14fc0c66b148dc4ecb3eecdeea13892841ac43"
+    },
+    {
+      "path": "tests/translation-layer/test_efficiency.py",
+      "sha256": "60c65c2504cb7170a462d2ef5206c9cc870396b81113d6c10c684aa31abd79ad"
+    },
+    {
+      "path": "tests/translation-layer/test_efficiency_analysis.py",
+      "sha256": "c5e67b2b0010b627add335d4683fbc12d905021bff3e10c73d2d3471d235599f"
+    },
+    {
+      "path": "tests/translation-layer/test_external_efficiency.py",
+      "sha256": "2e9f77e5f88fb4e798289e43bda23b7763d8b99ef1603de1dc76911b25aa41cb"
+    },
+    {
+      "path": "tests/translation-layer/test_native_archive.py",
+      "sha256": "fe8358045de071bfab23a7d2f8d739de2a10bdbb05b06a3707d851a5bd4eb4d2"
+    },
+    {
+      "path": "tests/translation-layer/test_native_display.py",
+      "sha256": "ae3995716e08aeaee93decfa95a551494e72228a5de940e1fc92e4e43c59f775"
+    },
+    {
+      "path": "tests/translation-layer/test_pipeline_core_state.py",
+      "sha256": "8f2b2c6d513dd1db74f7b0b9ab61fecda42d105b93c5c43c9d47b0239de899d5"
+    },
+    {
+      "path": "tests/translation-layer/test_process_metrics.py",
+      "sha256": "58f0407480a7a64a0a31a93a0afb11572e172e0023540a661a0ab2a6293ff1a0"
+    },
+    {
+      "path": "tests/translation-layer/test_publication_wait.py",
+      "sha256": "8bcda9652f5f2a4c97e7934163d7771e4fe54ac05d8d7e9ebfbac612906ac8ae"
+    },
+    {
+      "path": "tests/translation-layer/test_queue_options.py",
+      "sha256": "8c04bd175aa7217808724335a8b4d7a55666af3b0ef8f75ae4dd93694c835ac7"
+    },
+    {
+      "path": "tests/translation-layer/test_roadmap_progress.py",
+      "sha256": "51436a9a9c3c073637064477954b3199f628231ab16c446c7373600c02390f9b"
+    },
+    {
+      "path": "tests/translation-layer/test_spatial_lifetime.py",
+      "sha256": "a47f46ae77dfd53de759c2a8a890de78c5f1635a8125ff5e9226183a96f108f0"
+    },
+    {
+      "path": "tests/translation-layer/test_swapchain_budget.py",
+      "sha256": "bd668d013f5d333f07eb0772ebdaffd4bd9d0d7420d91b91d6217fe7562b01c4"
+    },
+    {
+      "path": "tests/translation-layer/test_upstream_native.py",
+      "sha256": "c9f0ef52425b5b0cb546b33cdff554becce0293a72e34089cb762d25b9fc8804"
+    },
+    {
+      "path": "tests/translation-layer/test_vk_frame_timing.py",
+      "sha256": "2b47727759209de982ce383a18633bb268934808e107a4bdd35655cd98c47ff4"
+    }
+  ],
+  "energy_benefit": "UNVERIFIED",
+  "current_active_user_test_source_inferred": "0ff0758b658befbe4cc083c9e5e4bf7dfaa40696",
+  "delivery": "Consolidated candidate parked;no immediate new user installation/testing requested."
+}

@@ -240,3 +240,12 @@ B6 correction:4a7/run40415776642 passed261checks/31suites/zero skips,pinned driv
 GitHub Actions dispatch rejectedHTTP422,Actions disabled for repository;workflow active,Actions-permissions read403. No new run/IPA or Apple success is claimed. Whole score28.67%,M4-only31.86%,Duo0;all unverified benefits/engine-input dependencies remain open.
 
 Final source`d8fa46e82106a5c9940f70918e5ce82a934280ee`:[handover](builds/d8fa46e82106a5c9940f70918e5ce82a934280ee.md),[dispatch receipt](builds/d8fa46e82106a5c9940f70918e5ce82a934280ee.ci.json),[unchanged accepted-score snapshot](progress/d8fa46e82106a5c9940f70918e5ce82a934280ee.score.json). Final dispatch01:55:59Z rejectsActionsdisabled;no newer artifact is implied.
+
+
+### 2026-10-27 — CONTINUATION-8 final source/Apple package and official audit
+
+Source`5b7620237dc50906959e6a0aecf290f1e7ef6f11-dirty`,[run40440914065](https://github.com/aaULTra/Husk/actions/runs/40440914065),job121980774558:365/365checks,40suites,zero skips,Metal compiler probe,driver11exports,SDK31structures96offsets,app/IPA/upload pass. [Handover](builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md)/[receipt](builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json). Artifact12707130409ZIPSHA256`d03396b62069060e76d4f468cfa9b024a87263ac67633fccf2c3f7058c578996`,innerIPASHA256`124c4cb9334354ef25d962b5519525e1dc991637b2f0c21519dedaf82e2921f7`,CRC/stamp/bundle/bothdriver/manifest independently verified. Full pin/patch/compatibility and68source path hashes retained.
+
+[30official commits](runs/UPSTREAM-2026-10-27.audit.json) reviewed atdb6965a:JNIgeneration and manifestbase selection adapted;typed isnan fixes old import;broaderUI/JIT/etc retained separately. M5highest-cost8/native requirement-satisfied skip and stable compiler compatibility;M4/M6direct drawable-versus-estimated source and full included histogram. [Mechanisms/limits](31-log-led-upstream-continuation.md). No old log's missing source data is invented.
+
+Resumed d8fa46e passes331checks/IPA;ca18cbe359/IPA;0f0771c365checksbutappfailsmissingMetalToolchain,no artifact. All receipts/intermediates retained;new workflow component smoke check succeeds. Only unchanged M8-I3 isolated candidate I gate accepted:+0.42overall→29.09%,weighted I78.37%(+1.43),M4-only32.32%,Duo0. No physical/benefit gate;E-M4-008subjective comfortable feedback still not measured power. Candidate parked,active0ff0758test preserved.
