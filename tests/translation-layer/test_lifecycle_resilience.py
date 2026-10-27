@@ -160,6 +160,7 @@ precondition(RuntimeLogEvidence.fatalSignal(["=== CRASH: signal 999"]) == nil)
         with tempfile.TemporaryDirectory() as d:
             p=Path(d)
             (p/'main.swift').write_text(r'''import Foundation
+import CoreGraphics
 let output=CGSize(width:2128,height:1600)
 for bounds in [CGRect(x:0,y:0,width:1376,height:1032), CGRect(x:5,y:9,width:688,height:516), CGRect(x:0,y:0,width:1000,height:700)] {
  let centre=CGPoint(x:bounds.midX,y:bounds.midY)
@@ -181,6 +182,7 @@ precondition(NativeTouchCoordinates.map(.zero,bounds:b,surface:CGSize(width:CGFl
         source = (APP/'TLUnityView.swift').read_text()
         methods = '\n'.join(function(source, x) for x in ['private func id(for touch:', 'private func send(', 'private func cancelActiveTouches()'])
         harness = r'''import Foundation
+import CoreGraphics
 var events: [(Int32,Int32,Float,Float)] = []
 func husk_unity_touch(_ phase:Int32,_ id:Int32,_ x:Float,_ y:Float){events.append((phase,id,x,y))}
 func tl_vk_spatial_touch(_ x:inout Float,_ y:inout Float){x *= 0.8;y *= 0.8}

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import Foundation
+import CoreGraphics
 
 /// UIKit has already inverted the view transform. Map its local bounds to the
 /// fixed launch output; UE4 applies the optional spatial input scale afterwards.
