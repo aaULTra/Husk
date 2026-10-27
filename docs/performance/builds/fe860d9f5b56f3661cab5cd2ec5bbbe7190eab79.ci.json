@@ -1,0 +1,15 @@
+{
+  "source_sha": "fe860d9f5b56f3661cab5cd2ec5bbbe7190eab79",
+  "run_id": 40509247558,
+  "job_id": 122206473222,
+  "conclusion": "failure",
+  "checks": 367,
+  "suites": 41,
+  "skips": 0,
+  "failed_step": "Compile app before expensive experimental driver build",
+  "error": "EfficiencyDiagnostics.swift:504:49 cannot pass immutable value as inout argument: a is a let constant",
+  "correction": "Copy the fixed-size verification-domain field to a mutable local before withUnsafePointer. No archive configuration, driver or rendering change.",
+  "ipa_uploaded": false,
+  "failure_log_artifact": 12736970408,
+  "energy_benefit": "UNVERIFIED"
+}

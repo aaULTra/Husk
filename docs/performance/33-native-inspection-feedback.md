@@ -29,3 +29,5 @@ Export any existing test before replacing/restarting it. Preserve saves and comp
 Before a corrected IPA is ready, the current test exports remain useful. Do not ask the user to repeatedly press an apparently unchanged control or claim their current capture settings are wrong without the inspection evidence.
 
 Local validation: all41required workflow suites passed on Linux;359reported checks,348passed and11explicit Apple/Swift skips. [Machine receipt](runs/NATIVE-INSPECTION-FIX.local-tests.json). Required Apple compile/native/full-app/IPA validation remains pending; local skips are not device passes.
+
+First Apple run40509247558/sourcefe860d9passed367/367checks across41suites with zero skips,but early app compile rejected an immutable snapshot field passed as inout. No IPA was uploaded. Corrected by copying the fixed-size error-domain field into a mutable local. [Failed-source receipt](builds/fe860d9f5b56f3661cab5cd2ec5bbbe7190eab79.ci.json). A fresh full build is required. Current global roadmap ledger synchronized with the already accepted5b76202snapshot,retaining M8-I3;this repairs a stale ledger pointer and awards no additional progress.

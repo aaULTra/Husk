@@ -501,7 +501,8 @@ final class EfficiencyDiagnostics: ObservableObject {
             "known_requirement_satisfied_skips": priority.requirement_satisfied_skips,
             "highest_pending_host_ns": priority.highest_pending_ns, "lowest_pending_host_ns": priority.lowest_pending_ns,
             "scope": "Keep up to8 highest observed native-call durations, slowest first. Complete requests only; timing is not a semantic variant key. Skip extra preparation when opt-in verification already satisfied the archive requirement. No first-ever-hitch or net-energy guarantee."]
-        let errorDomain = withUnsafePointer(to: &a.last_verification_error_domain) { p in
+        var domainBuffer = a.last_verification_error_domain
+        let errorDomain = withUnsafePointer(to: &domainBuffer) { p in
             p.withMemoryRebound(to: CChar.self, capacity: 64) { String(cString: $0) }
         }
         return ["plan_ids": ["M2", "M5", "M3"], "requested": a.requested != 0,
