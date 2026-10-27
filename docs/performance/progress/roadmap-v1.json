@@ -2,7 +2,7 @@
   "model": "HUSK-ROADMAP-v1",
   "gate_version": "whole-milestones-1",
   "updated": "2026-10-27",
-  "scope": "Apple367-check host/UI inspection feedback correction. Existing gate statuses unchanged from final5b76202; no new device/energy acceptance.",
+  "scope": "E-M4-009 actual e9835d9 logs earn M2-I4 identified slow core coverage/M2-D2 supported-feedback assessment. RESILIENCE-v1 exact-source395ec7c Apple372checks/driver/app/IPA independently verified; physical0/4,energy unknown.",
   "milestones": [
     {
       "id": "M0",
@@ -60,7 +60,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
-              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": null
           },
@@ -76,7 +78,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
-              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": null
           },
@@ -94,7 +98,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
-              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": null
           }
@@ -121,9 +127,11 @@
           {
             "id": "M1-D3",
             "criterion": "Full relevant panel/window/lifecycle/input/audio regression matrix",
-            "status": "pending",
-            "evidence": [],
-            "remaining": "Status-bar fix is user-confirmed but full matrix is open"
+            "status": "regression",
+            "evidence": [
+              "docs/performance/runs/E-M4-009.md"
+            ],
+            "remaining": "User reports screenshot/input freeze then process end on e9835d9 with spatial+both clock experiments. Cause unknown; RESILIENCE-v1 fixes confirmed host defects. Full matrix on corrected source still pending."
           },
           {
             "id": "M1-D4",
@@ -172,7 +180,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
-              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": null
           },
@@ -189,7 +199,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
-              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": null
           },
@@ -206,19 +218,26 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
-              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": null
           },
           {
             "id": "M2-I4",
             "criterion": "State coverage sufficient to distinguish the identified expensive full variants",
-            "status": "pending",
+            "status": "passed",
             "evidence": [
               "docs/performance/25-implementation-completion-batch.md",
-              "docs/performance/28-whole-plan-implementation-inventory.md"
+              "docs/performance/28-whole-plan-implementation-inventory.md",
+              "docs/performance/runs/E-M4-009.md",
+              "docs/performance/runs/E-M4-009.analysis.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
-            "remaining": "Core-v4 covers RenderPass2/KHR and SDK31structures/96offsets; actual identified expensive device variants and unsupported-extension sufficiency still require requests. No source-only pass."
+            "remaining": "E-M4-009 scoped assessment: all9 emitted >=16.67ms individual slow variants have distinct core-v4 identities,full-core1/coverage0x1f;346 emitted valid feedback records,stage hits observed but no pipeline-level application hit. Not all dropped/unknown variants covered,not replay recipes,not persisted-seed attribution or measured benefit. First/repeat/restart campaign,phase correlation and E gates stay open."
           }
         ],
         "D": [
@@ -226,22 +245,30 @@
             "id": "M2-D1",
             "criterion": "Same expensive event first/repeat/restart identifiers collected",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Device exports pending"
+            "evidence": [
+              "docs/performance/runs/E-M4-009.md"
+            ],
+            "remaining": "First/repeat same-ID examples now observed; controlled phase-marked persisted-cache restart correlation still absent."
           },
           {
             "id": "M2-D2",
             "criterion": "Actual supported feedback and cache reuse evidence assessed",
-            "status": "pending",
-            "evidence": [],
-            "remaining": "Accepted seed is not a hit"
+            "status": "passed",
+            "evidence": [
+              "docs/performance/runs/E-M4-009.md",
+              "docs/performance/runs/E-M4-009.analysis.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
+            ],
+            "remaining": "E-M4-009 scoped assessment: all9 emitted >=16.67ms individual slow variants have distinct core-v4 identities,full-core1/coverage0x1f;346 emitted valid feedback records,stage hits observed but no pipeline-level application hit. Not all dropped/unknown variants covered,not replay recipes,not persisted-seed attribution or measured benefit. First/repeat/restart campaign,phase correlation and E gates stay open."
           },
           {
             "id": "M2-D3",
             "criterion": "Expensive groups correlated with gameplay hitches using trustworthy timestamps",
             "status": "pending",
-            "evidence": [],
-            "remaining": "Partial observations pending"
+            "evidence": [
+              "docs/performance/runs/E-M4-009.md"
+            ],
+            "remaining": "Host completion timestamps and coarse frame windows observed; gameplay phase/exclusive causal hitch attribution remains unavailable."
           }
         ],
         "E": [
@@ -491,7 +518,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
-              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           },
@@ -509,7 +538,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
-              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           },
@@ -527,7 +558,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
-              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           }
@@ -602,7 +635,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": null
           },
@@ -614,7 +649,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": null
           },
@@ -627,7 +664,9 @@
               "docs/performance/runs/E-M4-003.md",
               "docs/performance/builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": "Code/research gate only: historical timestamp mismatch plus pinned native present/feedback source supports isolated clock adapter. Sizing, buffering, async, physical cadence and energy remain open."
           },
@@ -640,7 +679,9 @@
               "tests/translation-layer/test_vk_frame_timing.py",
               "docs/performance/builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": "Implementation checks/build/rollback only. Supported bounded immutable chain, clock mapping, native results and passive feedback tested; hardware acceptance open."
           }
@@ -909,7 +950,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": null
           },
@@ -920,7 +963,9 @@
             "evidence": [
               "docs/performance/14-gpu-sampling-and-metalfx-inputs.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": null
           },
@@ -933,7 +978,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": null
           },
@@ -946,7 +993,9 @@
               "docs/performance/builds/9d298c5c7c56af87c715ba2b8ad03111a48dcbac.md",
               "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": "Implementation/build gate only: actual useful scene input, correctness, colour, lifetime/lifecycle and benefit remain in M9-D/E and legacy M9-A R3/R4."
           },
@@ -959,7 +1008,9 @@
               "tests/translation-layer/test_spatial.py",
               "docs/performance/builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": "Actual-component Apple doubles cover fixed-input reuse, ownership, failure, concurrent serialization, destruction/reconfiguration; physical GPU lifetime, colour, resize/lifecycle remain in D2/D4."
           },
@@ -971,7 +1022,9 @@
               "docs/performance/21-fixed-and-dynamic-resolution-decision.md",
               "docs/performance/builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
             ],
             "remaining": "Research/retained-decision gate only. Automatic dynamic resolution and temporal MetalFX remain unimplemented/deferred with reopening conditions; no optimal budget or energy benefit established."
           }
@@ -1011,13 +1064,14 @@
           {
             "id": "M9-D4",
             "criterion": "Resize/pause/resume/device-loss/baseline restoration checks",
-            "status": "pending",
+            "status": "regression",
             "evidence": [
               "docs/performance/17-metalfx-spatial-prototype.md",
               "docs/performance/runs/E-M4-005.md",
-              "docs/performance/runs/E-M4-006.md"
+              "docs/performance/runs/E-M4-006.md",
+              "docs/performance/runs/E-M4-009.md"
             ],
-            "remaining": "E-M4-006 OFF launch and lifecycle recreate2128x1600 confirmed. Full ON resize/pause/resume/device-loss/visual-input-audio restoration coverage remains pending."
+            "remaining": "User reports screenshot/input freeze then process end on e9835d9 with spatial+both clock experiments. Cause unknown; RESILIENCE-v1 fixes confirmed host defects. Full matrix on corrected source still pending."
           }
         ],
         "E": [
@@ -1130,6 +1184,6 @@
       }
     }
   ],
-  "source_sha": "e9835d95ec530da3efd515ac298200b6d386f46e",
-  "evidence_id": "NATIVE-INSPECTION-FIX-final"
+  "source_sha": "395ec7ca5e72ba09d53bfbfa249e7732c312ccee",
+  "evidence_id": "E-M4-009"
 }

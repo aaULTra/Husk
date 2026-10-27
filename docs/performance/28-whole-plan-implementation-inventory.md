@@ -2,6 +2,8 @@
 
 Current continuation: [CONTINUATION-8 source, official audit and mechanisms](31-log-led-upstream-continuation.md). User requests complete feasible implementation before later testing. This inventory covers every M0–M10 milestone; a small source checklist is not whole-plan completion. Implementation/build, physical correctness, measured work and electrical benefit remain distinct.
 
+Later evidence/current priority: [E-M4-009](runs/E-M4-009.md) confirms e9835d9 device source,346 emitted identities/9slow full-core calls and valid stage feedback. M2-I4/M2-D2 assessed under unchanged gates;I80.92%(32/39),overall30.84%. Screenshot/input freeze is a correctness blocker; [M1/M6/M9 resilience](34-lifecycle-resilience.md) precedes another long comparison. Historical old-ID and active-build statements below retain their original context; first/repeat/restart,partial/dropped state and all energy/Duo dependencies remain open.
+
 Sequence: M0 preserve/reference → M1/M2 observations → M3 attribution → independent M4–M9 candidates → required Apple integration → later controlled device/energy acceptance → M10 independent Duo validation. M3 evidence may change later priorities without deleting work. Active user test remains inferred0ff0758/MetalFXON; [E-M4-008 subjective comfortable10–20minutes](runs/E-M4-008.md) is retained. No replacement installation is requested during coding/CI.
 
 | Milestone | Implemented engineering | Still open; exact input or acceptance needed |

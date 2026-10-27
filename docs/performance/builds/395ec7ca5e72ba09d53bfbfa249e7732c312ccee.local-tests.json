@@ -1,0 +1,299 @@
+{
+  "environment": "Linux; Swift/Metal/platform tests require Apple CI",
+  "suites": [
+    {
+      "command": "python3 tests/translation-layer/test_ue4_graphics.py -v",
+      "passed": true,
+      "tests": 18,
+      "skips": 0,
+      "seconds": 0.187
+    },
+    {
+      "command": "python3 tests/translation-layer/test_ue4_resolution_hook.py -v",
+      "passed": true,
+      "tests": 6,
+      "skips": 0,
+      "seconds": 0.144
+    },
+    {
+      "command": "python3 tests/translation-layer/test_source_efficiency.py -v",
+      "passed": true,
+      "tests": 6,
+      "skips": 0,
+      "seconds": 0.39
+    },
+    {
+      "command": "python3 tests/translation-layer/test_compat_sync.py -v",
+      "passed": true,
+      "tests": 6,
+      "skips": 0,
+      "seconds": 0.392
+    },
+    {
+      "command": "python3 tests/translation-layer/test_publication_wait.py -v",
+      "passed": true,
+      "tests": 8,
+      "skips": 0,
+      "seconds": 0.595
+    },
+    {
+      "command": "python3 tests/translation-layer/test_queue_options.py -v",
+      "passed": true,
+      "tests": 5,
+      "skips": 0,
+      "seconds": 0.16
+    },
+    {
+      "command": "python3 tests/translation-layer/test_swapchain_budget.py -v",
+      "passed": true,
+      "tests": 11,
+      "skips": 0,
+      "seconds": 0.181
+    },
+    {
+      "command": "python3 tests/translation-layer/test_thread_policy.py -v",
+      "passed": true,
+      "tests": 36,
+      "skips": 0,
+      "seconds": 0.165
+    },
+    {
+      "command": "python3 tests/translation-layer/test_vk_frame_timing.py -v",
+      "passed": true,
+      "tests": 11,
+      "skips": 0,
+      "seconds": 0.711
+    },
+    {
+      "command": "python3 tests/translation-layer/test_present_clock.py -v",
+      "passed": true,
+      "tests": 8,
+      "skips": 0,
+      "seconds": 0.227
+    },
+    {
+      "command": "python3 tests/translation-layer/test_pipeline_store.py -v",
+      "passed": true,
+      "tests": 9,
+      "skips": 0,
+      "seconds": 0.177
+    },
+    {
+      "command": "python3 tests/translation-layer/test_component_profile.py -v",
+      "passed": true,
+      "tests": 7,
+      "skips": 0,
+      "seconds": 0.464
+    },
+    {
+      "command": "python3 tests/translation-layer/test_component_triage.py -v",
+      "passed": true,
+      "tests": 1,
+      "skips": 1,
+      "seconds": 0.068
+    },
+    {
+      "command": "python3 tests/translation-layer/test_device_profiles.py -v",
+      "passed": true,
+      "tests": 1,
+      "skips": 1,
+      "seconds": 0.073
+    },
+    {
+      "command": "python3 tests/translation-layer/test_driver_profile.py -v",
+      "passed": true,
+      "tests": 10,
+      "skips": 0,
+      "seconds": 0.194
+    },
+    {
+      "command": "python3 tests/translation-layer/test_efficiency.py -v",
+      "passed": true,
+      "tests": 15,
+      "skips": 0,
+      "seconds": 0.144
+    },
+    {
+      "command": "python3 tests/translation-layer/test_process_metrics.py -v",
+      "passed": true,
+      "tests": 8,
+      "skips": 0,
+      "seconds": 0.134
+    },
+    {
+      "command": "python3 tests/translation-layer/test_cpu_threads.py -v",
+      "passed": true,
+      "tests": 1,
+      "skips": 1,
+      "seconds": 0.075
+    },
+    {
+      "command": "python3 tests/translation-layer/test_efficiency_math.py -v",
+      "passed": true,
+      "tests": 1,
+      "skips": 1,
+      "seconds": 0.082
+    },
+    {
+      "command": "python3 tests/translation-layer/test_pipeline_core_state.py -v",
+      "passed": true,
+      "tests": 12,
+      "skips": 0,
+      "seconds": 0.217
+    },
+    {
+      "command": "python3 tests/translation-layer/test_pipeline_diagnostics.py -v",
+      "passed": true,
+      "tests": 11,
+      "skips": 0,
+      "seconds": 0.201
+    },
+    {
+      "command": "python3 tests/translation-layer/test_pipeline_feedback.py -v",
+      "passed": true,
+      "tests": 13,
+      "skips": 0,
+      "seconds": 0.133
+    },
+    {
+      "command": "python3 tests/translation-layer/test_game_chrome.py -v",
+      "passed": true,
+      "tests": 1,
+      "skips": 1,
+      "seconds": 0.062
+    },
+    {
+      "command": "python3 tests/translation-layer/test_gpu_timing.py -v",
+      "passed": true,
+      "tests": 10,
+      "skips": 0,
+      "seconds": 0.132
+    },
+    {
+      "command": "python3 tests/translation-layer/test_gpu_metal.py -v",
+      "passed": true,
+      "tests": 1,
+      "skips": 1,
+      "seconds": 0.074
+    },
+    {
+      "command": "python3 tests/translation-layer/test_gpu_vk_queue.py -v",
+      "passed": true,
+      "tests": 3,
+      "skips": 0,
+      "seconds": 0.122
+    },
+    {
+      "command": "python3 tests/translation-layer/test_render_inventory.py -v",
+      "passed": true,
+      "tests": 6,
+      "skips": 0,
+      "seconds": 0.141
+    },
+    {
+      "command": "python3 tests/translation-layer/test_efficiency_analysis.py -v",
+      "passed": true,
+      "tests": 23,
+      "skips": 0,
+      "seconds": 0.512
+    },
+    {
+      "command": "python3 tests/translation-layer/test_roadmap_progress.py -v",
+      "passed": true,
+      "tests": 6,
+      "skips": 0,
+      "seconds": 0.071
+    },
+    {
+      "command": "python3 tests/translation-layer/test_roadmap_projection.py -v",
+      "passed": true,
+      "tests": 7,
+      "skips": 0,
+      "seconds": 0.195
+    },
+    {
+      "command": "python3 tests/translation-layer/test_comparison_campaign.py -v",
+      "passed": true,
+      "tests": 27,
+      "skips": 0,
+      "seconds": 0.421
+    },
+    {
+      "command": "python3 tests/translation-layer/test_external_efficiency.py -v",
+      "passed": true,
+      "tests": 30,
+      "skips": 0,
+      "seconds": 0.223
+    },
+    {
+      "command": "python3 tests/translation-layer/test_spatial.py -v",
+      "passed": true,
+      "tests": 5,
+      "skips": 1,
+      "seconds": 0.412
+    },
+    {
+      "command": "python3 tests/translation-layer/test_spatial_lifetime.py -v",
+      "passed": true,
+      "tests": 1,
+      "skips": 1,
+      "seconds": 0.08
+    },
+    {
+      "command": "python3 tests/translation-layer/test_native_archive.py -v",
+      "passed": true,
+      "tests": 3,
+      "skips": 1,
+      "seconds": 0.205
+    },
+    {
+      "command": "python3 tests/translation-layer/test_native_archive_status.py -v",
+      "passed": true,
+      "tests": 1,
+      "skips": 1,
+      "seconds": 0.079
+    },
+    {
+      "command": "python3 tests/translation-layer/test_lifecycle_resilience.py -v",
+      "passed": true,
+      "tests": 5,
+      "skips": 2,
+      "seconds": 0.296
+    },
+    {
+      "command": "python3 tests/translation-layer/test_archive_compatibility.py -v",
+      "passed": true,
+      "tests": 5,
+      "skips": 0,
+      "seconds": 0.105
+    },
+    {
+      "command": "python3 tests/translation-layer/test_native_preparation_audit.py -v",
+      "passed": true,
+      "tests": 8,
+      "skips": 0,
+      "seconds": 0.182
+    },
+    {
+      "command": "python3 tests/translation-layer/test_native_display.py -v",
+      "passed": true,
+      "tests": 12,
+      "skips": 0,
+      "seconds": 0.533
+    },
+    {
+      "command": "python3 tests/translation-layer/test_upstream_native.py -v",
+      "passed": true,
+      "tests": 6,
+      "skips": 0,
+      "seconds": 0.184
+    },
+    {
+      "command": "python3 tests/translation-layer/test_apk_order.py -v",
+      "passed": true,
+      "tests": 0,
+      "skips": 1,
+      "seconds": 0.074
+    }
+  ]
+}

@@ -1,0 +1,282 @@
+{
+  "source_sha": "395ec7ca5e72ba09d53bfbfa249e7732c312ccee",
+  "packaged_identity": "395ec7ca5e72ba09d53bfbfa249e7732c312ccee-dirty",
+  "run_id": 40520340270,
+  "job_id": 122245398340,
+  "conclusion": "success",
+  "checks": 372,
+  "suites": 42,
+  "skips": 0,
+  "failures": [],
+  "metal_compiler_smoke_check": "passed",
+  "early_app_and_final_app": "passed",
+  "driver_build": "pinned1.4.2passed",
+  "vulkan_observer_sdk_abi": {
+    "structures": 31,
+    "offsets": 96,
+    "result": "passed"
+  },
+  "driver_exports": [
+    "_vkHuskSpatialConfigure",
+    "_vkHuskSpatialSnapshot",
+    "_vkHuskSpatialObservations",
+    "_vkHuskSpatialBindings",
+    "_vkHuskDisplayConfigure",
+    "_vkHuskDisplaySnapshot",
+    "_vkHuskArchiveConfigure",
+    "_vkHuskArchiveSnapshot",
+    "_vkHuskArchivePrepare",
+    "_vkHuskArchiveForget",
+    "_vkHuskArchivePriority"
+  ],
+  "artifact_id": 12742630907,
+  "artifact_link": "https://github.com/aaULTra/Husk/actions/runs/40520340270/artifacts/12742630907",
+  "expires_at": "2026-11-03T14:33:38Z",
+  "artifact_digest": "sha256:4aac6d385c89b95024f6965eb567881f3118f05bb110579a03e141a7d467f427",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1
+    },
+    {
+      "name": "Check out Husk fork",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2
+    },
+    {
+      "name": "Verify sharp-resolution source and run regression checks",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3
+    },
+    {
+      "name": "Install XcodeGen",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4
+    },
+    {
+      "name": "Ensure Metal compiler component",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5
+    },
+    {
+      "name": "Download verified official base libraries and game resources",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6
+    },
+    {
+      "name": "Install Rust iOS target",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7
+    },
+    {
+      "name": "Cache Rust pairing dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8
+    },
+    {
+      "name": "Build pairing library",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9
+    },
+    {
+      "name": "Compile app before expensive experimental driver build",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10
+    },
+    {
+      "name": "Build separate pinned MetalFX experimental driver",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11
+    },
+    {
+      "name": "Build this fork's Husk app and package IPA",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12
+    },
+    {
+      "name": "Upload the installable IPA",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13
+    },
+    {
+      "name": "Upload compiler log on failure",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 14
+    },
+    {
+      "name": "Post Cache Rust pairing dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27
+    },
+    {
+      "name": "Post Check out Husk fork",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 28
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 29
+    }
+  ],
+  "package_verification": {
+    "artifact_zip_sha256": "4aac6d385c89b95024f6965eb567881f3118f05bb110579a03e141a7d467f427",
+    "artifact_zip_bytes": 142045512,
+    "inner_ipa_sha256": "f40d6a273e081c4858f22dd0aa5b22fcf54b7ac07673a44229cb9bb0c54d37a9",
+    "inner_ipa_bytes": 142045382,
+    "zip_crc_checks": "outer and inner passed",
+    "source_stamp": "395ec7ca5e72ba09d53bfbfa249e7732c312ccee-dirty",
+    "build_date": "2026-10-27 14:33 UTC",
+    "bundle_identifier": "com.husk.app",
+    "bundle_version": "129",
+    "minimum_os": "15.5",
+    "original_and_experimental_drivers_present": true,
+    "new_resilience_binary_strings": {
+      "[M1/M6/M9 lifecycle] apply begin sequence": true,
+      "native_preparation_finished": true,
+      "screenshot_observed": true,
+      "owning_scene_deactivated": true,
+      "No fatal cause was recorded.": true,
+      "Share archive inspection": true,
+      "*** FATAL SIGNAL ": true
+    },
+    "driver_manifest": {
+      "schema": 1,
+      "upstream_commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+      "upstream_version": "1.4.2",
+      "husk_spatial_patch_sha256": "584dfa2366061f345e6ab08f3b37225b79c98cd81594c8026ab8ef13be87af5a",
+      "husk_native_pipeline_patch_sha256": "584dfa2366061f345e6ab08f3b37225b79c98cd81594c8026ab8ef13be87af5a",
+      "native_archive_abi": 2,
+      "native_archive_cache_schema": 2,
+      "native_archive_compatibility_id": "a734100aa2a773b1e782c33b541593c02e7bba35aa28a5524ea30f2025202c50",
+      "native_archive_compatibility_inputs": {
+        "schema": 2,
+        "upstream_commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+        "spirv_cross_revision": "6c09849fe88c48eaed08413aa022aaa136a3a057",
+        "compiler_contract": "husk-native-default-mvk-compiler-contract-v1",
+        "archive_format_owner": "Metal binary archive"
+      },
+      "feature": "M9-SPATIAL-v3+M5-NATIVE-ARCHIVE-v1+M4-DISPLAY-v1",
+      "default_enabled": false
+    }
+  },
+  "changed_runtime_test_workflow_files": [
+    {
+      "path": ".github/workflows/build-husk-ipa.yml",
+      "sha256": "e6e319446b3c683bbc9ba5db99ce740f1c43e111c1b28355106c07191ac174a3"
+    },
+    {
+      "path": "src/app/Husk/AppDiagnosis.swift",
+      "sha256": "8e946ab73c9066aac5fe92af62348f168fdb3723953b4b00f64b817a45b18c6c"
+    },
+    {
+      "path": "src/app/Husk/CrashReport.swift",
+      "sha256": "88a8498881313da74106c62c3f08142c45cf7706a38dd62a344a2e5391650aed"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyDiagnostics.swift",
+      "sha256": "546e4e22350e71ac0cf29dce2ba6dc606d14bddd4c9f5cdbd5167946a9af7ff4"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyMath.swift",
+      "sha256": "bbe00b29e2e66484071c63add1793ee99eb4be59420dc7943f9600289b236804"
+    },
+    {
+      "path": "src/app/Husk/HuskBridge.h",
+      "sha256": "2722bcbab3b27598be6ff136192706888c7567d8c6e7d821432e5c5969fec747"
+    },
+    {
+      "path": "src/app/Husk/HuskGamepad.swift",
+      "sha256": "dca1039bc77f427154bec6debf9860322920f868c6f1bd64c853b52c45e39f09"
+    },
+    {
+      "path": "src/app/Husk/HuskLog.swift",
+      "sha256": "54828ec1ec839e31b2ba4b3f0d325a522d5427197f847ff2f4d212e1aefbb203"
+    },
+    {
+      "path": "src/app/Husk/NativeGameLifecycle.swift",
+      "sha256": "da08caf94b0807d31205a59a46c027dc638863e152e7fe4e0025f2f1d4fb452d"
+    },
+    {
+      "path": "src/app/Husk/RuntimeLogEvidence.swift",
+      "sha256": "1691189f62cd1b4be1e230bba68cb90053e7e82f9eac84b17a1832e3956f773e"
+    },
+    {
+      "path": "src/app/Husk/TLUnityView.swift",
+      "sha256": "ab3d533ea9cdd777ca143a61e5a63c3207235237ae9268be8fde4f4130028edf"
+    },
+    {
+      "path": "src/app/Husk/VirtualPad.swift",
+      "sha256": "cac9f7d160cf1ab14b90c9083242ec5d37df2d039b148ede40799faf0cab987e"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-crash-signal.c",
+      "sha256": "b9b3ea251fbb417dde4fc83e470f24ef15dba95ace6e547d2b1d637084f304d5"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-crash-signal.h",
+      "sha256": "f5c6712f8d17eaf11920dc7c3b98235d6028d11af5b61d458001f0545b798d7f"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-efficiency.c",
+      "sha256": "6935e1504d072588f6eff35249baddb4ac115dc6cdead6ab7b77abc7f4e47d5b"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-lifecycle.c",
+      "sha256": "2507239e358c96d4d09b687ccde4d60cc97e358b0a11c5cff7cc49ef353c3a7d"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-lifecycle.h",
+      "sha256": "93e64f83cbf88ead565c973d7d8bdb5864a94577c925c8898a90c5aeee8c5eab"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-native-archive.c",
+      "sha256": "3583b4e4734d5b24ca235759f6adda62afd1d1725cd7a97cb3beac7713c51ffb"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-native-archive.h",
+      "sha256": "24b73903b53f5ebf2b4aaf6f1be027d86c1d648989273e04cfb207c616af385b"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-nativeactivity.c",
+      "sha256": "bc84d5be0ac6fe8533d38abd492a4f2312a6e83ccf8210aca0f0a2f3fc0ec705"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-unity-app.c",
+      "sha256": "b5a8a9f28e5fe5f8d40ee6a2224ea1bef1b00f68e5b096c84ff0fdac0efbef4d"
+    },
+    {
+      "path": "tests/translation-layer/test_efficiency_math.py",
+      "sha256": "168b06cce09c31f32f1ad33dadfda2712f3349e618141fd176f1be932f8275e5"
+    },
+    {
+      "path": "tests/translation-layer/test_lifecycle_resilience.py",
+      "sha256": "0393a14c354467343075939d2004a59ef1c9afbfe365e48b99fddf4060294cfb"
+    },
+    {
+      "path": "tests/translation-layer/test_native_archive.py",
+      "sha256": "ac87bee5b05377c9c934d640fc2f433a1f555716b189aa091918cd811bfe5825"
+    }
+  ],
+  "raw_logs_lossless_hash_verification": "four supplied logs verified",
+  "device_resilience_validation": "pending:0/4 RESILIENCE-v1",
+  "energy_benefit": "UNAVAILABLE: not measured"
+}

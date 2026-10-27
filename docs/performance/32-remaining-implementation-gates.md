@@ -1,6 +1,8 @@
 # What still blocks implementation/build100% — IMPLEMENTATION-100-AUDIT
 
-2026-10-27. User requests implementation100%. Read the master plan and unchanged gate ledger before adding code. Current candidate is **5b7620237dc50906959e6a0aecf290f1e7ef6f11**,Apple365checks/40suites/zero skips,driver/app/IPA and independent package verification passed. Current fixed implementation/build score **78.37%**,31/39I gates;overall accepted29.09%,M4-only32.32%,Duo0. No score/gate/weight changed by this audit.
+2026-10-27. User requests implementation100%. Read the master plan and unchanged gate ledger before adding code. Original audit candidate was **5b7620237dc50906959e6a0aecf290f1e7ef6f11**,Apple365checks/40suites/zero skips,driver/app/IPA and independent package verification passed. Current fixed implementation/build score **78.37%**,31/39I gates;overall accepted29.09%,M4-only32.32%,Duo0. No score/gate/weight changed by this audit.
+
+**Later evidence update:** [E-M4-009](runs/E-M4-009.md) supplies346actual pipeline identity records and9identified slow full-core variants; M2-I4 now passes its unchanged scoped coverage criterion after source/test/raw-log audit. M2-D2 supported-feedback assessment also passes without a whole-pipeline hit/energy claim. Current I80.92%,32/39;overall30.84%;7I remain. The8I/zero-groups statements below preserve the earlier JSON-only audit and are not current claims about these new logs.
 
 ## The percentage is not a pure code-written counter
 
