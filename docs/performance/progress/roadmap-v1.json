@@ -2,7 +2,7 @@
   "model": "HUSK-ROADMAP-v1",
   "gate_version": "whole-milestones-1",
   "updated": "2026-10-27",
-  "scope": "E-M4-009 actual e9835d9 logs earn M2-I4 identified slow core coverage/M2-D2 supported-feedback assessment. RESILIENCE-v1 exact-source395ec7c Apple372checks/driver/app/IPA independently verified; physical0/4,energy unknown.",
+  "scope": "E-M4-010 comprehensive four-document assessment: reopen M2-I4 for four newly observed expensive incomplete layout groups; M4-D2 actual host/direct-drawable pacing assessment; M8-I4 scoped negative JNI/sync investigation. Latest screenshot responsiveness tentatively positive, window untested; full matrices inconclusive. CAPTURE-OPT-v1 source published, exact Apple packaging pending until build receipt.",
   "milestones": [
     {
       "id": "M0",
@@ -127,11 +127,13 @@
           {
             "id": "M1-D3",
             "criterion": "Full relevant panel/window/lifecycle/input/audio regression matrix",
-            "status": "regression",
+            "status": "inconclusive",
             "evidence": [
-              "docs/performance/runs/E-M4-009.md"
+              "docs/performance/runs/E-M4-009.md",
+              "docs/performance/runs/E-M4-010.md",
+              "docs/performance/runs/E-M4-010.analysis.json"
             ],
-            "remaining": "User reports screenshot/input freeze then process end on e9835d9 with spatial+both clock experiments. Cause unknown; RESILIENCE-v1 fixes confirmed host defects. Full matrix on corrected source still pending."
+            "remaining": "E-M4-009 screenshot/input freeze retained as prior-build regression. E-M4-010395ec7c finishes five paired pause/resume cycles; user thinks responsiveness remained and screenshot felt more durable. Window untested, full input/audio/rotation/device-loss/restoration matrix unconfirmed. No universal fix credited."
           },
           {
             "id": "M1-D4",
@@ -227,7 +229,7 @@
           {
             "id": "M2-I4",
             "criterion": "State coverage sufficient to distinguish the identified expensive full variants",
-            "status": "passed",
+            "status": "inconclusive",
             "evidence": [
               "docs/performance/25-implementation-completion-batch.md",
               "docs/performance/28-whole-plan-implementation-inventory.md",
@@ -235,9 +237,11 @@
               "docs/performance/runs/E-M4-009.analysis.json",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/runs/E-M4-010.md",
+              "docs/performance/runs/E-M4-010.analysis.json"
             ],
-            "remaining": "E-M4-009 scoped assessment: all9 emitted >=16.67ms individual slow variants have distinct core-v4 identities,full-core1/coverage0x1f;346 emitted valid feedback records,stage hits observed but no pipeline-level application hit. Not all dropped/unknown variants covered,not replay recipes,not persisted-seed attribution or measured benefit. First/repeat/restart campaign,phase correlation and E gates stay open."
+            "remaining": "E-M4-009 nine full slow variants remain historical. E-M4-010 adds four expensive layout-incomplete0x2001b groups (245.947/159.183/139.802/127.070ms). Source fixes one-shot metadata loss/indexed shader lookup and exposes missing versus incomplete references; actual new-device coverage not yet proven. Unsupported dependency descriptions remain partial; first/repeat/restart still required."
           }
         ],
         "D": [
@@ -462,11 +466,13 @@
           {
             "id": "M4-D2",
             "criterion": "Display/host pacing and p95/p99/late events assessed",
-            "status": "pending",
+            "status": "passed",
             "evidence": [
-              "docs/performance/runs/E-M4-007.md"
+              "docs/performance/runs/E-M4-007.md",
+              "docs/performance/runs/E-M4-010.md",
+              "docs/performance/runs/E-M4-010.analysis.json"
             ],
-            "remaining": "E-M4-007 host distributions and last256 native-feedback subset assessed: p95/p99 unchanged; native20.83ms survives host-off. Full relevant display/coverage attribution remains unverified."
+            "remaining": "E-M4-010 scoped assessment:70,884valid direct-drawable intervals, p95/p9920.9ms, lateevents and all host windows/losses assessed. Host p95/p9920.9/21.2ms; timedclockON does not eliminate tail. Not complete physical display accounting or matched ON/OFF benefit; other D/E gates unchanged."
           },
           {
             "id": "M4-D3",
@@ -876,14 +882,16 @@
           {
             "id": "M8-I4",
             "criterion": "Profile meaningful JNI/Bionic/futex overhead before a targeted change",
-            "status": "pending",
+            "status": "passed",
             "evidence": [
               "docs/performance/runs/CORE-BATCH-4.once-benchmark.json",
               "docs/performance/20-core-efficiency-batch.md",
               "docs/performance/runs/E-M4-007.md",
-              "docs/performance/25-implementation-completion-batch.md"
+              "docs/performance/25-implementation-completion-batch.md",
+              "docs/performance/runs/E-M4-010.md",
+              "docs/performance/runs/E-M4-010.analysis.json"
             ],
-            "remaining": "Bounded included JNI/futex/once-slow CPU-vs-wall sampling source added; previous synthetic once benchmark retained. Representative meaningful compatibility cost/energy still unverified."
+            "remaining": "Scoped negative investigation permitted by existing plan:6,652one-in64 JNI samples total12.766884msCPU/16.253mswall;instrumented futex/contended slow counters0 except one negligible once. No further broad JNI/futex rewrite justified. Sampling aliasing,fast completed-once/outside-scope work,unmarked scene and no energy extrapolation remain explicit; reopen with contrary representative evidence."
           },
           {
             "id": "M8-I5",
@@ -1064,14 +1072,16 @@
           {
             "id": "M9-D4",
             "criterion": "Resize/pause/resume/device-loss/baseline restoration checks",
-            "status": "regression",
+            "status": "inconclusive",
             "evidence": [
               "docs/performance/17-metalfx-spatial-prototype.md",
               "docs/performance/runs/E-M4-005.md",
               "docs/performance/runs/E-M4-006.md",
-              "docs/performance/runs/E-M4-009.md"
+              "docs/performance/runs/E-M4-009.md",
+              "docs/performance/runs/E-M4-010.md",
+              "docs/performance/runs/E-M4-010.analysis.json"
             ],
-            "remaining": "User reports screenshot/input freeze then process end on e9835d9 with spatial+both clock experiments. Cause unknown; RESILIENCE-v1 fixes confirmed host defects. Full matrix on corrected source still pending."
+            "remaining": "E-M4-009 screenshot/input freeze retained as prior-build regression. E-M4-010395ec7c finishes five paired pause/resume cycles; user thinks responsiveness remained and screenshot felt more durable. Window untested, full input/audio/rotation/device-loss/restoration matrix unconfirmed. No universal fix credited."
           }
         ],
         "E": [
@@ -1184,6 +1194,6 @@
       }
     }
   ],
-  "source_sha": "395ec7ca5e72ba09d53bfbfa249e7732c312ccee",
+  "source_sha": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
   "evidence_id": "E-M4-009"
 }

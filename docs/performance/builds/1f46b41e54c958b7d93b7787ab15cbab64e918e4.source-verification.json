@@ -1,0 +1,72 @@
+{
+  "source_sha": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+  "paths": [
+    {
+      "path": ".github/workflows/build-husk-ipa.yml",
+      "source_sha256": "0c8aff8b5c1e5ef5cf2b0881b77813d9d4667f5846d80b88da3456a4a7895941",
+      "source_bytes": 8700,
+      "working_copy_matches": true
+    },
+    {
+      "path": "docs/performance/36-capture-led-consolidation.md",
+      "source_sha256": "33646f2a36e2e05aefa09a9034b402368df2021f591a950978f07154d3dfb5df",
+      "source_bytes": 4676,
+      "working_copy_matches": true
+    },
+    {
+      "path": "scripts/analyse_efficiency.py",
+      "source_sha256": "d1f15b17c580646cd8666e7d7e2acf374fc4dc78caa779d361c608a87a8e1848",
+      "source_bytes": 18434,
+      "working_copy_matches": true
+    },
+    {
+      "path": "scripts/external_efficiency.py",
+      "source_sha256": "29d19a708804bc1482c74da756cf18a1baf80e922885276e364325bfa1e60da3",
+      "source_bytes": 19894,
+      "working_copy_matches": true
+    },
+    {
+      "path": "src/app/Husk/BoundedRecordHistory.swift",
+      "source_sha256": "1416487aeeb0c7e5f518bf8b9d8bcc399e671eca26668589be5e2ecc9ce05eda",
+      "source_bytes": 1185,
+      "working_copy_matches": true
+    },
+    {
+      "path": "src/app/Husk/EfficiencyDiagnostics.swift",
+      "source_sha256": "8554533c18108b0dd2480b61b9ba9f924c3e112554b7d5cc8d0ff934e3234dd5",
+      "source_bytes": 84454,
+      "working_copy_matches": true
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-pipeline-diagnostics.c",
+      "source_sha256": "734afd5b4a1b1288da337cf10dd92a70a62a4f6983a858946e43466ea26346dc",
+      "source_bytes": 13748,
+      "working_copy_matches": true
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-pipeline-diagnostics.h",
+      "source_sha256": "b55c83247c3d2ec80978ce06ce31092f54f2811246fbed83042f4f5e3d4935b1",
+      "source_bytes": 3617,
+      "working_copy_matches": true
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-pipeline-objects.h",
+      "source_sha256": "e27b6634906ffa723070a6ad976fdfbdd9cf5395f68b2803500a561b337bd9ee",
+      "source_bytes": 14206,
+      "working_copy_matches": true
+    },
+    {
+      "path": "tests/translation-layer/test_capture_consolidation.py",
+      "source_sha256": "da1ac1881ee763f1b84bb6cd99b6ec44720ad3e81af3ce6fe84780e336c2d631",
+      "source_bytes": 5569,
+      "working_copy_matches": true
+    },
+    {
+      "path": "tests/translation-layer/test_pipeline_core_state.py",
+      "source_sha256": "42695542755c37cd9a83d5bec48c4526745abcf0dfbb3ba8f036252c36d6a684",
+      "source_bytes": 14081,
+      "working_copy_matches": true
+    }
+  ],
+  "result": "All11published source/test/workflow/scope paths read back byte-exact; documentation-only handover changes may follow without changing binary source."
+}

@@ -1,0 +1,38 @@
+{
+  "evidence": "E-M4-010",
+  "tested_source": "395ec7ca5e72ba09d53bfbfa249e7732c312ccee-dirty",
+  "files": [
+    {
+      "original_name": "8E3E4498-B900-42E2-B9E2-F29A7B1C1B9B.json",
+      "archived": "E-M4-010.preparation.json.gz",
+      "raw_bytes": 10016,
+      "raw_sha256": "357b5b70bb0c092453dbddbf9fb80a93ead9425fc47e5e1b82c5a5fcff3dfbf8",
+      "gzip_bytes": 2705,
+      "gzip_sha256": "b49dab63f22e756b73706a9a1b0ec21e89bfff8a866ad97623698550d1a0d385"
+    },
+    {
+      "original_name": "report 7.md",
+      "archived": "E-M4-010.report.md.gz",
+      "raw_bytes": 8373,
+      "raw_sha256": "7f5b02378f735f178e2924afbafcdf3dbf0cd2db9540dd7773a3ef81995d5483",
+      "gzip_bytes": 3255,
+      "gzip_sha256": "0f4958793b73846b9e7ad50af9c12f558b07421e41e22c03d7c4b6ba9799d103"
+    },
+    {
+      "original_name": "4948EC24-AAA0-4032-832D-FD0D911C4DB3.json",
+      "archived": "E-M4-010.inspection.json.gz",
+      "raw_bytes": 3927,
+      "raw_sha256": "a0240f9e198048752b565d7b0ede33742ae5b1cebe678b62f17496e8857e81d7",
+      "gzip_bytes": 1716,
+      "gzip_sha256": "c81f897f5100f255353e5be8d958cb45b35a164217cbdc24ae20d9f902462e4c"
+    },
+    {
+      "original_name": "diagnostics 7.json",
+      "archived": "E-M4-010.diagnostics.json.gz",
+      "raw_bytes": 15461271,
+      "raw_sha256": "8c2e33bcd4cae022237bb9defdc3a36bd37030f195ea2ff8dd25902194727fe2",
+      "gzip_bytes": 910610,
+      "gzip_sha256": "bdb6126a976e2a272177566ba2b5ed5f616e4cb9c22419d2e41f4699374d44e2"
+    }
+  ]
+}

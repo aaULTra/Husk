@@ -262,3 +262,8 @@ Inspection-fix final source`e9835d95ec530da3efd515ac298200b6d386f46e`,[run405100
 - 2026-10-27 [395ec7c verified resilience IPA](builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md):372Apple checks/42suites/zero skips,driver/app/IPA,independent ZIP/IPA/source/compatibility verification;owner-thread lifecycle,input cancellation,scene-aware restoration,durable unknown-end reporting. Physical RESILIENCE-v1 matrix0/4,energy unknown.
 
 - 2026-10-27 [E-M4-009 whole-plan review](35-e-m4-009-whole-plan-review.md): all M0–M10 implementation/evidence consequences,observed Balanced/V4 forwarding,separate pipeline and non-pipeline stalls,native archive proof gaps,and unchanged electrical/Adaptive/translation/temporal/Duo dependencies. Corrects stale current-test wording;no runtime or score change/new capture.
+
+
+### 2026-10-27 — E-M4-010 complete capture-led assessment
+
+[E-M4-010](runs/E-M4-010.md),[machineaudit](runs/E-M4-010.analysis.json),[5-gatebatch](36-capture-led-consolidation.md). Complete four-document provenance/analysis,allM0–M10findings,source-confirmedmetadata/index/staleinspection/MachID/lateGPUdefects andfixes. Fivecycle/tentativeuserscreenshotrecovery,nativeprep8/526224bytesaftercapture;no restartbenefit,measuredpower orfullwindowmatrix. Actual31.11%,I79.80%,32/39,M4-only34.57%,Duo0;allenergygates0. Exactsource1f46b41Apple40543425959mustpassbeforecandidateIPAreadiness. Keeppriorfailures/resultsandallunfinishedmilestones.

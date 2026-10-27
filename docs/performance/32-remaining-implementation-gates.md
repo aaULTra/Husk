@@ -1,5 +1,8 @@
 # What still blocks implementation/build100% — IMPLEMENTATION-100-AUDIT
 
+**Current E-M4-010 update:** broader395ec7c capture exposes four newly observed expensive layout-incompletegroups;M2-I4reopens. Scoped6652JNI samples/nearzero instrumentedsync supportM8-I4negativefurtherrewrite decision. Remaining7IareM2-I4,M3-I4,M8-I2/I5,M10-I1/I2/I3;weighted79.80%,32/39,overall31.11. [Complete evidence/limits](runs/E-M4-010.md). Source1f46b41correctsmetadata loss/indexedregistry,MachIDexport,lateGPUcontext/staleinspection;actual new coverage andApplepackage must be verified separately. Statements below about earlier gate passes and absent oldJSONinputs remain historical.
+
+
 2026-10-27. User requests implementation100%. Read the master plan and unchanged gate ledger before adding code. Original audit candidate was **5b7620237dc50906959e6a0aecf290f1e7ef6f11**,Apple365checks/40suites/zero skips,driver/app/IPA and independent package verification passed. Current fixed implementation/build score **78.37%**,31/39I gates;overall accepted29.09%,M4-only32.32%,Duo0. No score/gate/weight changed by this audit.
 
 **Later evidence update:** [E-M4-009](runs/E-M4-009.md) supplies346actual pipeline identity records and9identified slow full-core variants; M2-I4 now passes its unchanged scoped coverage criterion after source/test/raw-log audit. M2-D2 supported-feedback assessment also passes without a whole-pipeline hit/energy claim. Current I80.92%,32/39;overall30.84%;7I remain. The8I/zero-groups statements below preserve the earlier JSON-only audit and are not current claims about these new logs.

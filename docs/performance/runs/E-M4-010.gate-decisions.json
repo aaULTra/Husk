@@ -1,0 +1,88 @@
+{
+  "evidence": "E-M4-010",
+  "model": "HUSK-ROADMAP-v1",
+  "gate_version": "whole-milestones-1",
+  "criteria_and_weights_unchanged": true,
+  "status_changes": [
+    {
+      "id": "M1-D3",
+      "criterion": "Full relevant panel/window/lifecycle/input/audio regression matrix",
+      "previous": "regression",
+      "current": "inconclusive",
+      "evidence": [
+        "docs/performance/runs/E-M4-009.md",
+        "docs/performance/runs/E-M4-010.md",
+        "docs/performance/runs/E-M4-010.analysis.json"
+      ],
+      "assessment": "E-M4-009 screenshot/input freeze retained as prior-build regression. E-M4-010395ec7c finishes five paired pause/resume cycles; user thinks responsiveness remained and screenshot felt more durable. Window untested, full input/audio/rotation/device-loss/restoration matrix unconfirmed. No universal fix credited."
+    },
+    {
+      "id": "M2-I4",
+      "criterion": "State coverage sufficient to distinguish the identified expensive full variants",
+      "previous": "passed",
+      "current": "inconclusive",
+      "evidence": [
+        "docs/performance/25-implementation-completion-batch.md",
+        "docs/performance/28-whole-plan-implementation-inventory.md",
+        "docs/performance/runs/E-M4-009.md",
+        "docs/performance/runs/E-M4-009.analysis.json",
+        "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+        "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+        "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+        "docs/performance/runs/E-M4-010.md",
+        "docs/performance/runs/E-M4-010.analysis.json"
+      ],
+      "assessment": "E-M4-009 nine full slow variants remain historical. E-M4-010 adds four expensive layout-incomplete0x2001b groups (245.947/159.183/139.802/127.070ms). Source fixes one-shot metadata loss/indexed shader lookup and exposes missing versus incomplete references; actual new-device coverage not yet proven. Unsupported dependency descriptions remain partial; first/repeat/restart still required."
+    },
+    {
+      "id": "M4-D2",
+      "criterion": "Display/host pacing and p95/p99/late events assessed",
+      "previous": "pending",
+      "current": "passed",
+      "evidence": [
+        "docs/performance/runs/E-M4-007.md",
+        "docs/performance/runs/E-M4-010.md",
+        "docs/performance/runs/E-M4-010.analysis.json"
+      ],
+      "assessment": "E-M4-010 scoped assessment:70,884valid direct-drawable intervals, p95/p9920.9ms, lateevents and all host windows/losses assessed. Host p95/p9920.9/21.2ms; timedclockON does not eliminate tail. Not complete physical display accounting or matched ON/OFF benefit; other D/E gates unchanged."
+    },
+    {
+      "id": "M8-I4",
+      "criterion": "Profile meaningful JNI/Bionic/futex overhead before a targeted change",
+      "previous": "pending",
+      "current": "passed",
+      "evidence": [
+        "docs/performance/runs/CORE-BATCH-4.once-benchmark.json",
+        "docs/performance/20-core-efficiency-batch.md",
+        "docs/performance/runs/E-M4-007.md",
+        "docs/performance/25-implementation-completion-batch.md",
+        "docs/performance/runs/E-M4-010.md",
+        "docs/performance/runs/E-M4-010.analysis.json"
+      ],
+      "assessment": "Scoped negative investigation permitted by existing plan:6,652one-in64 JNI samples total12.766884msCPU/16.253mswall;instrumented futex/contended slow counters0 except one negligible once. No further broad JNI/futex rewrite justified. Sampling aliasing,fast completed-once/outside-scope work,unmarked scene and no energy extrapolation remain explicit; reopen with contrary representative evidence."
+    },
+    {
+      "id": "M9-D4",
+      "criterion": "Resize/pause/resume/device-loss/baseline restoration checks",
+      "previous": "regression",
+      "current": "inconclusive",
+      "evidence": [
+        "docs/performance/17-metalfx-spatial-prototype.md",
+        "docs/performance/runs/E-M4-005.md",
+        "docs/performance/runs/E-M4-006.md",
+        "docs/performance/runs/E-M4-009.md",
+        "docs/performance/runs/E-M4-010.md",
+        "docs/performance/runs/E-M4-010.analysis.json"
+      ],
+      "assessment": "E-M4-009 screenshot/input freeze retained as prior-build regression. E-M4-010395ec7c finishes five paired pause/resume cycles; user thinks responsiveness remained and screenshot felt more durable. Window untested, full input/audio/rotation/device-loss/restoration matrix unconfirmed. No universal fix credited."
+    }
+  ],
+  "previous_overall_percent": 30.84,
+  "current_overall_percent": 31.11,
+  "overall_change_points": 0.2699999999999996,
+  "previous_weighted_I_percent": 80.91836734693878,
+  "current_weighted_I_percent": 79.79591836734694,
+  "weighted_I_change_points": -1.1224489795918373,
+  "energy_credit_added": false,
+  "meaning": "Evidence assessment and reopening; no assumed saving or gate rewrite."
+}

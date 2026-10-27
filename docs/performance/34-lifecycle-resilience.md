@@ -1,5 +1,8 @@
 # M1/M6/M9 interruption resilience — RESILIENCE-v1
 
+**Returned-device update E-M4-010:**395ec7c-dirty completes five pause/resume cycles;user thinks responsiveness remained,screenshot tested and felt more durable,window untested. Retain tentative scope:preview/editor,audio/window/device-loss/fullrestoration matrix not established;no universalguarantee. Native preparation acknowledged pause andcompleted8requests afterrecording. [Full audit](runs/E-M4-010.md). Historical0/4below is the definition/build-time state;individual narrowed observations now recorded,but wholephysical gates still inconclusive. Currentwholeplan31.11/I79.80;M2coverage reopened frombroadercapture.
+
+
 E-M4-009 follows the previously delivered inspection repair and confirms its actual device source. Screenshot → input freeze while frames continue → unclean process end is a correctness blocker. [Raw evidence and qualified findings](runs/E-M4-009.md). The exact termination cause is unproven. This batch repairs concrete source defects and enables a focused physical regression check before resuming M2/M5 native archive validation and M3/M9 efficiency comparisons.
 
 ## Changes and review scope
