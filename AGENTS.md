@@ -77,3 +77,8 @@ Use the existing architecture and tests. Preserve API arguments, results, object
 For code changes, run relevant portable checks and required regression suites; obtain a clean iOS build and IPA packaging before calling a device candidate ready. Record exact SHA, commands, results and environment limitations. A build validates compilation, not device performance. Documentation-only updates need link/status/diff checks, not an invented device result.
 
 Before finishing each task, update PROJECT_PLAN.md and supporting records with changed implementation, tests/evidence, regressions, decisions, remaining uncertainties and next actions. Preserve unfinished, inconclusive and unsuccessful experiments. Never silently drop work when priorities change. A performance or energy claim requires evidence on the named device and conditions; otherwise leave validation pending.
+
+
+## Whole-plan code-completion requests
+
+When the user requests100%implementation,work against the complete milestone inventory,not only a self-defined batch. Maintain each item as implemented/build-checked,feasible engineering still in progress,or genuinely input-dependent with the exact missing interface/data. Do not present a narrow10/10checklist as whole-plan completion. Missing physical benefit validation must not block independent coding; missing real engine inputs must not be fabricated. Continue useful independent work while CI runs,retain the user's active test and report remaining unimplemented code honestly.

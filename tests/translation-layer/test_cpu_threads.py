@@ -17,6 +17,7 @@ class CPUThreadTests(unittest.TestCase):
 static atomic_bool ready,stop;
 static void *worker(void *p){(void)p;pthread_setname_np("HuskCPUCheck");atomic_store(&ready,true);while(!atomic_load(&stop)){}return NULL;}
 int main(void){pthread_t thread;assert(!pthread_create(&thread,NULL,worker,NULL));while(!atomic_load(&ready))sched_yield();
+ tl_em_process process;tl_em_process_sample(true,&process);assert(process.cpu_seconds>=0&&process.footprint_bytes>=0);if(process.peak_bytes>=0)assert(process.peak_bytes>=process.footprint_bytes);
  tl_em_thread rows[128];tl_em_thread_stats s;unsigned count=tl_em_thread_sample(rows,128,&s);assert(s.result==0&&count>0&&count<=128&&s.enumerated>=count);
  uint64_t identity=0;double before=0;for(unsigned i=0;i<count;i++)if(!strcmp(rows[i].name,"HuskCPUCheck")){identity=rows[i].identity;before=rows[i].user_seconds+rows[i].system_seconds;}
  assert(identity);for(volatile unsigned i=0;i<20000000;i++){}count=tl_em_thread_sample(rows,128,&s);bool found=false;

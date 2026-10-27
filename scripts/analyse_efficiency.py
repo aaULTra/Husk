@@ -131,7 +131,7 @@ def thread_cpu_audit(data):
 
 
 def audit(data):
-    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11):
+    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12):
         raise ValueError('Unsupported diagnostic schema; preserve source for a version-aware audit')
     summary, metadata = data.get('summary', {}), data.get('metadata', {})
     windows, samples = data.get('windows', []), data.get('samples', [])
@@ -214,7 +214,7 @@ def audit(data):
                        'rollbacks': worker.get('rollback_requests_since_launch'), 'waiting_reason': worker.get('waiting_reason'),
                        'normal_utility_last_observations': len(utility), 'core_residency': 'UNAVAILABLE',
                        'scope': 'Last observations, not live thread count or verified placement'},
-            'native_pipeline_archive': data.get('native_pipeline_archive', {}), 'component_sampling': data.get('component_sampling', {}),
+            'native_pipeline_archive': data.get('native_pipeline_archive', {}), 'component_sampling': data.get('component_sampling', {}), 'queue_execution_options': data.get('queue_execution_options', {}), 'initialization_waits': data.get('initialization_waits', {}),
             'driver_phases': data.get('driver_phases', {}), 'component_triage': data.get('component_triage', {}),
             'delayed_os_reports': data.get('delayed_os_reports', {}),
             'presentation_clock': data.get('presentation_clock', {}), 'compatibility_sync': data.get('compatibility_sync', {}),

@@ -67,6 +67,10 @@ class EfficiencyTests(unittest.TestCase):
         self.lib.tl_em_stop();self.lib.tl_em_frame(1);self.lib.tl_em_host(4,500000000)
         self.lib.tl_em_log(b'ue4 cache: ignored');self.assertEqual(self.snapshot().host_calls[4],0)
         e=Event();self.assertFalse(self.lib.tl_em_pop(C.byref(e)))
+    def test_queue_configuration_event_keeps_component_identity(self):
+        self.lib.tl_em_log(b'[M6/M8 queue-options] requested prefill 1; query result 5; benefit unverified')
+        event=Event();self.assertTrue(self.lib.tl_em_pop(C.byref(event)))
+        self.assertIn(b'M6/M8',bytes(event.text))
     def test_bounded_events_and_relevant_filter(self):
         self.lib.tl_em_log(b'unrelated repetitive frame log')
         for _ in range(300):self.lib.tl_em_log(b'ue4 cache: accepted seed is not a hit')

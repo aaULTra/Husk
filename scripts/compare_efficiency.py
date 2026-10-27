@@ -14,6 +14,10 @@ RECIPES = {
     'relative-worker': ('worker_policy', 2, 4, ['M7', 'M3']),
     'engine-only': ('engine_only_limiter', False, True, ['M4']),
     'async': ('submission_mode', 0, 1, ['M6']),
+    'prefill': ('metal_prefill', -1, 1, ['M6', 'M8']),
+    'swapchain-images': ('swapchain_image_budget', 0, 2, ['M6', 'M8']),
+    'buffer-limit': ('metal_command_buffer_limit', 0, 8, ['M6', 'M8']),
+    'initialization-parking': ('initialization_parking', False, True, ['M8', 'M3']),
     'spatial': ('metalfx_spatial_requested', False, True, ['M9', 'M3']),
     'native-archive': ('native_pipeline_archive_mode', 1, 2, ['M2', 'M5']),
     'feedback-clock': ('feedback_clock_correction', False, True, ['M4', 'M6']),
@@ -144,7 +148,7 @@ def compare_pair(left, right, recipe, context=None):
             blockers.append('Additional changed control: ' + key)
     defaults = {'worker_policy': 2, 'submission_mode': 0, 'engine_only_limiter': False,
                 'clock_correct_presentation': False, 'metalfx_spatial_requested': False,
-                'feedback_clock_correction': False, 'native_pipeline_archive_mode': 0, 'native_archive_verification': False}
+                'feedback_clock_correction': False, 'native_pipeline_archive_mode': 0, 'native_archive_verification': False, 'metal_prefill': -1, 'metal_command_buffer_limit': 0, 'initialization_parking': False, 'swapchain_image_budget': 0}
     for index, (data, analysed, config) in enumerate(zip((left, right), analyses, configs)):
         side = 'baseline' if index == 0 else 'candidate'
         blockers.extend(side + ': ' + e for e in analysed['errors'])
@@ -154,6 +158,10 @@ def compare_pair(left, right, recipe, context=None):
             blockers.append(side + ': Dungeons UE4 reference is not selected')
         if not isinstance(data.get('gpu_sampling', {}).get('requested'), bool) or not isinstance(metas[index].get('cpu_thread_sampling_requested'), bool):
             warnings.append(side + ': GPU/thread diagnostic activation is unknown')
+        if data.get('schema_version', 0) >= 12:
+            for key in ('metal_prefill', 'metal_command_buffer_limit', 'initialization_parking', 'swapchain_image_budget'):
+                if key not in config:
+                    blockers.append(side + ': missing launch control in schema12: ' + key)
         for key, value in defaults.items():
             if key != field and key in config and config[key] != value:
                 blockers.append(side + ': unrelated experimental control enabled: ' + key)
@@ -241,6 +249,43 @@ def compare_pair(left, right, recipe, context=None):
                 and m.get('component_sampling_requested', False if d.get('schema_version', 0) < 11 else None) is False
                 and all(c.get(k) is False for k in ('detailed_driver_profiling', 'pipeline_identification', 'pipeline_creation_feedback', 'render_target_inventory'))
                 for d, m, c in zip((left, right), metas, configs))
+    if all(d.get('schema_version', 0) >= 12 for d in (left, right)):
+        queues = [d.get('queue_execution_options', {}) for d in (left, right)]
+        if any(q.get('actual_configuration_available') is not True for q in queues):
+            blockers.append('Actual queue configuration unavailable for schema12 comparison')
+        for key, permitted_recipe in [('actual_synchronous_submission', 'async'), ('actual_prefill', 'prefill'), ('actual_command_buffer_limit', 'buffer-limit')]:
+            if any(key not in q for q in queues):
+                blockers.append('Missing runtime queue field: ' + key)
+            elif recipe != permitted_recipe and queues[0][key] != queues[1][key]:
+                blockers.append('Additional changed actual queue setting: ' + key)
+    if recipe in ('prefill', 'buffer-limit'):
+        for side, data, config in zip(('baseline', 'candidate'), (left, right), configs):
+            runtime = data.get('queue_execution_options', {})
+            if runtime.get('actual_configuration_available') is not True or runtime.get('environment_error') != 0:
+                blockers.append(side + ': actual queue configuration unavailable or environment failed')
+        actual = right.get('queue_execution_options', {})
+        expected = 1 if recipe == 'prefill' else 8
+        if actual.get('actual_prefill' if recipe == 'prefill' else 'actual_command_buffer_limit') != expected:
+            blockers.append('candidate: requested queue treatment not observed')
+        baseline = left.get('queue_execution_options', {})
+        if baseline.get('actual_prefill' if recipe == 'prefill' else 'actual_command_buffer_limit') == expected:
+            blockers.append('baseline already has selected actual queue treatment; no A/B contrast')
+    if recipe == 'swapchain-images':
+        for side, data in zip(('baseline', 'candidate'), (left, right)):
+            runtime = data.get('swapchain_budget', {})
+            if runtime.get('create_result_available') is not True or runtime.get('last_create_result') != 0 or runtime.get('returned_image_count_complete') is not True:
+                blockers.append(side + ': complete actual swapchain image count unavailable')
+        chosen = right.get('swapchain_budget', {})
+        if chosen.get('override_applied') is not True or chosen.get('returned_image_count') != 2:
+            blockers.append('candidate: two-image treatment not observed')
+        if left.get('swapchain_budget', {}).get('returned_image_count') == 2:
+            blockers.append('baseline already uses two images; no actual image-count contrast')
+        warnings.append('Swapchain image count does not independently establish Vulkan frames in flight or display latency')
+    if recipe == 'initialization-parking':
+        info = right.get('initialization_waits', {})
+        if info.get('requested') is not True or not finite(info.get('wait_entries_since_launch')) or info['wait_entries_since_launch'] <= 0:
+            blockers.append('candidate: no observed parked initialization waits; treatment opportunity unverified')
+        warnings.append('Initialization counters are since launch and can include excluded/loading work; compare whole launch and gameplay cost separately')
     metrics = [run_metrics(d, a) for d, a in zip((left, right), analyses)]
     delta = {key: metrics[1][key] - metrics[0][key] for key in ('retained_fps', 'p95_ms', 'p99_ms', 'cpu_weighted_percent_one_core',
                'over20_per1000_host_intervals', 'over33_per1000_host_intervals', 'over50_per1000_host_intervals')

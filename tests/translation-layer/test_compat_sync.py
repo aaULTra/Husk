@@ -8,11 +8,12 @@ class CompatSyncTests(unittest.TestCase):
  def setUpClass(cls):
   cls.temp=tempfile.TemporaryDirectory();cls.addClassCleanup(cls.temp.cleanup);p=Path(cls.temp.name)
   io=(ROOT/'src/translation-layer-next/husk-tl-bionic-io.c').read_text();futex=io[io.index('#define FUT_BUCKETS'):io.index('static long linux_syscall_impl(',io.index('#define FUT_BUCKETS'))]
-  thread=(ROOT/'src/translation-layer-next/husk-tl-bionic-pthread.c').read_text();once=thread[thread.index('static int b_once('):thread.index("/* bionic's pthread_key_t")]
+  thread=(ROOT/'src/translation-layer-next/husk-tl-bionic-pthread.c').read_text();once=thread[thread.index('static bool once_initializing('):thread.index("/* bionic's pthread_key_t")]
   source=r'''
 #define _GNU_SOURCE
 #define _DARWIN_C_SOURCE
 #include "husk-tl-component-scope.h"
+#include "husk-tl-publication-wait.h"
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdint.h>
@@ -65,7 +66,8 @@ int real_waiters(void){
 static _Atomic int once_word,init_count;static int initialized_value;
 static void initializer(void){atomic_fetch_add(&init_count,1);usleep(10000);initialized_value=12345;}
 static void *once_waiter(void*raw){(void)raw;b_once(&once_word,initializer);return(void*)(uintptr_t)(initialized_value!=12345);}
-int once_case(void){
+int once_case_mode(int parking){
+ husk_ue4_set_initialization_parking(parking!=0);
  atomic_store(&once_word,0);atomic_store(&init_count,0);initialized_value=0;pthread_t threads[12];
  for(unsigned i=0;i<12;i++)if(pthread_create(&threads[i],NULL,once_waiter,NULL))return 1;
  for(unsigned i=0;i<12;i++){void*result;pthread_join(threads[i],&result);if(result)return 2;}
@@ -73,10 +75,11 @@ int once_case(void){
  return atomic_load(&init_count)==1&&atomic_load(&once_word)==1?0:3;
 }
 '''
-  (p/'test.c').write_text(source);subprocess.run([os.environ.get('CC','cc'),'-std=c11','-O2','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(ROOT/'src/translation-layer-next'),str(p/'test.c'),str(ROOT/'src/translation-layer-next/husk-tl-component-profile.c'),'-o',str(p/'test.so')],check=True);cls.lib=ctypes.CDLL(str(p/'test.so'))
+  (p/'test.c').write_text(source);subprocess.run([os.environ.get('CC','cc'),'-std=c11','-O2','-Wall','-Wextra','-Werror','-shared','-fPIC','-pthread','-I',str(ROOT/'src/translation-layer-next'),str(p/'test.c'),str(ROOT/'src/translation-layer-next/husk-tl-component-profile.c'),str(ROOT/'src/translation-layer-next/husk-tl-publication-wait.c'),'-o',str(p/'test.so')],check=True);cls.lib=ctypes.CDLL(str(p/'test.so'))
  def test_spurious_wake_preserves_relative_deadline(self):self.assertEqual(self.lib.deadline_case(0),0)
  def test_spurious_wake_preserves_absolute_monotonic_deadline(self):self.assertEqual(self.lib.deadline_case(1),0)
  def test_validation_and_value_mismatch_before_expired_deadline(self):self.assertEqual(self.lib.invalid_case(),0)
  def test_actual_waiters_filter_bits_and_colliding_addresses(self):self.assertEqual(self.lib.real_waiters(),0)
- def test_once_initializes_once_and_publishes_to_all_waiters(self):self.assertEqual(self.lib.once_case(),0)
+ def test_once_initializes_once_and_publishes_to_all_waiters(self):self.assertEqual(self.lib.once_case_mode(0),0)
+ def test_parked_once_publishes_to_all_waiters(self):self.assertEqual(self.lib.once_case_mode(1),0)
 if __name__=='__main__':unittest.main()

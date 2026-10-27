@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 PATH='src/translation-layer-next/husk-tl-bionic-pthread.c'
 BASE='cb3a380070b5156aa8dd15108fee858963a5c9d1'
-def body(source):return source[source.index('static int b_once('):source.index("/* bionic's pthread_key_t")].replace('static int b_once(', 'static __attribute__((noinline)) int b_once(')
+def body(source):return source[source.index('static bool once_initializing(')if 'static bool once_initializing('in source else source.index('static int b_once('):source.index("/* bionic's pthread_key_t")].replace('static int b_once(', 'static __attribute__((noinline)) int b_once(')
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--candidate-ref');p.add_argument('--output',type=Path);a=p.parse_args()
  old=subprocess.check_output(['git','show',BASE+':'+PATH],cwd=ROOT,text=True)
@@ -19,6 +19,8 @@ def main():
 #include <stdlib.h>
 #include <stdio.h>
 #include "husk-tl-efficiency.h"
+#include "husk-tl-component-scope.h"
+#include "husk-tl-publication-wait.h"
 void tl_em_sync_event(unsigned kind){(void)kind;}
 '''
  suffix='''
@@ -33,7 +35,7 @@ printf("%.9f %.9f\\n",stamp(CLOCK_PROCESS_CPUTIME_ID)-cpu,stamp(CLOCK_MONOTONIC)
  with tempfile.TemporaryDirectory()as d:
   for name,source in [('old',old),('new',new)]:
    path=Path(d)/(name+'.c');path.write_text(prefix+body(source)+suffix);binary=Path(d)/name
-   subprocess.run(['cc','-std=c11','-O2','-pthread','-I',str(ROOT/'src/translation-layer-next'),str(path),'-o',str(binary)],check=True)
+   subprocess.run(['cc','-std=c11','-O2','-pthread','-I',str(ROOT/'src/translation-layer-next'),str(path),str(ROOT/'src/translation-layer-next/husk-tl-component-profile.c'),str(ROOT/'src/translation-layer-next/husk-tl-publication-wait.c'),'-o',str(binary)],check=True)
    result['runs'][name]={}
    for threads in [1,4]:
     values=[list(map(float,subprocess.check_output([str(binary),str(threads)],text=True).split()))for _ in range(5)]

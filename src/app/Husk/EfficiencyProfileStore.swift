@@ -20,6 +20,7 @@ struct EfficiencyProfile: Codable, Identifiable, Equatable {
         var resolution: Int, customPercent: Int, fps: Int, worker: Int, submission: Int
         var spatial: Bool, spatialPercent: Int, archive: Int
         var archiveVerification: Bool, engineOnly: Bool, clockTimed: Bool, clockFeedback: Bool
+        var execution: HuskExecutionOptions? = nil
     }
     var version = 1
     var id: String = UUID().uuidString
@@ -42,6 +43,7 @@ struct EfficiencyProfile: Codable, Identifiable, Equatable {
               [30,60].contains(c.fps), (0...4).contains(c.worker), (0...1).contains(c.submission),
               [80,85,90,95].contains(c.spatialPercent), (0...2).contains(c.archive),
               (!c.archiveVerification || c.archive == 2),
+              (c.execution?.valid ?? true),
               !(c.clockTimed && c.clockFeedback) else { throw Failure.invalid }
         return self
     }

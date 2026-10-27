@@ -39,6 +39,11 @@ uint64_t variant(int mode){
  if(mode==10){descriptor.next=(void*)1;descriptor.bindings=(void*)1;tl_pi_object(TL_PI_DESCRIPTOR_LAYOUT,device,60,&descriptor);tl_pi_object(TL_PI_PIPELINE_LAYOUT,device,lh,&layout);}
  uint32_t format=mode==12?50:44;pi_rendering rendering={.type=1000044002,.colors=1,.formats=&format};
  if(mode==11||mode==12){ci.renderpass=0;ci.next=&rendering;}
+ pi_attachment2 attachment2={.type=1000109000,.format=(uint32_t)(mode==17?50:44),.samples=1};
+ pi_ref2 ref2={.type=1000109001,.attachment=0,.layout=2,.aspects=1};pi_subpass2 sub2={.type=1000109002,.colors=1,.color=&ref2};
+ pi_render_pass2 rp2={.type=1000109004,.attachments=1,.attachment_data=&attachment2,.subpasses=1,.subpass_data=&sub2};
+ if(mode==18){sub2.next=(void*)1;sub2.color=(void*)1;}
+ if(mode>=16)tl_pi_object(TL_PI_RENDER_PASS,device,rh,&rp2);
  tl_pi_request r=tl_pi_identify(false,device,1,&ci);last_full=r.full_core[0];last_coverage=r.coverage[0];
  if(mode==13){uint64_t handles[1]={100};tl_pi_pipeline_objects(r,device,handles);ci.flags=4;ci.base=100;return tl_pi_identify(false,device,1,&ci).full_core[0];}
  if(mode==14){uint64_t handles[1]={100};tl_pi_pipeline_objects(r,device,handles);tl_pi_forget_object(TL_PI_PIPELINE,device,100);ci.flags=4;ci.base=100;return tl_pi_identify(false,device,1,&ci).full_core[0];}
@@ -81,7 +86,10 @@ int forwarding(void){
  husk_ue4_set_pipeline_diagnostics(false);expected_ci=(void*)1;returned=0;assert(w_vkCreateDescriptorSetLayout((void*)1,expected_ci,expected_alloc,&out)==0);w_vkDestroyDescriptorSetLayout((void*)1,200,expected_alloc);
  assert(w_vkCreatePipelineLayout((void*)1,expected_ci,expected_alloc,&out)==0);w_vkDestroyPipelineLayout((void*)1,200,expected_alloc);
  assert(w_vkCreateRenderPass((void*)1,expected_ci,expected_alloc,&out)==0);w_vkDestroyRenderPass((void*)1,200,expected_alloc);w_vkDestroyPipeline((void*)1,200,expected_alloc);
- return calls==10;
+ husk_ue4_set_pipeline_diagnostics(true);pi_render_pass2 rp2={.type=1000109004};expected_ci=&rp2;
+ assert(w_vkCreateRenderPass2((void*)1,expected_ci,expected_alloc,&out)==0);w_vkDestroyRenderPass((void*)1,200,expected_alloc);
+ assert(w_vkCreateRenderPass2KHR((void*)1,expected_ci,expected_alloc,&out)==0);w_vkDestroyRenderPass((void*)1,200,expected_alloc);
+ return calls==14;
 }
 '''.replace('/* WRAPPERS */',wrapper))
   exe=p/'check.so';subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror','-fPIC','-shared','-I',str(TL),str(p/'check.c'),'-pthread','-o',str(exe)],check=True)
@@ -101,6 +109,9 @@ int forwarding(void){
   a=self.lib.variant(11);self.assertEqual(self.lib.full(),1);self.assertNotEqual(a,self.lib.variant(12));self.assertEqual(self.lib.full(),1)
  def test_base_pipeline_tracking_and_destroy_prevent_stale_full_identity(self):self.assertEqual(self.lib.variant(13),1);self.assertEqual(self.lib.variant(14),0)
  def test_device_destroy_clears_object_registry(self):self.assertEqual(self.lib.variant(15),0)
+ def test_render_pass2_formats_are_tracked_with_explicit_unknown_extension_coverage(self):
+  a=self.lib.variant(16);self.assertEqual(self.lib.full(),1);self.assertNotEqual(a,self.lib.variant(17));self.assertEqual(self.lib.full(),1)
+  self.lib.variant(18);self.assertEqual(self.lib.full(),0)
  def test_registry_collisions_tombstones_and_bounded_immutable_sampler_reads(self):self.assertEqual(self.lib.registry_collisions_and_bounds(),1)
  def test_descriptor_binding_array_order_is_semantic_not_pointer_or_order(self):self.assertEqual(self.lib.order_independent(),1)
  def test_actual_wrappers_preserve_arguments_results_lifetime_and_disabled_fast_path(self):self.assertEqual(self.lib.forwarding(),1)

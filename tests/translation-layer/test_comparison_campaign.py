@@ -47,6 +47,58 @@ class CampaignTests(unittest.TestCase):
     def compare(self, recipe='engine-only'):
         return compare_pair(self.a, self.b, recipe)
 
+    def prepare_execution(self, field, value):
+        for data in (self.a, self.b):
+            data['schema_version'] = 12
+            data['metadata']['component_sampling_requested'] = False
+            data['metadata']['launch_configuration'].update(metal_prefill=-1, metal_command_buffer_limit=0, initialization_parking=False, swapchain_image_budget=0, engine_only_limiter=False)
+            data['queue_execution_options'] = dict(actual_configuration_available=True, environment_error=0, actual_synchronous_submission=1, actual_prefill=0, actual_command_buffer_limit=64)
+        self.b['metadata']['launch_configuration'][field] = value
+
+    def test_schema12_rejects_missing_execution_controls_and_unrelated_actual_queue_change(self):
+        self.prepare_execution('metal_prefill', 1)
+        self.b['queue_execution_options']['actual_prefill'] = 1
+        self.assertEqual(self.compare('prefill')['blockers'], [])
+        self.b['queue_execution_options']['actual_command_buffer_limit'] = 8
+        self.assertTrue(any('actual queue' in b for b in self.compare('prefill')['blockers']))
+        self.b['queue_execution_options']['actual_command_buffer_limit'] = 64
+        del self.b['metadata']['launch_configuration']['swapchain_image_budget']
+        self.assertTrue(any('missing launch control' in b for b in self.compare('prefill')['blockers']))
+
+    def test_prefill_requires_actual_runtime_treatment_and_contrast(self):
+        self.prepare_execution('metal_prefill', 1)
+        self.assertTrue(self.compare('prefill')['blockers'])
+        self.b['queue_execution_options']['actual_prefill'] = 1
+        self.assertEqual(self.compare('prefill')['blockers'], [])
+        self.a['queue_execution_options']['actual_prefill'] = 1
+        self.assertTrue(self.compare('prefill')['blockers'])
+
+    def test_buffer_limit_requires_actual_configuration_and_preserves_single_axis(self):
+        self.prepare_execution('metal_command_buffer_limit', 8)
+        self.b['queue_execution_options']['actual_command_buffer_limit'] = 8
+        self.assertEqual(self.compare('buffer-limit')['blockers'], [])
+        self.b['metadata']['launch_configuration']['initialization_parking'] = True
+        self.assertTrue(self.compare('buffer-limit')['blockers'])
+
+    def test_swapchain_count_requires_success_complete_count_and_real_contrast(self):
+        self.prepare_execution('swapchain_image_budget', 2)
+        for data, count in [(self.a, 3), (self.b, 2)]:
+            data['swapchain_budget'] = dict(create_result_available=True, last_create_result=0, returned_image_count_complete=True, returned_image_count=count, override_applied=count == 2)
+        self.a['metadata']['launch_configuration']['swapchain_image_budget'] = 0
+        self.assertEqual(self.compare('swapchain-images')['blockers'], [])
+        self.b['swapchain_budget']['returned_image_count_complete'] = False
+        self.assertTrue(self.compare('swapchain-images')['blockers'])
+
+    def test_parking_without_observed_waits_cannot_establish_a_treatment_opportunity(self):
+        self.prepare_execution('initialization_parking', True)
+        self.b['initialization_waits'] = dict(requested=True, wait_entries_since_launch=0)
+        self.assertTrue(self.compare('initialization-parking')['blockers'])
+        self.b['initialization_waits']['wait_entries_since_launch'] = 3
+        result = self.compare('initialization-parking')
+        self.assertEqual(result['blockers'], [])
+        self.assertEqual(result['energy_improvement'], 'UNVERIFIED')
+        self.assertTrue(any('since launch' in warning for warning in result['warnings']))
+
     def test_matching_pair_is_only_metadata_ready_and_never_energy_or_gate_acceptance(self):
         result = self.compare()
         self.assertEqual(result['blockers'], [])

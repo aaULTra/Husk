@@ -6,6 +6,7 @@
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
+#include <stddef.h>
 #ifdef __APPLE__
 #include <TargetConditionals.h>
 #include <mach/mach.h>
@@ -151,7 +152,7 @@ void tl_em_host(unsigned stage, uint64_t ns) {
 }
 void tl_em_log(const char *line) {
     if (!atomic_load(&enabled) || !line) return;
-    if (strncmp(line, "[M2/M5 native-archive]", 22) && strncmp(line, "[M4/M6 present-clock]", 21) && strncmp(line, "thread-policy", 13) && strncmp(line, "ue4 cache store:", 16) &&
+    if (strncmp(line, "[M6/M8 queue-options]", 21) && strncmp(line, "[M2/M5 native-archive]", 22) && strncmp(line, "[M4/M6 present-clock]", 21) && strncmp(line, "thread-policy", 13) && strncmp(line, "ue4 cache store:", 16) &&
         strncmp(line, "ue4 cache:", 10) && strncmp(line, "ue4 pipeline", 12) &&
         strncmp(line, "ue4 submission:", 15) && strncmp(line, "ue4 timing:", 11) && strncmp(line, "vulkan: vkCreateSwapchain", 25) && strncmp(line, "vulkan: sizing", 14)) return;
     if (!enter(&dropped_events)) return;
@@ -197,17 +198,24 @@ void tl_em_process_sample(bool memory, tl_em_process *out) {
 #ifdef __APPLE__
     /* TASK_ABSOLUTETIME_INFO includes live and terminated threads. It does not
      * enumerate threads or perturb their QoS. */
-    task_absolutetime_info_data_t cpu;
+    task_absolutetime_info_data_t cpu = {0};
     mach_msg_type_number_t count = TASK_ABSOLUTETIME_INFO_COUNT;
-    if (task_info(mach_task_self(), TASK_ABSOLUTETIME_INFO, (task_info_t)&cpu, &count) == KERN_SUCCESS) {
-        mach_timebase_info_data_t base; mach_timebase_info(&base);
-        out->cpu_seconds = ((double)cpu.total_user + cpu.total_system) * base.numer / base.denom / 1e9;
+    if (task_info(mach_task_self(), TASK_ABSOLUTETIME_INFO, (task_info_t)&cpu, &count) == KERN_SUCCESS && count >= TASK_ABSOLUTETIME_INFO_COUNT) {
+        mach_timebase_info_data_t base = {0};
+        if(mach_timebase_info(&base)==KERN_SUCCESS&&base.denom)
+            out->cpu_seconds = ((double)cpu.total_user + cpu.total_system) * base.numer / base.denom / 1e9;
     }
     if (memory) {
-        task_vm_info_data_t vm; count = TASK_VM_INFO_COUNT;
+        task_vm_info_data_t vm = {0}; count = TASK_VM_INFO_COUNT;
         if (task_info(mach_task_self(), TASK_VM_INFO, (task_info_t)&vm, &count) == KERN_SUCCESS) {
-            out->footprint_bytes = (int64_t)vm.phys_footprint;
-            /* phys_footprint peak is not supplied by this interface. */
+            size_t returned = (size_t)count * sizeof(integer_t);
+            if(returned >= offsetof(task_vm_info_data_t,phys_footprint)+sizeof(vm.phys_footprint) && vm.phys_footprint <= INT64_MAX)
+                out->footprint_bytes = (int64_t)vm.phys_footprint;
+#ifdef TASK_VM_INFO_REV3_COUNT
+            if(returned >= offsetof(task_vm_info_data_t,ledger_phys_footprint_peak)+sizeof(vm.ledger_phys_footprint_peak) &&
+               out->footprint_bytes >= 0 && vm.ledger_phys_footprint_peak >= out->footprint_bytes)
+                out->peak_bytes = vm.ledger_phys_footprint_peak;
+#endif
         }
 #if TARGET_OS_IOS
         out->jetsam_bytes = (int64_t)os_proc_available_memory();

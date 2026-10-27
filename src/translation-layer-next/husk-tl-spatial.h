@@ -21,6 +21,8 @@ typedef struct {
     uint32_t input_format,output_format,color_processing,observed_images;
     uint64_t unsupported_swapchains,allocation_failures,encode_validation_failures;
 } tl_spatial_observations;
+typedef struct {uint32_t version,size;uint64_t output_contract_checks,output_rebinds;} tl_spatial_bindings;
+bool tl_vk_spatial_bindings(tl_spatial_bindings *out);
 typedef int (*tl_spatial_configure_fn)(const tl_spatial_config *);
 typedef int (*tl_spatial_stats_fn)(tl_spatial_stats *);
 typedef int (*tl_spatial_observations_fn)(tl_spatial_observations *);

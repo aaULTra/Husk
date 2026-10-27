@@ -47,10 +47,55 @@ static uint64_t pi_reference(uint64_t h,unsigned kind,void *device,uint64_t hand
 static uint64_t pi_ref(uint64_t h,const pi_attachment_ref *ref){
  h=number(h,ref->attachment);return ref->attachment==UINT32_MAX?h:number(h,ref->layout);
 }
+/* Vulkan1.2/KHR render-pass core descriptions, field-wise and bounded. */
+typedef struct {uint32_t type;const void *next;uint32_t flags,format,samples,load,store,stencil_load,stencil_store,initial_layout,final_layout;} pi_attachment2;
+typedef struct {uint32_t type;const void *next;uint32_t attachment,layout,aspects;} pi_ref2;
+typedef struct {uint32_t type;const void *next;uint32_t flags,bind_point,view_mask,inputs;const pi_ref2 *input;uint32_t colors;const pi_ref2 *color,*resolve,*depth;uint32_t preserves;const uint32_t *preserve;} pi_subpass2;
+typedef struct {uint32_t type;const void *next;uint32_t src,dst,src_stages,dst_stages,src_access,dst_access,flags;int32_t view_offset;} pi_dependency2;
+typedef struct {uint32_t type;const void *next;uint32_t flags,attachments;const pi_attachment2 *attachment_data;uint32_t subpasses;const pi_subpass2 *subpass_data;uint32_t dependencies;const pi_dependency2 *dependency_data;uint32_t correlated;const uint32_t *masks;} pi_render_pass2;
+_Static_assert(sizeof(pi_attachment2)==56&&sizeof(pi_ref2)==32&&sizeof(pi_subpass2)==88&&sizeof(pi_dependency2)==48&&sizeof(pi_render_pass2)==80,"Vulkan render-pass2 LP64 ABI");
+static uint64_t pi_rp2_ref(uint64_t h,const pi_ref2 *r,unsigned *complete){
+ if(r->type!=1000109001u){*complete=0;return number(h,0);}
+ h=number(h,r->attachment);if(r->attachment==UINT32_MAX)return h;
+ if(r->next)*complete=0;
+ return number(number(h,r->layout),r->aspects);
+}
+static uint64_t pi_rp2_key(uint64_t h,const pi_render_pass2 *r,unsigned *complete){
+ h=number(number(number(number(number(h,r->type),r->attachments),r->subpasses),r->dependencies),r->correlated);
+ if(r->next||r->flags||r->attachments>128||r->subpasses>64||r->dependencies>256||r->correlated>64||
+    (r->attachments&&!r->attachment_data)||(r->subpasses&&!r->subpass_data)||(r->dependencies&&!r->dependency_data)||(r->correlated&&!r->masks)){*complete=0;return h;}
+ for(unsigned i=0;i<r->attachments;i++){
+  const pi_attachment2 *a=r->attachment_data+i;
+  if(a->type!=1000109000u||a->next||(a->flags&~1u))*complete=0;
+  h=number(number(number(number(number(number(number(number(number(h,a->flags),a->format),a->samples),a->load),a->store),a->stencil_load),a->stencil_store),a->initial_layout),a->final_layout);
+ }
+ unsigned budget=2048;
+ for(unsigned i=0;i<r->subpasses;i++){
+  const pi_subpass2 *s=r->subpass_data+i;
+  h=number(number(number(number(number(number(h,s->flags),s->bind_point),s->view_mask),s->inputs),s->colors),s->preserves);
+  if(s->type!=1000109002u||s->next||s->flags||s->bind_point||s->inputs>128||s->colors>128||s->preserves>128||
+     (s->inputs&&!s->input)||(s->colors&&!s->color)||(s->preserves&&!s->preserve)){*complete=0;continue;}
+  unsigned needed=s->inputs+s->colors+(s->resolve?s->colors:0)+(s->depth?1:0);
+  if(needed>budget){*complete=0;continue;}budget-=needed;
+  for(unsigned j=0;j<s->inputs;j++)h=pi_rp2_ref(h,s->input+j,complete);
+  for(unsigned j=0;j<s->colors;j++)h=pi_rp2_ref(h,s->color+j,complete);
+  h=number(h,s->resolve!=NULL);if(s->resolve)for(unsigned j=0;j<s->colors;j++)h=pi_rp2_ref(h,s->resolve+j,complete);
+  h=number(h,s->depth!=NULL);if(s->depth)h=pi_rp2_ref(h,s->depth,complete);
+  for(unsigned j=0;j<s->preserves;j++)h=number(h,s->preserve[j]);
+ }
+ for(unsigned i=0;i<r->dependencies;i++){
+  const pi_dependency2 *d=r->dependency_data+i;
+  if(d->type!=1000109003u||d->next)*complete=0;
+  h=number(number(number(number(number(number(number(number(h,d->src),d->dst),d->src_stages),d->dst_stages),d->src_access),d->dst_access),d->flags),(uint32_t)d->view_offset);
+ }
+ for(unsigned i=0;i<r->correlated;i++)h=number(h,r->masks[i]);
+ return h;
+}
 static uint64_t pi_object_key(unsigned kind,void *device,const void *raw,unsigned *complete){
  const pi_prefix *prefix=raw;
  uint64_t h=number(14695981039346656037ULL,kind);
  uint32_t type=kind==TL_PI_SAMPLER?31:kind==TL_PI_DESCRIPTOR_LAYOUT?32:kind==TL_PI_PIPELINE_LAYOUT?30:38;
+ if(raw&&kind==TL_PI_RENDER_PASS&&prefix->type==1000109004u)return pi_rp2_key(h,raw,complete);
  if(!raw||prefix->type!=type){*complete=0;return h;}
  h=number(h,prefix->flags);
  if(prefix->next||prefix->flags){*complete=0;return number(h,prefix->type);}

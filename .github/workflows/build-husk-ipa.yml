@@ -49,6 +49,9 @@ jobs:
           python3 tests/translation-layer/test_ue4_resolution_hook.py -v
           python3 tests/translation-layer/test_source_efficiency.py -v
           python3 tests/translation-layer/test_compat_sync.py -v
+          python3 tests/translation-layer/test_publication_wait.py -v
+          python3 tests/translation-layer/test_queue_options.py -v
+          python3 tests/translation-layer/test_swapchain_budget.py -v
           python3 tests/translation-layer/test_thread_policy.py -v
           python3 tests/translation-layer/test_vk_frame_timing.py -v
           python3 tests/translation-layer/test_present_clock.py -v
@@ -58,6 +61,7 @@ jobs:
           python3 tests/translation-layer/test_device_profiles.py -v
           python3 tests/translation-layer/test_driver_profile.py -v
           python3 tests/translation-layer/test_efficiency.py -v
+          python3 tests/translation-layer/test_process_metrics.py -v
           python3 tests/translation-layer/test_cpu_threads.py -v
           python3 tests/translation-layer/test_efficiency_math.py -v
           python3 tests/translation-layer/test_pipeline_core_state.py -v
@@ -100,13 +104,6 @@ jobs:
           # Verifies the SHA256 and stages dependencies only, not the donor app executable.
           python3 scripts/stage_graphics_build.py build/Husk-3.0-base.ipa
 
-      - name: Build separate pinned MetalFX experimental driver
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p build/logs
-          bash scripts/build_spatial_moltenvk_ios.sh 2>&1 | tee build/logs/spatial-driver.log
-
       - name: Install Rust iOS target
         shell: bash
         run: |
@@ -129,6 +126,25 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/build_rppairing_ios.sh
+
+      - name: Compile app before expensive experimental driver build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd src/app
+          xcodegen generate --quiet
+          mkdir -p /tmp/husk_ipa
+          xcodebuild -project Husk.xcodeproj -scheme Husk -sdk iphoneos -configuration Release \
+            -derivedDataPath /tmp/husk_ipa CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build > /tmp/husk_ipa/build.log 2>&1 || { tail -100 /tmp/husk_ipa/build.log; exit 1; }
+          grep 'BUILD SUCCEEDED' /tmp/husk_ipa/build.log
+
+      - name: Build separate pinned MetalFX experimental driver
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/logs
+          bash scripts/build_spatial_moltenvk_ios.sh 2>&1 | tee build/logs/spatial-driver.log
 
       - name: Build this fork's Husk app and package IPA
         shell: bash

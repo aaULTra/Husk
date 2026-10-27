@@ -13,6 +13,9 @@
 
 #include "../../translation-layer-next/husk-tl-component-profile.h"
 #include "../../translation-layer-next/husk-tl-driver-profile.h"
+#include "../../translation-layer-next/husk-tl-queue-options.h"
+#include "../../translation-layer-next/husk-tl-swapchain-budget.h"
+#include "../../translation-layer-next/husk-tl-publication-wait.h"
 #include <stdbool.h>
 #include <stdint.h>
 

@@ -1,5 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include "husk-tl-component-scope.h"
+#include "husk-tl-queue-options.h"
+#include "husk-tl-swapchain-budget.h"
 #include "husk-tl-vulkan.h"
 
 #import <QuartzCore/QuartzCore.h>
@@ -107,6 +109,7 @@ static void vk_load(void)
     const char *probe = getenv("TL_VK_PROBE_FRAMES");
     V.probe_frames = probe && !strcmp(probe, "1");
     if (submission_mode == 1) setenv("MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", "0", 1);
+    tl_queue_options_environment();
     V.lib = V.have_path ? dlopen(V.path, RTLD_NOW | RTLD_LOCAL) : RTLD_DEFAULT;
     if(!V.lib&&V.have_path){
         const char *suffix=strstr(V.path,"HuskMoltenVK.framework/HuskMoltenVK");
@@ -142,6 +145,9 @@ static void vk_load(void)
     config_fn config = V.lib ? (config_fn)dlsym(V.lib, "vkGetMoltenVKConfigurationMVK") : NULL;
     uint32_t prefix[5] = {0}; size_t bytes = sizeof(prefix);
     int cr = config ? config(NULL, prefix, &bytes) : -1;
+    tl_queue_options_observe(cr,prefix,(uint32_t)bytes);
+    tl_queue_options_stats options;tl_queue_options_snapshot(&options);
+    tl_log_line("[M6/M8 queue-options] requested prefill %d, buffer limit %u; environment error %d; runtime observed %d; query result %d; treatment/benefit unverified",options.requested_prefill,options.requested_limit,options.environment_error,options.observed,options.query_result);
     if ((cr == 0 || cr == 5) && bytes >= sizeof(prefix))
         tl_log_line("ue4 submission: mode %s; MoltenVK synchronous=%u, prefill=%u, active-command-buffer-limit=%u; asynchronous may move work rather than reduce it",
                     submission_mode ? "Async (experimental)" : "Driver Default", prefix[2], prefix[3], prefix[4]);
@@ -179,6 +185,12 @@ bool tl_vk_spatial_prepare(const char *project,int *width,int *height){
     tl_log_line("[M9-SPATIAL] configured experimental input %ux%u -> output %ux%u; %d%% dimension budget; actual encoding/quality/energy pending; restart with option OFF restores baseline",
                 config.input_width,config.input_height,config.output_width,config.output_height,spatial_input_percent);
     return true;
+}
+bool tl_vk_spatial_bindings(tl_spatial_bindings *out){
+    if(!out)return false;
+    *out=(tl_spatial_bindings){.version=1,.size=sizeof(*out)};
+    typedef int(*fn)(tl_spatial_bindings*);fn read=V.lib?(fn)dlsym(V.lib,"vkHuskSpatialBindings"):NULL;
+    return read&&read(out)==1;
 }
 bool tl_vk_spatial_observations(tl_spatial_observations *out){
     if(!out)return false;
@@ -446,6 +458,18 @@ PI_OBJECT_WRAPPERS(DescriptorSetLayout,TL_PI_DESCRIPTOR_LAYOUT)
 PI_OBJECT_WRAPPERS(PipelineLayout,TL_PI_PIPELINE_LAYOUT)
 PI_OBJECT_WRAPPERS(RenderPass,TL_PI_RENDER_PASS)
 #undef PI_OBJECT_WRAPPERS
+#define PI_RP2_WRAPPER(Name) \
+static int w_##Name(void *device,const void *ci,const void *alloc,uint64_t *out){ \
+ typedef int(*fn)(void*,const void*,const void*,uint64_t*);static _Atomic(fn) cached; \
+ fn real=atomic_load_explicit(&cached,memory_order_acquire); \
+ if(!real&&V.lib){real=(fn)dlsym(V.lib,#Name);atomic_store_explicit(&cached,real,memory_order_release);} \
+ int result=real?real(device,ci,alloc,out):-3; \
+ if(result==VK_SUCCESS&&out&&*out){tl_pi_object(TL_PI_RENDER_PASS,device,*out,ci);}return result; \
+}
+PI_RP2_WRAPPER(vkCreateRenderPass2)
+PI_RP2_WRAPPER(vkCreateRenderPass2KHR)
+#undef PI_RP2_WRAPPER
+
 static void w_vkDestroyPipeline(void *device,uint64_t pipeline,const void *alloc){
     typedef void(*fn)(void*,uint64_t,const void*);
     fn real=V.lib?(fn)dlsym(V.lib,"vkDestroyPipeline"):NULL;
@@ -549,7 +573,12 @@ static int w_vkCreateSwapchainKHR(void *device, const void *ci, const void *allo
     const uint8_t *c = ci; uint32_t minimg, fmt, cs, w, h, usage, alpha, mode;
     memcpy(&minimg, c + 32, 4); memcpy(&fmt, c + 36, 4); memcpy(&cs, c + 40, 4); memcpy(&w, c + 44, 4); memcpy(&h, c + 48, 4);
     memcpy(&usage, c + 56, 4); memcpy(&alpha, c + 84, 4); memcpy(&mode, c + 88, 4);
-    int r = real ? real(device, ci, alloc, out) : -3;
+    tl_sb_create copy;uint64_t budget_ticket=0;
+    tl_sb_query caps=V.lib?(tl_sb_query)dlsym(V.lib,"vkGetPhysicalDeviceSurfaceCapabilitiesKHR"):NULL;
+    const void *effective=tl_sb_prepare(device,ci,caps,&copy,&budget_ticket);
+    if(effective==&copy)minimg=copy.min_images;
+    int r = real ? real(device, effective, alloc, out) : -3;
+    tl_sb_created(device,r==VK_SUCCESS&&out?*out:0,r,budget_ticket);
     tl_log_line("vulkan: vkCreateSwapchainKHR %ux%u images %u format %u colorspace %u usage %#x compositeAlpha %u presentMode %u -> %d", w, h, minimg, fmt, cs, usage, alpha, mode, r);
     if (r == VK_SUCCESS) tl_em_size(w, h);
     if (r == VK_SUCCESS && tl_ue4_sharp_graphics_enabled())
@@ -558,6 +587,15 @@ static int w_vkCreateSwapchainKHR(void *device, const void *ci, const void *allo
     [CATransaction flush];
     log_layer_state(g_swapchain_layer, "after swapchain");
     return r;
+}
+
+static int w_vkGetSwapchainImagesKHR(void *device,uint64_t swapchain,uint32_t *count,uint64_t *images){
+    typedef int(*fn)(void*,uint64_t,uint32_t*,uint64_t*);static _Atomic(fn) cached;
+    fn real=atomic_load_explicit(&cached,memory_order_acquire);
+    if(!real&&V.lib){real=(fn)dlsym(V.lib,"vkGetSwapchainImagesKHR");atomic_store_explicit(&cached,real,memory_order_release);}
+    int result=real?real(device,swapchain,count,images):-3;
+    tl_sb_images(device,swapchain,result,count&&(result==0||result==5)?*count:0,images==NULL);
+    return result;
 }
 
 typedef int (*pfn_acquire)(void *, uint64_t, uint64_t, uint64_t, uint64_t, uint32_t *);
@@ -729,6 +767,7 @@ static void w_vkDestroyPipelineCache(void *device, uint64_t cache, const void *a
 }
 static void w_vkDestroyDevice(void *device, const void *alloc)
 {
+    tl_sb_forget(device);
     tl_npa_forget(device);
     tl_dp_forget(device);
     tl_pi_forget_device(device);
@@ -1203,7 +1242,8 @@ static int w_vkCreateDevice(void *pd, const vk_device_ci *ci, const void *alloc,
     if (!dxvk_game()) {
         int result = tl_pf_create_device(pd, ci, alloc, out, g_real_create_device, g_real_enum_dev_ext);
         if (result == VK_SUCCESS && out && *out) {
-            tl_dp_device(*out);
+            tl_sb_device(pd,*out);
+        tl_dp_device(*out);
         tl_npa_device(*out);
             typedef void (*properties_fn)(void *, void *);
             properties_fn properties = V.lib ? (properties_fn)dlsym(V.lib, "vkGetPhysicalDeviceProperties") : NULL;
@@ -1305,11 +1345,14 @@ static const struct { const char *name; void *fn; } k_over[] = {
     { "vkCreatePipelineLayout", w_vkCreatePipelineLayout },
     { "vkDestroyPipelineLayout", w_vkDestroyPipelineLayout },
     { "vkCreateRenderPass", w_vkCreateRenderPass },
+    { "vkCreateRenderPass2", w_vkCreateRenderPass2 },
+    { "vkCreateRenderPass2KHR", w_vkCreateRenderPass2KHR },
     { "vkDestroyRenderPass", w_vkDestroyRenderPass },
     { "vkDestroyPipeline", w_vkDestroyPipeline },
     { "vkCreateGraphicsPipelines", w_vkCreateGraphicsPipelines },
     { "vkCreateComputePipelines", w_vkCreateComputePipelines },
     { "vkCreateSwapchainKHR", w_vkCreateSwapchainKHR },
+    { "vkGetSwapchainImagesKHR", w_vkGetSwapchainImagesKHR },
     { "vkAcquireNextImageKHR", w_vkAcquireNextImageKHR },
     { "vkGetPhysicalDeviceFeatures", w_vkGetPhysicalDeviceFeatures },
     { "vkGetPhysicalDeviceFeatures2", w_vkGetPhysicalDeviceFeatures2 },

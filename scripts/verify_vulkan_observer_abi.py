@@ -9,6 +9,8 @@ PAIRS={
  'pi_dynamic':'VkPipelineDynamicStateCreateInfo','pi_vertex':'VkPipelineVertexInputStateCreateInfo','pi_assembly':'VkPipelineInputAssemblyStateCreateInfo',
  'pi_tess':'VkPipelineTessellationStateCreateInfo','pi_raster':'VkPipelineRasterizationStateCreateInfo','pi_multi':'VkPipelineMultisampleStateCreateInfo',
  'pi_depth':'VkPipelineDepthStencilStateCreateInfo','pi_blend':'VkPipelineColorBlendStateCreateInfo','pi_viewport':'VkPipelineViewportStateCreateInfo',
+ 'tl_sb_create':'VkSwapchainCreateInfoKHR','tl_sb_caps':'VkSurfaceCapabilitiesKHR',
+ 'pi_attachment2':'VkAttachmentDescription2','pi_ref2':'VkAttachmentReference2','pi_subpass2':'VkSubpassDescription2','pi_dependency2':'VkSubpassDependency2','pi_render_pass2':'VkRenderPassCreateInfo2',
  'pi_sampler':'VkSamplerCreateInfo','pi_binding':'VkDescriptorSetLayoutBinding','pi_descriptor_layout':'VkDescriptorSetLayoutCreateInfo',
  'pi_push':'VkPushConstantRange','pi_pipeline_layout':'VkPipelineLayoutCreateInfo','pi_attachment_ref':'VkAttachmentReference',
  'pi_subpass':'VkSubpassDescription','pi_render_pass':'VkRenderPassCreateInfo','pi_rendering':'VkPipelineRenderingCreateInfo'}
@@ -23,6 +25,13 @@ FIELDS={
  'pi_raster':{'constant':'depthBiasConstantFactor','line':'lineWidth'},'pi_multi':{'mask':'pSampleMask','coverage':'alphaToCoverageEnable'},
  'pi_depth':{'front':'front','back':'back','minimum':'minDepthBounds'},'pi_blend':{'attachments':'pAttachments','constants':'blendConstants'},
  'pi_viewport':{'viewport_data':'pViewports','scissor_data':'pScissors'},'pi_binding':{'samplers':'pImmutableSamplers'},
+ 'tl_sb_create':{'surface':'surface','min_images':'minImageCount','width':'imageExtent','queues':'pQueueFamilyIndices','old_swapchain':'oldSwapchain'},
+ 'tl_sb_caps':{'min_images':'minImageCount','max_images':'maxImageCount','current_width':'currentExtent','usage':'supportedUsageFlags'},
+ 'pi_ref2':{'attachment':'attachment','aspects':'aspectMask'},
+ 'pi_subpass2':{'view_mask':'viewMask','input':'pInputAttachments','color':'pColorAttachments','resolve':'pResolveAttachments','depth':'pDepthStencilAttachment','preserve':'pPreserveAttachments'},
+ 'pi_render_pass2':{'attachment_data':'pAttachments','subpass_data':'pSubpasses','dependency_data':'pDependencies','correlated':'correlatedViewMaskCount','masks':'pCorrelatedViewMasks'},
+ 'pi_dependency2':{'src':'srcSubpass','view_offset':'viewOffset'},
+ 'pi_attachment2':{'flags':'flags','format':'format','final_layout':'finalLayout'},
  'pi_sampler':{'bias':'mipLodBias','anisotropy':'anisotropyEnable','max_anisotropy':'maxAnisotropy','unnormalized':'unnormalizedCoordinates'},
  'pi_descriptor_layout':{'bindings':'pBindings'},'pi_pipeline_layout':{'sets':'setLayoutCount','layouts':'pSetLayouts','pushes':'pushConstantRangeCount','ranges':'pPushConstantRanges'},
  'pi_subpass':{'input':'pInputAttachments','color':'pColorAttachments','resolve':'pResolveAttachments','depth':'pDepthStencilAttachment','preserve':'pPreserveAttachments'},
@@ -33,7 +42,7 @@ def main():
  headers=list(a.driver_source.glob('External/**/vulkan/vulkan_core.h'))
  if len(headers)!=1:raise SystemExit(f'Expected exactly one fetched Vulkan SDK, found {len(headers)}')
  include=headers[0].parent.parent
- source='#include <vulkan/vulkan_core.h>\n#include "husk-tl-pipeline-diagnostics.c"\n'
+ source='#include <vulkan/vulkan_core.h>\n#include "husk-tl-pipeline-diagnostics.c"\n#include "husk-tl-swapchain-budget.h"\n'
  for local,actual in PAIRS.items():
   source+=f'_Static_assert(sizeof({local})==sizeof({actual}),"size {local}");\n'
   for ours,theirs in FIELDS.get(local,{}).items():source+=f'_Static_assert(offsetof({local},{ours})==offsetof({actual},{theirs}),"offset {local}.{ours}");\n'

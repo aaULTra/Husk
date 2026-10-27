@@ -17,8 +17,10 @@ cd "$SRC"
 SPVC_REV="$(cat ExternalRevisions/SPIRV-Cross_repo_revision)"
 SPVC="$HUSK_ROOT/third_party/build/SPIRV-Cross-spatial-$SPVC_REV"
 if [ ! -d "$SPVC/.git" ]; then
-    git clone https://github.com/KhronosGroup/SPIRV-Cross "$SPVC"
-    git -C "$SPVC" checkout -q "$SPVC_REV"
+    git init "$SPVC"
+    git -C "$SPVC" remote add origin https://github.com/KhronosGroup/SPIRV-Cross
+    git -C "$SPVC" fetch --depth 1 origin "$SPVC_REV"
+    git -C "$SPVC" checkout -q --detach FETCH_HEAD
 fi
 test "$(git -C "$SPVC" rev-parse HEAD)" = "$SPVC_REV"
 for patch in "$HUSK_ROOT"/patches/husk-spirv-cross-*.patch; do
@@ -42,6 +44,7 @@ cp "$SRC/HuskSpatialBuild.json" "$OUT/"
 nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialConfigure$'
 nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialSnapshot$'
 nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialObservations$'
+nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialBindings$'
 for symbol in Configure Snapshot Prepare Forget; do
     nm -gU "$OUT/HuskMoltenVK" | grep -E "_vkHuskArchive${symbol}$"
 done

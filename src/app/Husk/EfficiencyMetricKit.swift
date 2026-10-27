@@ -41,11 +41,11 @@ final class EfficiencyMetricKit: NSObject, ObservableObject, MXMetricManagerSubs
             do {
                 guard data.count <= self.maximumBytes else { throw EfficiencyProfile.Failure.tooLarge }
                 let payload = try JSONSerialization.jsonObject(with: data)
-                let record: [String: Any] = ["schema_version": 1, "type": kind, "plan_ids": ["M3", "M1"],
+                let record: [String: Any] = ["schema_version": 2, "type": kind, "plan_ids": ["M3", "M1"],
                     "received_utc": ISO8601DateFormatter().string(from: Date()), "device_identifier": EfficiencyHardware.identifier(),
-                    "reported_bundle_identifier": Bundle.main.bundleIdentifier ?? "UNAVAILABLE",
-                    "build_sha": Bundle.main.object(forInfoDictionaryKey: "HuskBuildCommit") as? String ?? "UNAVAILABLE",
-                    "attribution": "Delayed OS payload for the hosting process/bundle; LiveContainer can affect bundle mapping. Not isolated Dungeons or instant/session energy. No inferred watts or numerical temperature.", "os_payload": payload]
+                    "receiving_bundle_identifier": Bundle.main.bundleIdentifier ?? "UNAVAILABLE",
+                    "receiving_build_sha": Bundle.main.object(forInfoDictionaryKey: "HuskBuildCommit") as? String ?? "UNAVAILABLE",
+                    "attribution": "Delayed OS payload for the hosting process/bundle and its own reporting period. Receiving build/bundle identify this collector, not the build(s) covered by the payload. LiveContainer can affect bundle mapping. Not isolated Dungeons or instant/session energy. No inferred watts or numerical temperature.", "os_payload": payload]
                 let encoded = try JSONSerialization.data(withJSONObject: record, options: [.prettyPrinted, .sortedKeys])
                 guard encoded.count <= self.maximumBytes else { throw EfficiencyProfile.Failure.tooLarge }
                 _ = try self.storage.save(encoded)

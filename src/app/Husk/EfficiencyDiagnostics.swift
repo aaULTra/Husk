@@ -304,6 +304,7 @@ final class EfficiencyDiagnostics: ObservableObject {
         lastCPU = excludedReason.isEmpty ? p.cpu_seconds : -1; lastCPUAt = t
         if memory {
             row["footprint_bytes"] = p.footprint_bytes >= 0 ? p.footprint_bytes : NSNull()
+            row["process_lifetime_peak_footprint_bytes"] = p.peak_bytes >= 0 ? p.peak_bytes : NSNull()
             row["jetsam_headroom_bytes"] = p.jetsam_bytes >= 0 ? p.jetsam_bytes : NSNull()
             lastMemoryAt = t
         }
@@ -356,6 +357,12 @@ final class EfficiencyDiagnostics: ObservableObject {
     private func spatialReport() -> [String: Any] {
         var s = tl_spatial_stats()
         tl_vk_spatial_snapshot(&s)
+        var binding = tl_spatial_bindings()
+        let bindingAPI = tl_vk_spatial_bindings(&binding)
+        let bindings: [String: Any] = ["available": bindingAPI,
+            "output_contract_checks_since_driver_launch": bindingAPI ? binding.output_contract_checks as Any : NSNull(),
+            "output_rebinds_since_driver_launch": bindingAPI ? binding.output_rebinds as Any : NSNull(),
+            "scope": "M9 immutable repeated-drawable binding cache. Different output textures remain validated/rebound. Mechanism counts, not GPU or energy savings."]
         var observed = tl_spatial_observations()
         let observationAPI = tl_vk_spatial_observations(&observed)
         let textures: [String: Any] = ["status": observationAPI && observed.observed_images > 0 ? "MEASURED: actual texture properties at validated encode" : "UNAVAILABLE: no actual texture observation",
@@ -376,7 +383,33 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "input_width": s.input_width, "input_height": s.input_height,
                 "output_width": s.output_width, "output_height": s.output_height,
                 "images_created": s.images_created, "encoded_calls": s.encoded, "failures": s.failures,
-                "texture_observations": textures, "patch": "M9-SPATIAL-v2", "energy_benefit": "UNVERIFIED"]
+                "output_binding_reuse": bindings, "texture_observations": textures, "patch": "M9-SPATIAL-v3", "energy_benefit": "UNVERIFIED"]
+    }
+    private func swapchainBudgetReport() -> [String: Any] {
+        var s = tl_sb_stats(); tl_sb_snapshot(&s)
+        return ["plan_ids": ["M6", "M8"], "requested_images": s.requested, "original_min_images": s.original_min,
+                "selected_min_images": s.selected_min, "caps_available": s.caps_result == 0,
+                "surface_min_images": s.surface_min, "surface_max_images": s.surface_max,
+                "override_applied": s.override_applied, "surface_eligible": s.eligible,
+                "last_create_result": s.create_result, "create_result_available": s.create_completed, "returned_image_count": s.returned_images,
+                "returned_image_count_complete": s.images_complete, "image_query_result": s.images_result,
+                "create_calls_since_launch": s.create_calls, "override_calls_since_launch": s.override_calls,
+                "rejected_overrides_since_launch": s.rejections, "device_registry_drops": s.device_capacity_drops,
+                "generation": s.generation, "scope": "Last started swapchain creation/generation and matching native image query; counters since launch. Surface-checked min-image request, no change to extent/mode/ownership. Complete actual count requires a successful image query. Images are not Vulkan frames in flight; no GPU/energy inference. Failed creations are never retried with a retired old swapchain."]
+    }
+    private func queueExecutionReport() -> [String: Any] {
+        var s = tl_queue_options_stats(); tl_queue_options_snapshot(&s)
+        return ["plan_ids": ["M6", "M8"], "requested_prefill": s.requested_prefill, "requested_command_buffer_limit": s.requested_limit,
+                "environment_applied": s.applied, "environment_error": s.environment_error, "actual_configuration_available": s.observed,
+                "configuration_query_result": s.query_result, "actual_synchronous_submission": s.observed ? s.actual_synchronous as Any : NSNull(),
+                "actual_prefill": s.observed ? s.actual_prefill as Any : NSNull(), "actual_command_buffer_limit": s.observed ? s.actual_limit as Any : NSNull(),
+                "scope": "Launch-time requested controls versus size-checked MoltenVK runtime configuration. Limit bounds native Metal buffers, not Vulkan frames in flight. Environment application alone is not treatment or energy proof."]
+    }
+    private func initializationWaitReport() -> [String: Any] {
+        var s = tl_publication_stats(); tl_publication_snapshot(&s)
+        return ["plan_ids": ["M8", "M3"], "requested": s.requested, "wait_entries_since_launch": s.waits,
+                "notifications_since_launch": s.wakeups, "fallback_sleep_entries_since_launch": s.fallbacks,
+                "scope": "Since launch, including startup/exclusions. Predicate-checked once/object initialization waits only. Ready fast path unchanged. Counts are not CPU, P/E residency or energy savings; no observed waits means no demonstrated opportunity."]
     }
     private func driverPhaseReport() -> [String: Any] {
         var info = tl_dp_info(), phases = Array(repeating: tl_dp_phase(), count: 23)
@@ -527,7 +560,7 @@ final class EfficiencyDiagnostics: ObservableObject {
             let stages: [[String: Any]] = (0..<min(Int(g.shader_stages), 4)).map { i in
                 ["stage_index": i, "vulkan_stage": bitList[i], "module_content_hash": String(format: "%016llx", hashList[i]), "module_known": hashList[i] != 0]
             }
-            return ["signature_version": "core-v3", "full_core_fields_known": g.full_core != 0, "state_coverage_mask": g.coverage, "full_core_batch_calls": g.full_core_calls, "partial_signature": String(format: "%016llx", g.signature), "batch_calls": g.calls,
+            return ["signature_version": "core-v4", "full_core_fields_known": g.full_core != 0, "state_coverage_mask": g.coverage, "full_core_batch_calls": g.full_core_calls, "partial_signature": String(format: "%016llx", g.signature), "batch_calls": g.calls,
              "slow_batch_calls": g.slow_calls, "aggregate_host_ns": g.total_ns, "worst_host_ns": g.worst_ns,
              "first_pipeline_valid_feedback_calls": g.valid_feedback, "first_pipeline_application_hit_calls": g.application_hits,
              "first_pipeline_shader_stages": stages,
@@ -550,8 +583,8 @@ final class EfficiencyDiagnostics: ObservableObject {
         observers.forEach { NotificationCenter.default.removeObserver($0) }; observers = []
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
-        stoppedReport = ["schema_version": 11, "metadata": metadata, "duration_seconds": now - origin,
-                         "summary": stats(total), "delayed_os_reports": EfficiencyMetricKit.shared.summary, "component_sampling": componentReport(), "driver_phases": driverPhaseReport(), "native_pipeline_archive": nativeArchiveReport(), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
+        stoppedReport = ["schema_version": 12, "metadata": metadata, "duration_seconds": now - origin,
+                         "summary": stats(total), "delayed_os_reports": EfficiencyMetricKit.shared.summary, "component_sampling": componentReport(), "driver_phases": driverPhaseReport(), "native_pipeline_archive": nativeArchiveReport(), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "swapchain_budget": swapchainBudgetReport(), "queue_execution_options": queueExecutionReport(), "initialization_waits": initializationWaitReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
                          "battery_arithmetic_rate_pp_per_hour": battery.arithmeticRate.map { $0 as Any } ?? NSNull(),
@@ -568,7 +601,8 @@ final class EfficiencyDiagnostics: ObservableObject {
                          "metric_labels": ["host_cadence_cpu_memory_battery_thermal": "MEASURED (process/API scope)",
                                            "histogram_percentiles_battery_drain": "ESTIMATED",
                                            "sampled_command_buffer_gpu_intervals": "MEASURED only when gpu_sampling.status reports valid records",
-                                           "per_frame_gpu_displayed_frames_peak_footprint_aggregate_cache_hit_rate": "UNAVAILABLE",
+                                           "per_frame_gpu_displayed_frames_aggregate_cache_hit_rate": "UNAVAILABLE",
+                                           "process_peak_footprint": "MEASURED when returned Mach revision supports it; process lifetime, not session-only; otherwise UNAVAILABLE",
                                            "electrical_power_chip_temperature_surface_temperature": "EXTERNAL"],
                          "limitations": ["0.1 ms upper-bin nearest-rank percentiles; >=1 s overflow uses exact worst as conservative bound",
                                           "Host API stages: acquire, submit, present, sleep, graphics creation, compute creation; durations overlap",
@@ -599,6 +633,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 let rows = report["samples"] as? [[String: Any]] ?? []
                 let cpu = rows.compactMap { $0["process_cpu_percent_one_core"] as? Double }
                 let footprints = rows.compactMap { $0["footprint_bytes"] as? Int64 }
+                let lifetimePeaks = rows.compactMap { $0["process_lifetime_peak_footprint_bytes"] as? Int64 }
                 let thermal = Set(rows.compactMap { ($0["environment"] as? [String: Any])?["thermal_classification"] as? Int }).sorted()
                 let feedback = report["pipeline_feedback_request"] as? [String: Any] ?? [:]
                 let inventory = report["render_inventory"] as? [String: Any] ?? [:]
@@ -623,6 +658,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 Slow pipeline calls: \(summary["slow_pipeline_calls"] ?? 0); worst host call: \(summary["worst_pipeline_ns"] ?? 0) ns
                 Process CPU maximum sampled activity: \(cpu.max().map { String(format: "%.2f%%", $0) } ?? "UNAVAILABLE") (100% = one logical CPU, not whole-device usage)
                 Maximum observed footprint: \(footprints.max().map { String(format: "%.3f GiB", Double($0) / 1073741824) } ?? "UNAVAILABLE") (not actual peak)
+                Largest reported process lifetime footprint peak: \(lifetimePeaks.max().map { String(format: "%.3f GiB", Double($0) / 1073741824) } ?? "UNAVAILABLE") (host scope, including pre-session/excluded work)
                 Thermal classifications observed: \(thermal)
                 Battery status: \(report["battery_estimate_status"] ?? "UNAVAILABLE")
                 Included battery samples/span: \(report["battery_included_sample_count"] ?? 0) / \(report["battery_estimate_observed_seconds"] ?? 0) seconds
@@ -655,7 +691,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 M8 compatibility sync: \(sync)
                 M4/M6 clock option/mapped/expired/future requests: \(presentation["requested"] ?? false) / \(presentation["mapped_requests"] ?? 0) / \(presentation["expired_requests"] ?? 0) / \(presentation["far_future_requests"] ?? 0)
                 Presentation feedback: \(presentation["status"] ?? "UNAVAILABLE"); source may be estimated by driver, not complete display accounting.
-                UNAVAILABLE: actual displayed frames, per-frame GPU attribution, peak footprint and aggregate cache-hit rate. Per-request driver feedback is exported only where available.
+                UNAVAILABLE: actual displayed frames, per-frame GPU attribution and aggregate cache-hit rate. Process peak footprint remains unavailable when the returned Mach revision does not supply a valid value. Per-request driver feedback is exported only where available.
                 EXTERNAL: electrical power and numerical physical temperature. Thermal state is a classification.
                 \(EfficiencyComponentTriage.text(triage))
                 No measured energy improvement. Monitoring overhead and device correctness need validation.

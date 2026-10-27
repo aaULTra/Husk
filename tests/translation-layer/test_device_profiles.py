@@ -33,8 +33,9 @@ let keep=reports.directory.appendingPathComponent("keep.txt");try Data("keep".ut
 _=try reports.save(Data("{}".utf8));assert(reports.listed().count==8&&FileManager.default.fileExists(atPath:keep.path))
 do{_=try reports.save(Data(repeating:32,count:1025));fatalError("accepted oversized report")}catch{}
 do{_=try reports.save(Data("not json".utf8));fatalError("accepted invalid JSON")}catch{}
+bad=first;bad.controls.execution=HuskExecutionOptions(prefill:3,commandBufferLimit:8,initializationParking:true);reject(bad)
 assert(!EfficiencyHardware.identifier().isEmpty)
 print("Actual device/game/profile constraints, bounded reads/capacity and owned OS-report rotation passed")
 ''')
-   exe=p/'check';subprocess.run(['swiftc',str(ROOT/'src/app/Husk/EfficiencyProfileStore.swift'),str(p/'main.swift'),'-o',str(exe)],check=True);subprocess.run([str(exe),str(p/'data')],check=True)
+   exe=p/'check';subprocess.run(['swiftc',str(ROOT/'src/app/Husk/HuskExecutionOptions.swift'),str(ROOT/'src/app/Husk/EfficiencyProfileStore.swift'),str(p/'main.swift'),'-o',str(exe)],check=True);subprocess.run([str(exe),str(p/'data')],check=True)
 if __name__=='__main__':unittest.main()

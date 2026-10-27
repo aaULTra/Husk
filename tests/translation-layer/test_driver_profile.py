@@ -22,6 +22,7 @@ class DriverProfileTests(unittest.TestCase):
 #include <stdarg.h>
 #include <stdio.h>
 #include "husk-tl-driver-profile.c"
+#include "husk-tl-swapchain-budget.h"
 static void tl_npa_device(void *device){(void)device;}
 static char output[32768];
 static unsigned used, api_calls, event_count;
@@ -102,7 +103,7 @@ int exercise_create(int status){
         (root / 'test.c').write_text(source)
         tl = ROOT / 'src/translation-layer-next'
         subprocess.run([os.environ.get('CC', 'cc'), '-std=c11', '-Wall', '-Wextra', '-Werror',
-                        '-shared', '-fPIC', '-pthread', '-I', str(tl), str(root/'test.c'), str(tl/'husk-tl-pipeline-feedback.c'),
+                        '-shared', '-fPIC', '-pthread', '-I', str(tl), str(root/'test.c'), str(tl/'husk-tl-pipeline-feedback.c'), str(tl/'husk-tl-swapchain-budget.c'),
                         '-o', str(root/'profile.so')], check=True)
         cls.lib = ctypes.CDLL(str(root/'profile.so'))
         cls.lib.setup.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_char_p]

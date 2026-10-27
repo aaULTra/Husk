@@ -1,0 +1,52 @@
+{
+  "scope": "Synthetic actual Bionic once:12 threads wait on one100ms initializer,3repeats per mode. Linux/Apple host CPU/wall only; not Dungeons/M4/iPhone performance or watts/temperature. Completed fast path checked separately.",
+  "source_hashes": {
+    "src/translation-layer-next/husk-tl-bionic-pthread.c": "e2b5f1b3f15471d7d0ab54fccc88fea583711eae82849296ef7ea26eaa3fc340",
+    "src/translation-layer-next/husk-tl-publication-wait.c": "a3b3b754407de512cdb3e94e0d92798a138c13d79ec577b45e06be6777c6bb5d"
+  },
+  "runs": {
+    "bench-off": {
+      "samples": [
+        {
+          "cpu_seconds": 0.276816619,
+          "wall_seconds": 0.121435084,
+          "parked_waits": 0
+        },
+        {
+          "cpu_seconds": 0.203427513,
+          "wall_seconds": 0.100611631,
+          "parked_waits": 0
+        },
+        {
+          "cpu_seconds": 0.203427476,
+          "wall_seconds": 0.100584908,
+          "parked_waits": 0
+        }
+      ],
+      "median_cpu_seconds": 0.203427513,
+      "median_wall_seconds": 0.100611631
+    },
+    "bench-on": {
+      "samples": [
+        {
+          "cpu_seconds": 0.000964701,
+          "wall_seconds": 0.100693929,
+          "parked_waits": 11
+        },
+        {
+          "cpu_seconds": 0.005639778,
+          "wall_seconds": 0.102877908,
+          "parked_waits": 11
+        },
+        {
+          "cpu_seconds": 0.001252106,
+          "wall_seconds": 0.100867969,
+          "parked_waits": 11
+        }
+      ],
+      "median_cpu_seconds": 0.001252106,
+      "median_wall_seconds": 0.100867969
+    }
+  },
+  "energy_benefit": "UNVERIFIED"
+}

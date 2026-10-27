@@ -15,6 +15,7 @@
  */
 #define _DARWIN_C_SOURCE
 #include "husk-tl-component-scope.h"
+#include "husk-tl-publication-wait.h"
 #include "husk-tl-bionic.h"
 #include "husk-tl-ld.h"
 #include "husk-tl-thread-policy.h"
@@ -44,16 +45,18 @@ typedef struct { uint32_t value; _Atomic uint32_t magic; void *host; } guest_obj
 
 /* Get (making if needed) the Darwin object behind a guest object. `make` builds one
  * from the guest's flags word. */
+static bool object_initializing(const void *g){return atomic_load_explicit(&((const guest_obj*)g)->magic,memory_order_acquire)==MAGIC_INIT;}
 static void *obj_host(void *g, void *(*make)(uint32_t value))
 {
     guest_obj *o = g;
     uint32_t m = atomic_load_explicit(&o->magic, memory_order_acquire);
     for (;;) {
         if (m == MAGIC_READY) return o->host;
-        if (m == MAGIC_INIT) { sched_yield(); m = atomic_load_explicit(&o->magic, memory_order_acquire); continue; }
+        if (m == MAGIC_INIT) { if(tl_publication_parking())tl_publication_wait(o,object_initializing);else sched_yield(); m = atomic_load_explicit(&o->magic, memory_order_acquire); continue; }
         if (atomic_compare_exchange_weak_explicit(&o->magic, &m, MAGIC_INIT, memory_order_acq_rel, memory_order_acquire)) {
             o->host = make(o->value);
             atomic_store_explicit(&o->magic, MAGIC_READY, memory_order_release);
+            tl_publication_notify(o);
             return o->host;
         }
     }
@@ -343,6 +346,7 @@ static int b_sem_getvalue(void *g, int *v)
 
 /* --------------------------------------------------------------- once, keys */
 
+static bool once_initializing(const void *word){return atomic_load_explicit((const _Atomic int*)word,memory_order_acquire)==2;}
 static int b_once(_Atomic int *once, void (*fn)(void))
 {
     /* Published initialization is immutable. Avoid a write/exclusive cache-line
@@ -353,10 +357,12 @@ static int b_once(_Atomic int *once, void (*fn)(void))
     if (atomic_compare_exchange_strong(once, &expect, 2)) {
         tl_em_sync_event(TL_SYNC_ONCE_INIT);
         fn();
-        atomic_store(once, 1);
+        atomic_store_explicit(once,1,memory_order_release);
+        tl_publication_notify(once);
     } else {
         if(expect==2)tl_em_sync_event(TL_SYNC_ONCE_WAIT);
-        while (atomic_load(once) == 2) sched_yield();
+        if(tl_publication_parking())tl_publication_wait(once,once_initializing);
+        else while (atomic_load_explicit(once,memory_order_acquire) == 2) sched_yield();
     }
     return 0;
 }

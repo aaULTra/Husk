@@ -71,19 +71,23 @@ int main(){@autoreleasepool{
  assert(huskSpatialEncodeFailures.load()==invalid+3&&scaler.encodes==0);
  auto encode=[&]{@autoreleasepool{for(unsigned i=0;i<500;i++)assert(huskSpatialEncode(a,(id<MTLTexture>)out,(id<MTLCommandBuffer>)command));}};
  std::thread first(encode),second(encode);first.join();second.join();
- assert(scaler.encodes==1000&&scaler.inputBindings==1&&scaler.contentWrites==2&&scaler.outputBindings==1000&&!overlaps.load());
+ assert(scaler.encodes==1000&&scaler.inputBindings==1&&scaler.contentWrites==2&&scaler.outputBindings==1&&!overlaps.load());
+ tl_spatial_bindings bindings={1,sizeof(bindings)};assert(vkHuskSpatialBindings(&bindings)&&bindings.output_rebinds==1&&bindings.output_contract_checks==4);
+ auto*replacement=texture(2128,1600,MTLTextureUsageShaderWrite);assert(huskSpatialEncode(a,(id<MTLTexture>)replacement,(id<MTLCommandBuffer>)command));
+ assert(scaler.outputBindings==2&&a->boundOutput==(id<MTLTexture>)replacement);
+ assert(huskSpatialEncode(a,(id<MTLTexture>)out,(id<MTLCommandBuffer>)command));assert(scaler.outputBindings==3);[replacement release];
  tl_spatial_observations observations={};observations.version=1;observations.size=sizeof(observations);
  assert(vkHuskSpatialObservations(&observations)&&observations.observed_images==1&&observations.input_width==1696&&observations.output_width==2128);
  tl_spatial_config off={1,sizeof(off),0,0,0,0,0,0};assert(!vkHuskSpatialConfigure(&off));
- huskSpatialDeleteImage(a);assert(huskSpatialLive.load()==1&&texturesFreed.load()==1&&scalersFreed.load()==1);assert(!vkHuskSpatialConfigure(&off));
+ huskSpatialDeleteImage(a);assert(huskSpatialLive.load()==1&&texturesFreed.load()==2&&scalersFreed.load()==1);assert(!vkHuskSpatialConfigure(&off));
  auto*input=(TestTexture*)b->input;input.usage=MTLTextureUsageRenderTarget;
  assert(!huskSpatialPrepareImage(b,c,MTLPixelFormatBGRA8Unorm)&&!b->prepared);
  assert(!huskSpatialEncode(b,(id<MTLTexture>)out,(id<MTLCommandBuffer>)command));
- huskSpatialDeleteImage(b);assert(huskSpatialLive.load()==0&&texturesFreed.load()==2&&scalersFreed.load()==2);
+ huskSpatialDeleteImage(b);assert(huskSpatialLive.load()==0&&texturesFreed.load()==3&&scalersFreed.load()==2);
  assert(vkHuskSpatialConfigure(&off));assert(vkHuskSpatialObservations(&observations)&&observations.observed_images==0);
  unsigned resources=huskSpatialResources.load();assert(!huskSpatialNewImage(nil,MTLPixelFormatBGRA8Unorm,MTLTextureUsageRenderTarget,c));
  assert(huskSpatialResources.load()==resources+1&&!huskSpatialLive.load());
- [out release];[command release];assert(texturesFreed.load()==3);return 0;
+ [out release];[command release];assert(texturesFreed.load()==4);return 0;
 }}
 ''')
    binary=p/'check';subprocess.run(['clang++','-std=c++17','-fno-objc-arc','-fblocks','-I',str(p),'-I',str(inc),str(p/'main.mm'),'-framework','Foundation','-framework','Metal','-framework','MetalFX','-o',str(binary)],check=True);subprocess.run([str(binary)],check=True)

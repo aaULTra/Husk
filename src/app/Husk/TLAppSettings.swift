@@ -128,6 +128,7 @@ struct TLAppSettings: Codable, Equatable {
     var feedbackClockCorrection = false
     var nativePipelineArchiveMode = 0
     var nativeArchiveVerification = false
+    var execution = HuskExecutionOptions()
     var pipelineIdentification = false
     var pipelineFeedback = false
     var spatialUpscaling = false
@@ -215,6 +216,7 @@ struct TLAppSettings: Codable, Equatable {
         engineOnlyLimiter = try c.decodeIfPresent(Bool.self, forKey: .engineOnlyLimiter) ?? false
         clockPresentation = try c.decodeIfPresent(Bool.self, forKey: .clockPresentation) ?? false
         feedbackClockCorrection = try c.decodeIfPresent(Bool.self, forKey: .feedbackClockCorrection) ?? false
+        execution = (try c.decodeIfPresent(HuskExecutionOptions.self, forKey: .execution) ?? .init()).safe
         nativeArchiveVerification = try c.decodeIfPresent(Bool.self, forKey: .nativeArchiveVerification) ?? false
         let archiveMode = try c.decodeIfPresent(Int.self, forKey: .nativePipelineArchiveMode) ?? 0
         nativePipelineArchiveMode = [0,1,2].contains(archiveMode) ? archiveMode : 0
@@ -339,6 +341,24 @@ struct TLAppSettingsView: View {
                     Picker("Vulkan Submission", selection: $settings.vulkanSubmission) {
                         ForEach(TLAppSettings.VulkanSubmission.allCases) { Text($0.title).tag($0) }
                     }
+                    Picker("Metal Command Preparation (Experimental)", selection: $settings.execution.prefill) {
+                        Text("Driver Default").tag(-1)
+                        Text("At Queue Submission").tag(0)
+                        Text("At End of Recording").tag(1)
+                        Text("During Recording").tag(2)
+                    }
+                    Picker("Active Metal Buffer Limit (Experimental)", selection: $settings.execution.commandBufferLimit) {
+                        Text("Driver Default").tag(0)
+                        ForEach([8,16,32,64], id: \.self) { Text("\($0) per queue").tag($0) }
+                    }
+                    Picker("Swapchain Images (Experimental)", selection: $settings.execution.swapchainImages) {
+                        Text("Game Default").tag(0)
+                        Text("Two Images").tag(2)
+                        Text("Three Images").tag(3)
+                    }
+                    Text("Preserves output size and presentation mode. An override is used only within reported surface limits; extended swapchains are left unchanged. This is not a frame-in-flight guarantee. Restart to restore Game Default.").font(.caption)
+                    Toggle("Block During Initialization Waits (Experimental)", isOn: $settings.execution.initializationParking)
+                    Text("Independent experiments; fully restart and change one option per comparison. Defaults preserve the working mode. Blocking waits can avoid active polling during initialization. Buffer limits and preparation timing can change CPU work, memory and waiting; benefit is unverified.").font(.caption)
                     Toggle("MetalFX Spatial (Experimental)", isOn: $settings.spatialUpscaling)
                     if settings.spatialUpscaling {
                         Picker("MetalFX Input Budget", selection: $settings.spatialInputPercent) {

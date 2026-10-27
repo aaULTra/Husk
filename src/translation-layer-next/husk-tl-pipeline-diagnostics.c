@@ -181,7 +181,7 @@ void tl_pi_report(void) {
         pthread_mutex_unlock(&mu);
         char ids[220] = {0}; size_t used = 0;
         for (unsigned j = 0; j < e.request.sampled; j++) used += (size_t)snprintf(ids+used,sizeof(ids)-used,"%s%016llx/%s",j?",":"",(unsigned long long)e.request.id[j],e.request.known[j]?"shader-known":"incomplete");
-        tl_log_line("ue4 pipeline identity: M2/PIPE-01 core-v3 ids=%s kind=%s batch %u sampled %u host %.3f ms cache-present %d occurrence %llu feedback-first %s stages-valid %u/%u stage-hits %u masks %#x/%#x result %d, finished monotonic %.6f s; full-core-first %u coverage %#x; diagnostic hash, not replay/cache key; batch time; hitch unverified",
+        tl_log_line("ue4 pipeline identity: M2/PIPE-01 core-v4 ids=%s kind=%s batch %u sampled %u host %.3f ms cache-present %d occurrence %llu feedback-first %s stages-valid %u/%u stage-hits %u masks %#x/%#x result %d, finished monotonic %.6f s; full-core-first %u coverage %#x; diagnostic hash, not replay/cache key; batch time; hitch unverified",
             ids,e.compute?"compute":"graphics",e.request.count,e.request.sampled,e.ns/1e6,e.cache,(unsigned long long)e.occurrence,e.feedback<0?"unavailable":e.feedback?"application-cache-hit":"valid-no-application-hit",e.stage_valid,e.stage_count,e.stage_hits,e.stage_valid_mask,e.stage_hit_mask,e.result,e.finished/1e9,e.request.full_core[0],e.request.coverage[0]);
     }
     uint64_t lost = atomic_exchange(&drops,0);

@@ -24,7 +24,7 @@ enum EfficiencyComponentTriage {
         }
         let slow = number(summary["slow_pipeline_calls"]) ?? 0
         if slow > 0 {
-            add("pipeline_creation", ["M2", "M5"], "OBSERVATION", "Long Vulkan pipeline-creation calls were recorded. This is not proof every hitch is compilation.", "Compare the same core-v3 variant first/repeat/restart; inspect native requirement checks and driver library/pipeline phases separately.", ["slow_calls": slow, "worst_host_call_ms": (number(summary["worst_pipeline_ns"]) ?? 0) / 1e6])
+            add("pipeline_creation", ["M2", "M5"], "OBSERVATION", "Long Vulkan pipeline-creation calls were recorded. This is not proof every hitch is compilation.", "Compare the same core-v4 variant first/repeat/restart; inspect native requirement checks and driver library/pipeline phases separately.", ["slow_calls": slow, "worst_host_call_ms": (number(summary["worst_pipeline_ns"]) ?? 0) / 1e6])
         }
         let windows = rows(report["windows"])
         let irregular = windows.filter { w in
@@ -53,6 +53,14 @@ enum EfficiencyComponentTriage {
         }
         if archive["verification_requested"] as? Bool == true {
             add("native_archive_requirement", ["M2", "M5"], "OBSERVATION", "Metal archive-requirement checks were requested. Failed attempts are not necessarily archive misses; normal compilation fallback remains.", "Inspect successful requirement checks versus failures and raw NSError, then compare same variants with verification OFF for benefit/energy.", ["attempts": archive["verification_attempts"] ?? NSNull(), "satisfied_calls": archive["metal_archive_requirement_satisfied_calls"] ?? NSNull(), "failed_calls": archive["verification_failed_calls"] ?? NSNull(), "last_error_domain": archive["last_verification_error_domain"] ?? NSNull(), "last_error_code": archive["last_verification_error_code"] ?? NSNull()])
+        }
+        let queue = object(report["queue_execution_options"]), waits = object(report["initialization_waits"])
+        if queue["environment_applied"] as? Bool == true && queue["actual_configuration_available"] as? Bool != true {
+            add("queue_configuration", ["M6", "M8"], "OBSERVATION", "Queue options were prepared but actual runtime configuration is unavailable.", "Check driver API/result and restart; requested settings alone cannot establish an applied queue treatment.", queue)
+        }
+        if waits["requested"] as? Bool == true {
+            let observed = number(waits["wait_entries_since_launch"]) ?? 0
+            add("initialization_parking", ["M8", "M3"], "OBSERVATION", observed > 0 ? "Parked initialization waits were observed since launch; active polling is bypassed for those waits." : "No parked initialization waits were observed; no saving opportunity demonstrated.", "Separate startup/excluded work from gameplay and compare CPU and wall with the option OFF. Counts alone do not establish power or cooling.", waits)
         }
         let gpu = object(report["gpu_sampling"]), gpuRecords = (report["gpu_records"] as? [Any])?.count ?? 0
         coverage.append(["component": "gpu_execution", "status": gpuRecords > 0 ? "PARTIAL_COMMAND_BUFFER_TIMESTAMPS" : "DISABLED_UNAVAILABLE_OR_NO_VALID_RECORDS", "retained_records": gpuRecords, "collector": gpu])

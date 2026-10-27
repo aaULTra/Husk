@@ -46,7 +46,7 @@ struct EfficiencyProfilesView: View {
               fps: settings.efficientFrameRate.rawValue, worker: settings.workerScheduling.rawValue, submission: settings.vulkanSubmission.rawValue,
               spatial: settings.spatialUpscaling, spatialPercent: settings.spatialInputPercent, archive: settings.nativePipelineArchiveMode,
               archiveVerification: settings.nativeArchiveVerification, engineOnly: settings.engineOnlyLimiter,
-              clockTimed: settings.clockPresentation, clockFeedback: settings.feedbackClockCorrection)
+              clockTimed: settings.clockPresentation, clockFeedback: settings.feedbackClockCorrection, execution: settings.execution)
     }
     private func reload() { profiles = store.load(device: device, game: game) }
     private func save() {
@@ -72,6 +72,7 @@ struct EfficiencyProfilesView: View {
             settings.workerScheduling = worker; settings.vulkanSubmission = submission
             settings.spatialUpscaling = c.spatial; settings.spatialInputPercent = c.spatialPercent
             settings.nativePipelineArchiveMode = c.archive; settings.nativeArchiveVerification = c.archiveVerification
+            settings.execution = c.execution ?? .init()
             settings.engineOnlyLimiter = c.engineOnly; settings.clockPresentation = c.clockTimed; settings.feedbackClockCorrection = c.clockFeedback
             settings.driverPhaseProfiling = false; settings.pipelineIdentification = false; settings.pipelineFeedback = false; settings.renderTargetInventory = false
             message = "Applied \(p.name): \(c.fps) FPS, resolution budget \(c.resolution), worker \(c.worker), submission \(c.submission). Fully restart. Launch diagnostics reset OFF; session sampling controls are separate. Benefit unverified."
@@ -82,6 +83,7 @@ struct EfficiencyProfilesView: View {
         settings.unrealGraphics = .efficientHigh; settings.orientation = .landscape; settings.window = .fullScreen
         settings.efficientResolution = .automatic; settings.efficientFrameRate = .smooth
         settings.workerScheduling = .balanced; settings.vulkanSubmission = .driverDefault
+        settings.execution = .init()
         settings.spatialUpscaling = false; settings.nativePipelineArchiveMode = 0; settings.nativeArchiveVerification = false
         settings.engineOnlyLimiter = false; settings.clockPresentation = false; settings.feedbackClockCorrection = false
         settings.driverPhaseProfiling = false; settings.pipelineIdentification = false; settings.pipelineFeedback = false; settings.renderTargetInventory = false

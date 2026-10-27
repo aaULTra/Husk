@@ -7,6 +7,7 @@
 #include <new>
 static std::mutex huskSpatialConfigLock;
 static tl_spatial_config huskSpatialConfig={};
+static std::atomic<uint64_t> huskSpatialChecks{0},huskSpatialRebinds{0};
 static std::atomic<uint64_t> huskSpatialCreated{0},huskSpatialEncoded{0},huskSpatialFailures{0};
 static std::atomic<uint32_t> huskSpatialLive{0};
 static std::atomic<uint64_t> huskSpatialUnsupported{0},huskSpatialResources{0},huskSpatialEncodeFailures{0};
@@ -20,6 +21,7 @@ struct HuskSpatialImage {
     uint32_t outputWidth=0,outputHeight=0;
     MTLPixelFormat format=MTLPixelFormatInvalid;
     MTLTextureUsage outputUsage=MTLTextureUsageUnknown;
+    id<MTLTexture> boundOutput=nil; // nonowning tag; scaler retains this binding
     ~HuskSpatialImage(){[input release];[scaler release];--huskSpatialLive;}
 };
 static id<MTLFXSpatialScaler> huskNewScaler(id<MTLDevice> device,MTLPixelFormat format,const tl_spatial_config& c){
@@ -74,6 +76,11 @@ int vkHuskSpatialObservations(tl_spatial_observations* out){
     out->allocation_failures=huskSpatialResources.load();
     out->encode_validation_failures=huskSpatialEncodeFailures.load();
     return 1;
+}
+extern "C" __attribute__((visibility("default")))
+int vkHuskSpatialBindings(tl_spatial_bindings* out){
+    if(!out||out->version!=1||out->size!=sizeof(*out))return 0;
+    *out={1,sizeof(*out),huskSpatialChecks.load(std::memory_order_relaxed),huskSpatialRebinds.load(std::memory_order_relaxed)};return 1;
 }
 static int huskSpatialPlan(const VkSwapchainCreateInfoKHR* ci,tl_spatial_config* out){
     std::lock_guard<std::mutex> guard(huskSpatialConfigLock);
@@ -130,12 +137,19 @@ bool huskSpatialEncode(void* raw,id<MTLTexture> output,id<MTLCommandBuffer> comm
     if(!state||!command||!output){++huskSpatialFailures;++huskSpatialEncodeFailures;return false;}
     std::lock_guard<std::mutex> guard(state->lock);
     id<MTLFXSpatialScaler> scaler=state->scaler;
-    if(!state->prepared||!scaler||!state->input||
-       output.width!=state->outputWidth||output.height!=state->outputHeight||
-       output.pixelFormat!=state->format||(output.usage&state->outputUsage)!=state->outputUsage){
-        ++huskSpatialFailures;++huskSpatialEncodeFailures;return false;
+    if(!state->prepared||!scaler||!state->input){++huskSpatialFailures;++huskSpatialEncodeFailures;return false;}
+    // Metal texture dimensions/format/usage are immutable. The scaler retains
+    // its output, so this equality tag cannot become a dangling/ABA pointer.
+    // Preserve checks/rebinding for every different drawable texture.
+    if(output!=state->boundOutput){
+        huskSpatialChecks.fetch_add(1,std::memory_order_relaxed);
+        if(output.width!=state->outputWidth||output.height!=state->outputHeight||
+           output.pixelFormat!=state->format||(output.usage&state->outputUsage)!=state->outputUsage){
+            ++huskSpatialFailures;++huskSpatialEncodeFailures;return false;
+        }
+        scaler.outputTexture=output;state->boundOutput=output;
+        huskSpatialRebinds.fetch_add(1,std::memory_order_relaxed);
     }
-    scaler.outputTexture=output;
     [scaler encodeToCommandBuffer:command];++huskSpatialEncoded;
     if(!state->observed){
         std::lock_guard<std::mutex> observe(huskSpatialObservationLock);
