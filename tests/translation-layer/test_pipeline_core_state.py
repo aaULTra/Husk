@@ -12,6 +12,7 @@ class CoreStateTests(unittest.TestCase):
   (p/'check.c').write_text(r'''
 #include <assert.h>
 #include <stdarg.h>
+#include <time.h>
 #include "husk-tl-pipeline-diagnostics.c"
 void tl_log_line(const char*f,...){(void)f;}
 static unsigned last_full,last_coverage;
@@ -71,6 +72,45 @@ int order_independent(void){
  pi_binding tmp=b[0];b[0]=b[1];b[1]=tmp;tl_pi_object(TL_PI_DESCRIPTOR_LAYOUT,(void*)1,2,&d);
  return first==pi_find_object(TL_PI_DESCRIPTOR_LAYOUT,(void*)1,2)->key;
 }
+
+static atomic_bool metadata_entered,metadata_finished;
+static unsigned metadata_kind;
+static void *publish_metadata(void *unused){
+ (void)unused;atomic_store(&metadata_entered,true);
+ if(metadata_kind==0){uint32_t code[]={7,8,9};tl_pi_module_ci ci={.type=16,.size=sizeof(code),.code=code};tl_pi_shader((void*)1,77,&ci);}
+ else if(metadata_kind==1){pi_pipeline_layout ci={.type=30};tl_pi_object(TL_PI_PIPELINE_LAYOUT,(void*)1,88,&ci);}
+ else {tl_pi_request r={.sampled=1,.count=1,.id={99},.full_core={1}};uint64_t handle=99;tl_pi_pipeline_objects(r,(void*)1,&handle);}
+ atomic_store(&metadata_finished,true);return NULL;
+}
+int metadata_survives_contention(void){
+ husk_ue4_set_pipeline_diagnostics(true);memset(modules,0,sizeof(modules));memset(pi_objects,0,sizeof(pi_objects));
+ for(metadata_kind=0;metadata_kind<3;metadata_kind++){
+  atomic_store(&metadata_entered,false);atomic_store(&metadata_finished,false);pthread_mutex_lock(&mu);
+  pthread_t t;assert(!pthread_create(&t,NULL,publish_metadata,NULL));
+  while(!atomic_load(&metadata_entered)){}
+  struct timespec delay={0,20000000};nanosleep(&delay,NULL);
+  assert(!atomic_load(&metadata_finished));pthread_mutex_unlock(&mu);pthread_join(t,NULL);
+ }
+ assert(module_find((void*)1,77));assert(pi_find_object(TL_PI_PIPELINE_LAYOUT,(void*)1,88));assert(pi_find_object(TL_PI_PIPELINE,(void*)1,99));return 1;
+}
+int shader_hash_lookup_and_lifetime(void){
+ husk_ue4_set_pipeline_diagnostics(true);memset(modules,0,sizeof(modules));memset(&registry_stats,0,sizeof(registry_stats));
+ uint32_t code[]={0x07230203,17};tl_pi_module_ci ci={.type=16,.size=sizeof(code),.code=code};
+ for(unsigned i=1;i<=2048;i++)tl_pi_shader((void*)1,i,&ci);
+ for(unsigned i=1;i<=2048;i++){struct module_record *m=module_find((void*)1,i);assert(m&&m->hash==bytes(14695981039346656037ULL,code,sizeof(code)));}
+ assert(registry_stats.shader_lookup_probes<2048*8); // bounded indexed work versus former full-table publication scans
+ uint64_t a=5000,b=5001;while(module_bucket((void*)2,a)!=module_bucket((void*)2,b))b++;
+ tl_pi_shader((void*)2,a,&ci);tl_pi_shader((void*)2,b,&ci);tl_pi_forget_shader((void*)2,a);assert(!module_find((void*)2,a)&&module_find((void*)2,b));
+ code[1]=19;tl_pi_shader((void*)2,b,&ci);assert(module_find((void*)2,b)->hash==bytes(14695981039346656037ULL,code,sizeof(code)));
+ tl_pi_forget_device((void*)1);assert(!module_find((void*)1,1)&&module_find((void*)2,b));return 1;
+}
+int registry_missing_and_incomplete_are_separate(void){
+ husk_ue4_set_pipeline_diagnostics(true);memset(pi_objects,0,sizeof(pi_objects));memset(&registry_stats,0,sizeof(registry_stats));
+ unsigned known=1;pi_reference(1,TL_PI_PIPELINE_LAYOUT,(void*)1,123,&known);assert(!known);
+ pi_store_object(TL_PI_PIPELINE_LAYOUT,(void*)1,123,44,0);known=1;pi_reference(1,TL_PI_PIPELINE_LAYOUT,(void*)1,123,&known);assert(!known);
+ tl_pi_registry_stats s;tl_pi_registry_snapshot(&s);assert(s.enabled&&s.missing_object_references==1&&s.incomplete_object_references==1&&s.object_live==1&&s.object_capacity==PI_OBJECTS);return 1;
+}
+
 #define VK_SUCCESS 0
 static struct{void*lib;}V={(void*)1};static int returned;static const void *expected_ci,*expected_alloc;static unsigned calls;
 static int create(void*d,const void*c,const void*a,uint64_t*out){assert(d==(void*)1&&c==expected_ci&&a==expected_alloc);calls++;*out=200;return returned;}
@@ -115,4 +155,11 @@ int forwarding(void){
  def test_registry_collisions_tombstones_and_bounded_immutable_sampler_reads(self):self.assertEqual(self.lib.registry_collisions_and_bounds(),1)
  def test_descriptor_binding_array_order_is_semantic_not_pointer_or_order(self):self.assertEqual(self.lib.order_independent(),1)
  def test_actual_wrappers_preserve_arguments_results_lifetime_and_disabled_fast_path(self):self.assertEqual(self.lib.forwarding(),1)
+ def test_one_shot_shader_object_and_pipeline_metadata_survive_observer_contention(self):
+  self.assertEqual(self.lib.metadata_survives_contention(),1)
+ def test_indexed_shader_lookup_preserves_collisions_lifetimes_device_isolation_and_bounded_work(self):
+  self.assertEqual(self.lib.shader_hash_lookup_and_lifetime(),1)
+ def test_registry_snapshot_separates_absent_and_unsupported_dependency_metadata(self):
+  self.assertEqual(self.lib.registry_missing_and_incomplete_are_separate(),1)
+
 if __name__=='__main__':unittest.main()

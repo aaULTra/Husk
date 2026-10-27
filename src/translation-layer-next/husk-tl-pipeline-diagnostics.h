@@ -38,5 +38,12 @@ void tl_pi_report(void);
  * Durations may overlap. This cannot reconstruct pipelines or prove cache hits. */
 typedef struct { uint64_t signature, calls, slow_calls, total_ns, worst_ns, valid_feedback, application_hits, stage_feedback_valid, stage_application_hits; uint64_t shader_hashes[4]; uint32_t stage_bits[4], shader_stages, last_stage_valid_mask, last_stage_hit_mask; uint32_t coverage,full_core; uint64_t full_core_calls; } tl_pi_group;
 uint32_t tl_pi_copy_groups(tl_pi_group *out, uint32_t capacity);
+/* Process-lifetime observer work/coverage, not driver cache or energy metrics. */
+typedef struct {
+ uint32_t enabled,shader_capacity,shader_live,object_capacity,object_live;
+ uint64_t shader_lookup_probes,shader_capacity_drops,object_capacity_drops;
+ uint64_t missing_shader_references,missing_object_references,incomplete_object_references;
+} tl_pi_registry_stats;
+void tl_pi_registry_snapshot(tl_pi_registry_stats *out);
 
 #endif

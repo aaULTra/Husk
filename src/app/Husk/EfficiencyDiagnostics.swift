@@ -43,8 +43,8 @@ final class EfficiencyDiagnostics: ObservableObject {
     }
     private var gpuWindows: [Double: GPUWindow] = [:]
     private var gpuAggregateDrops = 0
-    private var gpuRows: [[String: Any]] = []
-    private var gpuExportDrops = 0
+    private var gpuHistory = BoundedRecordHistory<[String: Any]>(firstLimit: 16384, recentLimit: 512)
+    private var gpuRows: [[String: Any]] { gpuHistory.first }
     private var attached: [String: Any] = [:]
     private var lastBattery: (Double, Int)?
     private var battery = EfficiencyMath.Battery()
@@ -83,7 +83,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     func start() {
         guard !running, !exporting, !nativePreparing else { return }
         samples = []; windows = []; events = []; exclusions = []; files = []; dropped = 0
-        gpuRows = []; gpuExportDrops = 0; gpuWindows = [:]; gpuAggregateDrops = 0; lastThreadAt = now - 10
+        gpuHistory = BoundedRecordHistory(firstLimit: 16384, recentLimit: 512); gpuWindows = [:]; gpuAggregateDrops = 0; lastThreadAt = now - 10
         stoppedReport = nil; canExport = false; origin = now; windowAt = origin; lastCPUAt = origin; lastCPU = -1
         lastMemoryAt = origin - 10; lastBatteryAt = origin - 30; excludedAt = nil; excludedReason = ""; gpuExcludedStart = nil
         lastBattery = nil; battery = EfficiencyMath.Battery(); environment = [:]
@@ -218,8 +218,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 window.roleDurations[role, default: 0] += record.gpu_end - record.gpu_start
                 gpuWindows[record.sample_start] = window
             } else { gpuAggregateDrops += 1 }
-            if gpuRows.count >= 16384 { gpuExportDrops += 1; continue }
-            gpuRows.append(["command_buffer_role": role, "gpu_start_media_seconds": record.gpu_start, "gpu_end_media_seconds": record.gpu_end,
+            gpuHistory.append(["command_buffer_role": role, "gpu_start_media_seconds": record.gpu_start, "gpu_end_media_seconds": record.gpu_end,
                             "completed_media_seconds": record.completed, "completion_after_gpu_end_seconds": max(0, record.completed - record.gpu_end),
                             "sample_start_media_seconds": record.sample_start, "sample_end_media_seconds": record.sample_end,
                             "queue_id": record.queue, "phase_at_collection": phase,
@@ -246,9 +245,13 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "attached_handlers": s.attached, "valid_records": s.completed, "invalid_timestamps": s.invalid,
                 "command_buffer_errors": s.errors, "outside_sample_window": s.outside,
                 "stale_or_excluded_completions": s.stale, "unresolved_handlers_at_snapshot": s.pending,
-                "dropped_records_or_capture_attempts": s.dropped, "dropped_export_records": gpuExportDrops,
+                "dropped_records_or_capture_attempts": s.dropped, "dropped_export_records": gpuHistory.omitted,
+                "primary_raw_records": gpuRows.count, "recent_raw_records": gpuHistory.recent.count,
+                "primary_raw_limit": gpuHistory.firstLimit, "recent_raw_limit": gpuHistory.recentLimit,
+                "raw_retention_policy": "Disjoint early prefix and chronological recent tail; omitted middle rows counted. All-window aggregates remain separate. Retention and monitoring overhead unmeasured.",
                 "media_origin_seconds": s.media_origin, "sample_period_seconds": 10, "sample_width_seconds": 1,
-                "observed_interval_union_seconds": EfficiencyMath.gpuIntervalUnion(gpuRows),
+                "observed_interval_union_seconds": EfficiencyMath.gpuIntervalUnion(gpuRows + gpuHistory.recent),
+                "primary_record_interval_union_seconds": EfficiencyMath.gpuIntervalUnion(gpuRows),
                 "scope": "Known MoltenVK game queues; factory-created buffers only; sample-bound clipped union is partial, not utilisation or per-frame GPU time",
                 "clock": "Metal GPU timestamps and sample bounds use media clock; report event t uses a separate monotonic origin",
                 "aggregate_records": gpuWindows.values.reduce(0) { $0 + $1.count },
@@ -266,7 +269,10 @@ final class EfficiencyDiagnostics: ObservableObject {
             observations = records.prefix(Int(count)).map { value in
                 var v = value
                 let name = withUnsafePointer(to: &v.name) { $0.withMemoryRebound(to: CChar.self, capacity: 64) { String(cString: $0) } }
-                return ["observer_thread_id": v.identity, "name": name, "role": v.role, "mode": v.mode,
+                return ["observer_thread_id": v.identity,
+                        "mach_thread_id": v.mach_thread_id != 0 ? v.mach_thread_id as Any : NSNull(),
+                        "thread_identity_scope": "Mach ID joins CPU snapshots only within this host process; observer ID is a separate namespace; no core-residency inference",
+                        "name": name, "role": v.role, "mode": v.mode,
                         "revision": v.revision, "observed_t": v.observed_monotonic - origin,
                         "before_qos": v.before_qos, "after_qos": v.query_result == 0 ? v.after_qos as Any : NSNull(),
                         "query_result": v.query_result, "set_result": v.set_result, "policy_changed": v.changed]
@@ -557,13 +563,18 @@ final class EfficiencyDiagnostics: ObservableObject {
     }
     func exportNativeArchiveInspection() {
         archiveInspectionFiles = []
-        if lastArchiveInspection == nil { inspectNativeArchive() }
+        let precedingInspection = lastArchiveInspection
+        // Sharing must describe state now, not an earlier prepare_started tap.
+        let (fresh, control, status) = archiveInspection()
+        recordArchiveInspection(action: "share_inspection", stats: fresh, control: control, status: status)
         guard let inspection = lastArchiveInspection else { return }
         do {
             let receipt: [String: Any] = ["schema_version": 1, "type": "native_archive_inspection",
                 "exported_utc": ISO8601DateFormatter().string(from: Date()),
                 "build_sha": Bundle.main.object(forInfoDictionaryKey: "HuskBuildCommit") as? String ?? "UNAVAILABLE",
                 "configuration": attached, "inspection": inspection,
+                "previous_user_inspection": precedingInspection as Any? ?? NSNull(),
+                "native_pipeline_archive": nativeArchiveReport(),
                 "device_capabilities": EfficiencyDeviceInventory.snapshot(), "os": UIDevice.current.systemVersion,
                 "driver_build": spatialReport()["driver_build"] ?? "UNAVAILABLE"]
             let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("PipelineInspection")
@@ -626,9 +637,26 @@ final class EfficiencyDiagnostics: ObservableObject {
                     self.archiveMessage = pauseAcknowledged ? "Preparation result \(result). Receipt saved in Files > Husk > PipelinePreparation. Return to gameplay or share the receipt; benefit unverified." : "Preparation skipped: the activity did not acknowledge pause within 2 seconds. No preparation was started. Share the receipt; do not repeatedly retry."
                 } catch { self.archiveMessage = "Preparation result \(result); receipt export failed: \(error.localizedDescription)" }
                 self.nativePreparing = false
+                let completionMessage = self.archiveMessage
+                let (fresh, control, status) = self.archiveInspection()
+                self.recordArchiveInspection(action: pauseAcknowledged ? "prepare_finished" : "prepare_skipped", stats: fresh, control: control, status: status)
+                self.archiveMessage += "\n" + completionMessage
                 TLUnityUIView.reconcileNativeLifecycle()
             }
         }
+    }
+    private func pipelineRegistryReport() -> [String: Any] {
+        var s = tl_pi_registry_stats(); tl_pi_registry_snapshot(&s)
+        return ["status": s.enabled != 0 ? "MEASURED observer registry counters" : "UNAVAILABLE: pipeline identification disabled",
+                "plan_ids": ["M1", "M2"], "subsystem": "pipeline_identity_coverage",
+                "shader_live": s.shader_live, "shader_capacity": s.shader_capacity,
+                "object_live": s.object_live, "object_capacity": s.object_capacity,
+                "shader_lookup_probes": s.shader_lookup_probes,
+                "shader_capacity_drops": s.shader_capacity_drops, "object_capacity_drops": s.object_capacity_drops,
+                "missing_shader_references": s.missing_shader_references,
+                "missing_object_references": s.missing_object_references,
+                "incomplete_object_references": s.incomplete_object_references,
+                "scope": "Process-lifetime observer work and dependency references; not unique failed pipelines, cache misses, GPU work or energy. One-shot metadata publication is retained; unsupported dependency descriptions remain incomplete."]
     }
     private func lifecycleReport() -> [String: Any] {
         var s = tl_lifecycle_stats(); tl_lifecycle_snapshot(&s)
@@ -716,8 +744,8 @@ final class EfficiencyDiagnostics: ObservableObject {
         observers.forEach { NotificationCenter.default.removeObserver($0) }; observers = []
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
-        stoppedReport = ["schema_version": 13, "metadata": metadata, "duration_seconds": now - origin,
-                         "summary": stats(total), "native_display_sampling": nativeDisplayReport(), "delayed_os_reports": EfficiencyMetricKit.shared.summary, "component_sampling": componentReport(), "driver_phases": driverPhaseReport(), "native_pipeline_archive": nativeArchiveReport(), "native_lifecycle": lifecycleReport(), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "swapchain_budget": swapchainBudgetReport(), "queue_execution_options": queueExecutionReport(), "initialization_waits": initializationWaitReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
+        stoppedReport = ["schema_version": 14, "metadata": metadata, "duration_seconds": now - origin,
+                         "summary": stats(total), "native_display_sampling": nativeDisplayReport(), "delayed_os_reports": EfficiencyMetricKit.shared.summary, "component_sampling": componentReport(), "driver_phases": driverPhaseReport(), "native_pipeline_archive": nativeArchiveReport(), "native_lifecycle": lifecycleReport(), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "pipeline_identity_registry": pipelineRegistryReport(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_recent_records": gpuHistory.recent, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "swapchain_budget": swapchainBudgetReport(), "queue_execution_options": queueExecutionReport(), "initialization_waits": initializationWaitReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
                          "battery_arithmetic_rate_pp_per_hour": battery.arithmeticRate.map { $0 as Any } ?? NSNull(),
@@ -822,7 +850,9 @@ final class EfficiencyDiagnostics: ObservableObject {
                 Core residency and scheduling energy benefit: UNAVAILABLE / unverified
                 M3 sampled GPU timing: \(gpu["status"] ?? "UNAVAILABLE")
                 GPU valid records / unresolved handlers: \(gpu["valid_records"] ?? 0) / \(gpu["unresolved_handlers_at_snapshot"] ?? 0)
-                Observed sample-clipped GPU interval union: \(gpu["observed_interval_union_seconds"] ?? 0) seconds (partial coverage; not utilisation)
+                Retained-record sample-clipped GPU interval union: \(gpu["observed_interval_union_seconds"] ?? 0) seconds (partial coverage; not utilisation)
+                All-window sample-clipped GPU interval union: \(gpu["all_window_sample_clipped_union_seconds"] ?? "UNAVAILABLE") seconds (partial sampling, includes records outside raw retention).
+                Retained early/recent GPU records: \(gpu["primary_raw_records"] ?? "UNAVAILABLE") / \(gpu["recent_raw_records"] ?? "UNAVAILABLE"); omitted rows are counted, not assumed idle.
                 GPU invalid/error/dropped/export losses: \(gpu["invalid_timestamps"] ?? 0) / \(gpu["command_buffer_errors"] ?? 0) / \(gpu["dropped_records_or_capture_attempts"] ?? 0) / \(gpu["dropped_export_records"] ?? 0)
                 CPU thread snapshots: \(rows.filter { $0["cpu_threads"] != nil }.count); submit CPU/wall ns: \(submitWork["thread_cpu_ns"] ?? 0) / \(submitWork["wall_ns"] ?? 0); \(submitWork["status"] ?? "UNAVAILABLE")
                 GPU aggregate windows/records/drops: \(gpu["aggregate_window_count"] ?? 0) / \(gpu["aggregate_records"] ?? 0) / \(gpu["dropped_aggregate_records"] ?? 0); raw cap losses remain explicit.

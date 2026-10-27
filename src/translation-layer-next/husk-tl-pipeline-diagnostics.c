@@ -10,7 +10,23 @@ _Static_assert(sizeof(tl_pi_stage) == 48 && sizeof(tl_pi_graphics) == 144 && siz
 #define EVENTS 64
 static atomic_bool enabled;
 static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
-static struct { void *device; uint64_t module, hash; } modules[MODULES];
+static struct module_record { void *device; uint64_t module, hash; unsigned state; } modules[MODULES];
+static tl_pi_registry_stats registry_stats;
+static unsigned module_bucket(void *device,uint64_t module){
+ uint64_t x=(uint64_t)(uintptr_t)device^module;
+ x^=x>>33;x*=0xff51afd7ed558ccdULL;x^=x>>33;
+ return (unsigned)x&(MODULES-1);
+}
+static struct module_record *module_find(void *device,uint64_t module){
+ unsigned start=module_bucket(device,module);
+ for(unsigned n=0;n<MODULES;n++){
+  struct module_record *entry=modules+((start+n)&(MODULES-1));
+  registry_stats.shader_lookup_probes++;
+  if(!entry->state)return NULL;
+  if(entry->state==1&&entry->device==device&&entry->module==module)return entry;
+ }
+ return NULL;
+}
 static tl_pi_group signatures[SIGNATURES];
 static struct event { tl_pi_request request; bool compute, cache; int result; uint64_t ns, finished, occurrence; int feedback; unsigned stage_count, stage_valid, stage_hits, stage_valid_mask, stage_hit_mask; } events[EVENTS];
 static unsigned head, length;
@@ -25,14 +41,20 @@ void husk_ue4_set_pipeline_diagnostics(bool value) { atomic_store(&enabled, valu
 void tl_pi_shader(void *device, uint64_t module, const tl_pi_module_ci *ci) {
     if (!atomic_load(&enabled) || !ci || !ci->code || !ci->size || ci->size > 16u*1024u*1024u) return;
     uint64_t hash = bytes(14695981039346656037ULL, ci->code, ci->size);
-    if (pthread_mutex_trylock(&mu)) { atomic_fetch_add(&drops, 1); return; }
-    unsigned slot = MODULES;
-    for (unsigned i = 0; i < MODULES; i++) {
-        if (modules[i].device == device && modules[i].module == module) { slot = i; break; }
-        if (!modules[i].device && slot == MODULES) slot = i;
+    /* Creation metadata is observed once. Losing it here would make later
+     * dependent identities incomplete for the object's whole lifetime. */
+    pthread_mutex_lock(&mu);
+    unsigned start=module_bucket(device,module);
+    struct module_record *slot=NULL;
+    for(unsigned n=0;n<MODULES;n++){
+        struct module_record *entry=modules+((start+n)&(MODULES-1));
+        registry_stats.shader_lookup_probes++;
+        if(entry->state==1&&entry->device==device&&entry->module==module){slot=entry;break;}
+        if(entry->state!=1&&!slot)slot=entry;
+        if(!entry->state)break;
     }
-    if (slot != MODULES) { modules[slot].device = device; modules[slot].module = module; modules[slot].hash = hash; }
-    else atomic_fetch_add(&drops, 1);
+    if(slot)*slot=(struct module_record){device,module,hash,1};
+    else {registry_stats.shader_capacity_drops++;atomic_fetch_add(&drops,1);}
     pthread_mutex_unlock(&mu);
 }
 /* Lifetime invalidation must not be skipped: a reused handle must never inherit
@@ -40,13 +62,14 @@ void tl_pi_shader(void *device, uint64_t module, const tl_pi_module_ci *ci) {
 void tl_pi_forget_shader(void *device, uint64_t module) {
     if (!atomic_load(&enabled)) return;
     pthread_mutex_lock(&mu);
-    for (unsigned i = 0; i < MODULES; i++) if (modules[i].device == device && modules[i].module == module) modules[i].device = NULL;
+    struct module_record *entry=module_find(device,module);
+    if(entry){entry->state=2;entry->device=NULL;}
     pthread_mutex_unlock(&mu);
 }
 void tl_pi_forget_device(void *device) {
     if (!atomic_load(&enabled)) return;
     pthread_mutex_lock(&mu);
-    for (unsigned i = 0; i < MODULES; i++) if (modules[i].device == device) modules[i].device = NULL;
+    for (unsigned i = 0; i < MODULES; i++) if (modules[i].state==1&&modules[i].device == device){modules[i].state=2;modules[i].device=NULL;}
     pi_forget_objects(device);
     pthread_mutex_unlock(&mu);
 }
@@ -54,7 +77,8 @@ static uint64_t stage_hash(uint64_t h, void *device, const tl_pi_stage *stage, u
     h = number(number(h, stage->stage), stage->flags);
     if(stage->flags || stage->type!=18 || (stage->stage&~63u)) *known=0;
     uint64_t shader = 0;
-    for (unsigned i = 0; i < MODULES; i++) if (modules[i].device == device && modules[i].module == stage->module) { shader = modules[i].hash; break; }
+    struct module_record *entry=module_find(device,stage->module);
+    if(entry)shader=entry->hash;else registry_stats.missing_shader_references++;
     if (shader_identity) *shader_identity = shader;
     if (!shader) *known = 0;
     h = number(h, shader);
@@ -193,4 +217,14 @@ uint32_t tl_pi_copy_groups(tl_pi_group *out, uint32_t capacity) {
     pthread_mutex_lock(&mu);uint32_t n=0;
     for(unsigned i=0;i<SIGNATURES&&n<capacity;i++)if(signatures[i].signature)out[n++]=signatures[i];
     pthread_mutex_unlock(&mu);return n;
+}
+
+void tl_pi_registry_snapshot(tl_pi_registry_stats *out){
+ if(!out)return;
+ pthread_mutex_lock(&mu);*out=registry_stats;
+ out->enabled=atomic_load(&enabled);out->shader_capacity=MODULES;out->object_capacity=PI_OBJECTS;
+ out->shader_live=out->object_live=0;
+ for(unsigned i=0;i<MODULES;i++)out->shader_live+=modules[i].state==1;
+ for(unsigned i=0;i<PI_OBJECTS;i++)out->object_live+=pi_objects[i].state==1;
+ pthread_mutex_unlock(&mu);
 }

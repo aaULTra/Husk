@@ -55,7 +55,7 @@ def gpu_exclusion_audit(data):
     end_mono, end_media = end.get('monotonic_anchor_seconds'), end.get('media_anchor_seconds')
     drift = end_mono - end_media - (mono - media) if finite(end_mono, end_media, mono, media) else None
     retained, overlapping = [], 0
-    for row in data.get('gpu_records', []):
+    for row in data.get('gpu_records', []) + data.get('gpu_recent_records', []):
         values = [row.get(k) for k in ('gpu_start_media_seconds', 'gpu_end_media_seconds',
                                      'sample_start_media_seconds', 'sample_end_media_seconds')]
         if not all(isinstance(v, (int, float)) and math.isfinite(v) for v in values):
@@ -131,7 +131,7 @@ def thread_cpu_audit(data):
 
 
 def audit(data):
-    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13):
+    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14):
         raise ValueError('Unsupported diagnostic schema; preserve source for a version-aware audit')
     summary, metadata = data.get('summary', {}), data.get('metadata', {})
     windows, samples = data.get('windows', []), data.get('samples', [])
@@ -162,7 +162,8 @@ def audit(data):
         warnings.append('Frame intervals were lost; retained percentiles are incomplete')
     if data['schema_version'] == 1 and summary.get('dropped_collector_records', 0):
         warnings.append('Legacy mixed losses may reset cadence continuity')
-    gpu, gpu_rows = data.get('gpu_sampling', {}), data.get('gpu_records', [])
+    gpu = data.get('gpu_sampling', {})
+    gpu_rows = data.get('gpu_records', []) + data.get('gpu_recent_records', [])
     union = interval_union(gpu_rows)
     if gpu.get('valid_records') is not None and gpu['valid_records'] != len(gpu_rows) + gpu.get('dropped_export_records', 0):
         errors.append('GPU valid/exported record counts do not reconcile')
@@ -218,14 +219,14 @@ def audit(data):
             'host': {'retained_fps': cadence, 'p95_ms': summary.get('p95_ms'), 'p99_ms': summary.get('p99_ms'),
                      'worst_ms': summary.get('worst_ms'), 'slow_pipeline_calls': summary.get('slow_pipeline_calls'),
                      'cpu_weighted_percent_one_core': cpu_mean},
-            'gpu': {'status': gpu.get('status', 'UNAVAILABLE: no sampled GPU data'), 'records': len(gpu_rows),
+            'gpu': {'status': gpu.get('status', 'UNAVAILABLE: no sampled GPU data'), 'records': len(gpu_rows), 'primary_records': len(data.get('gpu_records', [])), 'recent_records': len(data.get('gpu_recent_records', [])),
                     'sample_clipped_interval_union_seconds': union, 'exclusion_audit': exclusion_audit,
                     'scope': 'Partial sampled command buffers; not utilisation, displayed frames or watts'},
             'worker': {'active_mode': worker.get('active_mode'), 'admissions': worker.get('admissions_since_launch'),
                        'rollbacks': worker.get('rollback_requests_since_launch'), 'waiting_reason': worker.get('waiting_reason'),
                        'normal_utility_last_observations': len(utility), 'core_residency': 'UNAVAILABLE',
                        'scope': 'Last observations, not live thread count or verified placement'},
-            'native_pipeline_archive': data.get('native_pipeline_archive', {}), 'component_sampling': data.get('component_sampling', {}), 'native_display_sampling': data.get('native_display_sampling', {}),
+            'native_pipeline_archive': data.get('native_pipeline_archive', {}), 'pipeline_identity_registry': data.get('pipeline_identity_registry', {}), 'component_sampling': data.get('component_sampling', {}), 'native_display_sampling': data.get('native_display_sampling', {}),
             'queue_execution_options': data.get('queue_execution_options', {}), 'initialization_waits': data.get('initialization_waits', {}),
             'driver_phases': data.get('driver_phases', {}), 'component_triage': data.get('component_triage', {}),
             'delayed_os_reports': data.get('delayed_os_reports', {}),

@@ -36,12 +36,12 @@ static void pi_store_object(unsigned kind,void *device,uint64_t handle,uint64_t 
   if(o->state!=1&&!slot)slot=o;
   if(!o->state)break;
  }
- if(slot)*slot=(struct pi_object_record){device,handle,key,kind,complete,1};else atomic_fetch_add(&drops,1);
+ if(slot)*slot=(struct pi_object_record){device,handle,key,kind,complete,1};else {registry_stats.object_capacity_drops++;atomic_fetch_add(&drops,1);}
 }
 static uint64_t pi_reference(uint64_t h,unsigned kind,void *device,uint64_t handle,unsigned *complete){
  struct pi_object_record *o=handle?pi_find_object(kind,device,handle):NULL;
- if(!o){*complete=0;return number(number(h,kind),0);}
- if(!o->complete)*complete=0;
+ if(!o){registry_stats.missing_object_references++;*complete=0;return number(number(h,kind),0);}
+ if(!o->complete){registry_stats.incomplete_object_references++;*complete=0;}
  return number(number(h,kind),o->key);
 }
 static uint64_t pi_ref(uint64_t h,const pi_attachment_ref *ref){
@@ -146,7 +146,7 @@ static uint64_t pi_object_key(unsigned kind,void *device,const void *raw,unsigne
 }
 void tl_pi_object(unsigned kind,void *device,uint64_t handle,const void *ci){
  if(!atomic_load(&enabled)||!device||!handle||kind<TL_PI_SAMPLER||kind>TL_PI_RENDER_PASS)return;
- if(pthread_mutex_trylock(&mu)){atomic_fetch_add(&drops,1);return;}
+ pthread_mutex_lock(&mu); /* one-shot dependency metadata must not be sampled away */
  unsigned complete=1;uint64_t key=pi_object_key(kind,device,ci,&complete);pi_store_object(kind,device,handle,key,complete);pthread_mutex_unlock(&mu);
 }
 void tl_pi_forget_object(unsigned kind,void *device,uint64_t handle){
@@ -155,7 +155,7 @@ void tl_pi_forget_object(unsigned kind,void *device,uint64_t handle){
 }
 void tl_pi_pipeline_objects(tl_pi_request request,void *device,const uint64_t *handles){
  if(!atomic_load(&enabled)||!handles||!request.sampled)return;
- if(pthread_mutex_trylock(&mu)){atomic_fetch_add(&drops,1);return;}
+ pthread_mutex_lock(&mu);
  for(unsigned i=0;i<request.sampled;i++)if(handles[i])pi_store_object(TL_PI_PIPELINE,device,handles[i],request.id[i],request.full_core[i]);
  pthread_mutex_unlock(&mu);
 }
