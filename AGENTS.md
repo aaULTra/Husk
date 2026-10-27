@@ -82,3 +82,10 @@ Before finishing each task, update PROJECT_PLAN.md and supporting records with c
 ## Whole-plan code-completion requests
 
 When the user requests100%implementation,work against the complete milestone inventory,not only a self-defined batch. Maintain each item as implemented/build-checked,feasible engineering still in progress,or genuinely input-dependent with the exact missing interface/data. Do not present a narrow10/10checklist as whole-plan completion. Missing physical benefit validation must not block independent coding; missing real engine inputs must not be fabricated. Continue useful independent work while CI runs,retain the user's active test and report remaining unimplemented code honestly.
+
+
+## Implementation percentage alongside overall accepted progress
+
+Report the separately derived weighted implementation/build percentage from the existing M1–M10 I gates:sum(milestone weight × passed-I fraction)/98 ×100. Exclude M0 documentation;include futureDuo with its unchanged10weight. Use scripts/roadmap_progress.py,never estimate from file/line/test counts or a self-defined source batch. State its change and scope;the checklist does not include every future research feature. Keep overall I/D/E accepted progress and measured energy distinct. Award a newly met existing implementation gate only with its actual required checks/build evidence;do not withhold an earned code-only gate merely because separate physical benefit remains pending.
+
+Native archive compatibility:retain schema2 separation between full package/diagnostic provenance and the GPU compiler contract. Preserve driver/SPIRV-Cross pins,device/OS keys,Metal-owned validation and fallback. Bump the compiler contract when MSL/native-descriptor compilation semantics change. Do not invalidate compatible archives solely for diagnostic/UI changes or silently trust/migrate old v1 archive files. Preserve full build manifest provenance and compare cold/warm conditions honestly.

@@ -107,6 +107,9 @@ int main(int argc,char**argv){assert(argc==2);@autoreleasepool{
  c.enabled=1;assert(vkHuskArchiveConfigure(&c));
  huskArchiveNewRender((id<MTLDevice>)device,(MTLRenderPipelineDescriptor*)d,^(id s,NSError*e){assert(s&&!e);complete++;});
  tl_na_stats stats={TL_NATIVE_ARCHIVE_ABI,sizeof(stats)};assert(vkHuskArchiveSnapshot(&stats)&&stats.supported&&stats.pending==1&&!stats.restored_bytes);
+ NSString *identity=[NSString stringWithFormat:@"v2|%s|%@|%llu|%@",HUSK_ARCHIVE_COMPAT_ID,device.name,(unsigned long long)device.registryID,NSProcessInfo.processInfo.operatingSystemVersionString];
+ NSString *expectedName=[NSString stringWithFormat:@"native-%016llx.metalarc",(unsigned long long)huskArchiveHash(identity)];
+ assert([[huskArchivePath lastPathComponent]isEqual:expectedName]);
  [d release];assert(huskArchivePending.size()==1);assert(vkHuskArchivePrepare()==1&&preparedCalls==1);
  assert(vkHuskArchiveSnapshot(&stats)&&stats.saved_bytes&&stats.prepared==1&&!stats.pending);
  d=[Descriptor new];huskArchiveVerify.store(true);huskArchiveStats.verification_requested=1;failArchive=true;completions=complete;

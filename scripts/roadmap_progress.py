@@ -14,6 +14,8 @@ def score(ledger):
     if ledger.get('model') != 'HUSK-ROADMAP-v1':
         raise ValueError('Unknown scoring model; explicit rebaseline required')
     rows, seen, total = [], set(), Fraction(0)
+    implementation_points = Fraction(0)
+    implementation_passed = implementation_total = 0
     def gates(items):
         if not items or len({g['id'] for g in items}) != len(items):
             raise ValueError('Every track needs stable unique gates')
@@ -35,6 +37,9 @@ def score(ledger):
             if set(m['tracks']) != set(TRACKS):
                 raise ValueError('Missing implementation/device/energy track')
             fractions = {k: gates(m['tracks'][k]) for k in TRACKS}
+            implementation_points += weight * fractions['I']
+            implementation_total += len(m['tracks']['I'])
+            implementation_passed += sum(g['status'] == 'passed' for g in m['tracks']['I'])
             fraction = sum((TRACKS[k] * fractions[k] for k in TRACKS), Fraction(0))
         contribution = weight * fraction
         total += contribution
@@ -44,6 +49,10 @@ def score(ledger):
         raise ValueError('Overall score requires all eleven milestones and 100 points')
     duo = next(r for r in rows if r['id'] == 'M10')['overall_contribution_points']
     return {'model': ledger['model'], 'gate_version': ledger['gate_version'], 'evidence_date': ledger['updated'],
+            'weighted_implementation_build_percent': float(implementation_points / 98 * 100),
+            'implementation_weighted_points': float(implementation_points), 'implementation_weight_denominator': 98,
+            'implementation_gates_passed': implementation_passed, 'implementation_gates_total': implementation_total,
+            'implementation_scope': 'Existing M1-M10 I gates only, same fixed milestone weights; M0 documentation excluded, future Duo included. Not every future research feature or a source-lines/energy percentage.',
             'overall_percent': float(total), 'overall_rounded_percent': int(total+Fraction(1,2)),
             'm4_scope_percent_excluding_duo': (float(total)-duo)/90*100, 'duo_milestone_percent': duo/10*100,
             'milestones': rows, 'meaning': 'Evidence-gated plan completion, not measured energy saved'}

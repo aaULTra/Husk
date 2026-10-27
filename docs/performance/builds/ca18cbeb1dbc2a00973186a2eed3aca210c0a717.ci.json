@@ -1,0 +1,32 @@
+{
+  "source_sha": "ca18cbeb1dbc2a00973186a2eed3aca210c0a717",
+  "packaged_identity": "ca18cbeb1dbc2a00973186a2eed3aca210c0a717-dirty",
+  "run_id": 40439120264,
+  "job_id": 121974902476,
+  "apple_checks": 359,
+  "apple_suites": 39,
+  "status": "success",
+  "artifacts": [
+    {
+      "id": 12706007339,
+      "node_id": "MDg6QXJ0aWZhY3QxMjcwNjAwNzMzOQ==",
+      "name": "Husk-LiveContainer-IPA",
+      "size_in_bytes": 142014760,
+      "url": "https://api.github.com/repos/aaULTra/Husk/actions/artifacts/12706007339",
+      "archive_download_url": "https://api.github.com/repos/aaULTra/Husk/actions/artifacts/12706007339/zip",
+      "expired": false,
+      "digest": "sha256:d851ef44aabc74e7b7a10a7a8dd65bd86d66eb7415d419ae941e22528cf37fcf",
+      "created_at": "2026-10-27T02:44:16Z",
+      "updated_at": "2026-10-27T02:44:16Z",
+      "expires_at": "2026-11-03T02:44:14Z",
+      "workflow_run": {
+        "id": 40439120264,
+        "repository_id": 1420682562,
+        "head_repository_id": 1420682562,
+        "head_branch": "codex/dungeons-efficient-native",
+        "head_sha": "ca18cbeb1dbc2a00973186a2eed3aca210c0a717"
+      }
+    }
+  ],
+  "scope": "Intermediate prior to compiler-compatibility namespace finalization;parked,no user install requested."
+}

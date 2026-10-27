@@ -17,6 +17,9 @@
 #ifndef HUSK_ARCHIVE_PATCH_ID
 #define HUSK_ARCHIVE_PATCH_ID "unidentified-patch"
 #endif
+#ifndef HUSK_ARCHIVE_COMPAT_ID
+#define HUSK_ARCHIVE_COMPAT_ID "unidentified-compiler-contract"
+#endif
 static std::mutex huskArchiveLock;
 static tl_na_stats huskArchiveStats={TL_NATIVE_ARCHIVE_ABI,sizeof(tl_na_stats)};
 static tl_na_priority huskArchivePriority={1,sizeof(tl_na_priority)};
@@ -78,7 +81,7 @@ static bool huskArchiveBind(id<MTLDevice> device){
  if(huskArchiveDevice)return huskArchiveDevice==device&&huskArchiveStats.supported;
  if(![device respondsToSelector:@selector(newBinaryArchiveWithDescriptor:error:)]){huskArchiveEnabled.store(false);return false;}
  huskArchiveDevice=[device retain];
- NSString *identity=[NSString stringWithFormat:@"v1|%s|%@|%llu|%@",HUSK_ARCHIVE_PATCH_ID,device.name,(unsigned long long)device.registryID,NSProcessInfo.processInfo.operatingSystemVersionString];
+ NSString *identity=[NSString stringWithFormat:@"v2|%s|%@|%llu|%@",HUSK_ARCHIVE_COMPAT_ID,device.name,(unsigned long long)device.registryID,NSProcessInfo.processInfo.operatingSystemVersionString];
  huskArchivePath=[[huskArchiveDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"native-%016llx.metalarc",(unsigned long long)huskArchiveHash(identity)]] copy];
  uint64_t bytes=huskArchiveFileSize(huskArchivePath);
  if(bytes&&bytes<=huskArchiveMaxBytes){

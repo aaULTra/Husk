@@ -70,9 +70,21 @@ REPLACEMENTS={
     ]
   ]
 }
+# This is a GPU compiler contract, not a diagnostic/package build identity.
+# Bump when transforms change MSL/native descriptor compilation semantics.
+NATIVE_COMPILER_CONTRACT="husk-native-default-mvk-compiler-contract-v1"
+def archive_compatibility_id(src):
+    revision=(src/"ExternalRevisions/SPIRV-Cross_repo_revision").read_text().strip()
+    if not re.fullmatch(r"[0-9a-f]{40}",revision):raise ValueError("Invalid pinned SPIRV-Cross revision")
+    inputs={"schema":2,"upstream_commit":PIN,"spirv_cross_revision":revision,
+            "compiler_contract":NATIVE_COMPILER_CONTRACT,"archive_format_owner":"Metal binary archive"}
+    payload=json.dumps(inputs,sort_keys=True,separators=(",",":")).encode()
+    return hashlib.sha256(payload).hexdigest(),inputs
+
 def prepare(src):
     rev=subprocess.check_output(["git","-C",str(src),"rev-parse","HEAD"],text=True).strip()
     if rev!=PIN:raise SystemExit("Unexpected MoltenVK source pin")
+    compatibility,compatibility_inputs=archive_compatibility_id(src)
     gpu=src/"MoltenVK/MoltenVK/GPUObjects"
     changed={}
     for name,edits in REPLACEMENTS.items():
@@ -117,9 +129,9 @@ def prepare(src):
     digest=hashlib.sha256()
     for path in inputs:digest.update(path.read_bytes())
     archive=(ROOT/"patches/metalfx/HuskArchive.inc").read_text()
-    (gpu/"HuskArchive.inc").write_text('#define HUSK_ARCHIVE_PATCH_ID "'+digest.hexdigest()+'"\n'+archive)
+    (gpu/"HuskArchive.inc").write_text('#define HUSK_ARCHIVE_PATCH_ID "'+digest.hexdigest()+'"\n#define HUSK_ARCHIVE_COMPAT_ID "'+compatibility+'"\n'+archive)
     shutil.copy2(ROOT/"src/translation-layer-next/husk-tl-native-archive.h",gpu/"HuskArchiveABI.h")
-    manifest={"schema":1,"upstream_commit":PIN,"upstream_version":"1.4.2","husk_spatial_patch_sha256":digest.hexdigest(),"husk_native_pipeline_patch_sha256":digest.hexdigest(),"native_archive_abi":2,"feature":"M9-SPATIAL-v3+M5-NATIVE-ARCHIVE-v1+M4-DISPLAY-v1","default_enabled":False}
+    manifest={"schema":1,"upstream_commit":PIN,"upstream_version":"1.4.2","husk_spatial_patch_sha256":digest.hexdigest(),"husk_native_pipeline_patch_sha256":digest.hexdigest(),"native_archive_abi":2,"native_archive_cache_schema":2,"native_archive_compatibility_id":compatibility,"native_archive_compatibility_inputs":compatibility_inputs,"feature":"M9-SPATIAL-v3+M5-NATIVE-ARCHIVE-v1+M4-DISPLAY-v1","default_enabled":False}
     (src/"HuskSpatialBuild.json").write_text(json.dumps(manifest,indent=2)+"\n")
     print(json.dumps(manifest))
 if __name__=="__main__":prepare(Path(sys.argv[1]).resolve())

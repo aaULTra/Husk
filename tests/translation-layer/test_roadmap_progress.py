@@ -25,4 +25,14 @@ class ProgressTests(unittest.TestCase):
    for gs in tracks:
     for g in gs:
      for ref in g['evidence']:self.assertTrue((ROOT/ref.split('#')[0]).exists(),ref)
+ def test_implementation_percentage_is_weighted_separate_and_includes_pending_duo(self):
+  for row in self.ledger['milestones'][1:]:
+   for gate in row['tracks']['I']:
+    gate['status']='passed' if row['id']!='M10' else 'pending';gate['evidence']=['test']
+  result=m.score(self.ledger)
+  self.assertAlmostEqual(result['weighted_implementation_build_percent'],88/98*100)
+  before=result['overall_percent']
+  self.ledger['milestones'][0]['documentation'][0]['status']='pending'
+  self.assertEqual(m.score(self.ledger)['weighted_implementation_build_percent'],result['weighted_implementation_build_percent'])
+  self.assertLess(m.score(self.ledger)['overall_percent'],before)
 if __name__=='__main__':unittest.main()
