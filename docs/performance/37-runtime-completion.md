@@ -1,3 +1,5 @@
+> **Superseded by a launch regression.**42c92f2 is withdrawn(E-M4-011). The audio rewrite/automatic recovery and direct Vulkan routing described below are quarantined by1584db6;controller/touch/count and earlier lifecycle/cache changes remain. See [current correction](38-launch-regression-restore.md). Retain this document as implementation history,not current all-features status.
+
 # Runtime completion and outstanding repairs — RUNTIME-COMPLETE-v1
 
 2026-10-27. User explicitly requests implementing the entire plan from existing logs, including outstanding bugs, without another diagnostic-only cycle. Base source ef0ef6f / verified runtime1f46b41; tested device remains395ec7c(E-M4-010). Preserve current artifacts/test instructions and every M0–M10 requirement. No new general playthrough is requested during engineering.

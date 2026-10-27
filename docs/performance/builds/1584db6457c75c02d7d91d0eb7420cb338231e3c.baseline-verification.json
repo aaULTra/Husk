@@ -1,0 +1,49 @@
+{
+  "baseline": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+  "tested_device_baseline": "395ec7ca5e72ba09d53bfbfa249e7732c312ccee",
+  "files": [
+    {
+      "path": "src/translation-layer-next/husk-tl-audio.c",
+      "restored_from": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+      "sha256": "65040aedf8ed33cf2f3c7b9587b35e6d9c6a8427c4b4bf76c1906a6f2cff4749",
+      "also_byte_exact_395ec7c": true
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-audio.h",
+      "restored_from": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+      "sha256": "5593aa294dfc4771cded370ebce0e51dbcd2f5091967b51b5e1f20b6f5ab2288",
+      "also_byte_exact_395ec7c": true
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-unity-app.c",
+      "restored_from": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+      "sha256": "b5a8a9f28e5fe5f8d40ee6a2224ea1bef1b00f68e5b096c84ff0fdac0efbef4d",
+      "also_byte_exact_395ec7c": true
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-unity-app.h",
+      "restored_from": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+      "sha256": "c550773d8aa3c0e06ea1ed5336cac261ad199924cc611a3d06a4d2d901a163d7",
+      "also_byte_exact_395ec7c": true
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-vulkan.m",
+      "restored_from": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+      "sha256": "c0ef726725d3db077ea9e76cda6fad6d29581fb50fb6fd8cb6165f25300f2b77",
+      "also_byte_exact_395ec7c": true
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-pipeline-diagnostics.c",
+      "restored_from": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+      "sha256": "734afd5b4a1b1288da337cf10dd92a70a62a4f6983a858946e43466ea26346dc",
+      "also_byte_exact_395ec7c": false
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-pipeline-diagnostics.h",
+      "restored_from": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+      "sha256": "b55c83247c3d2ec80978ce06ce31092f54f2811246fbed83042f4f5e3d4935b1",
+      "also_byte_exact_395ec7c": false
+    }
+  ],
+  "scope": "Compatibility rollback of new native startup paths; exact original fault not symbolicated without image map/stack. Retain independent touch/controller/count/lifecycle/cache fixes."
+}

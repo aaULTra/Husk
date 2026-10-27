@@ -1,0 +1,41 @@
+{
+  "id": "E-M4-011",
+  "source_sha": "42c92f297979435a6d193257dab51ce35fddf202",
+  "packaged_source": "42c92f297979435a6d193257dab51ce35fddf202-dirty",
+  "device": "iPad16,5",
+  "os": "iPadOS27.2",
+  "game": "Minecraft Dungeons",
+  "apk": "Minecraft-Dungeons-v1.4-full-apkvision.apk",
+  "package": "com.nintendosss.spice",
+  "session": "F80E3FFC-D683-4704-8347-0F102CD643A0",
+  "started": "2026-10-27T23:16:57Z",
+  "provenance": "User-pasted crash report and native output. This file retains selected exact observations,not a lossless archive of the full pasted text.",
+  "current_fault": {
+    "signal": 11,
+    "pc": "0x19d1a88b0",
+    "lr": "0x2df14336c",
+    "sp": "0x16f289770",
+    "fault_address": "0x5d9ea3544ee91e"
+  },
+  "previous_run_replay_fault": {
+    "signal": 11,
+    "pc": "0x19d1a883c",
+    "lr": "0x2df14336c",
+    "sp": "0x16b381770",
+    "fault_address": "0xabaa76920016",
+    "provenance": "Replayed previous-run tail in current build log; independently stamped previous header not supplied."
+  },
+  "observations": [
+    "JIT execution self-test PASS",
+    "Native UE4 libraries loaded and lifecycle delivered",
+    "Vulkan device and1696x1280 swapchain created,2128x1600drawable",
+    "Audio output running44100Hz2channels",
+    "Early loading alive frame1 before fatal",
+    "No screenshot/background/window action recorded after launch_visibility",
+    "Optional patch-OBB warning also exists in successful older gameplay;not a crash diagnosis"
+  ],
+  "cause": "UNRESOLVED: no image load map or full crashed-thread stack. Absolute PC/LR alone are insufficient for reliable function attribution.",
+  "action": "Withdraw42c92f2. Restore prior compatible native startup source;retain independent controller/touch/lifecycle/cache work.",
+  "correction_source_sha": "1584db6457c75c02d7d91d0eb7420cb338231e3c",
+  "user_test_needed": "Only one ordinary short launch after exact Apple package verification;no long gameplay/preparation/caches purge."
+}

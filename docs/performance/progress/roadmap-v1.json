@@ -2,7 +2,7 @@
   "model": "HUSK-ROADMAP-v1",
   "gate_version": "whole-milestones-1",
   "updated": "2026-10-27",
-  "scope": "RUNTIME-COMPLETE-v1 actual audio/controller/Vulkan/touch repairs: Apple397checks/45suites/zero skips,app/driver/SDK/IPA independently verified;6/6scoped build gates. Existing I/D/E statuses unchanged. Current device evidence remains E-M4-010395ec7c;new-source physical0/4,net-benefit0/1. No new general run requested.",
+  "scope": "E-M4-011 confirms42c92f2 startup SIGSEGV regression despite passing Apple checks;candidate withdrawn. LAUNCH-RESTORE-v1 restores proven native startup paths. M1-D3/M9-D4regression; prior395ec7c evidence retained. Exact Apple correction build pending;no new energy credit.",
   "milestones": [
     {
       "id": "M0",
@@ -139,13 +139,15 @@
           {
             "id": "M1-D3",
             "criterion": "Full relevant panel/window/lifecycle/input/audio regression matrix",
-            "status": "inconclusive",
+            "status": "regression",
             "evidence": [
               "docs/performance/runs/E-M4-009.md",
               "docs/performance/runs/E-M4-010.md",
-              "docs/performance/runs/E-M4-010.analysis.json"
+              "docs/performance/runs/E-M4-010.analysis.json",
+              "docs/performance/runs/E-M4-011.md",
+              "docs/performance/runs/E-M4-011.json"
             ],
-            "remaining": "E-M4-009 screenshot/input freeze retained as prior-build regression. E-M4-010395ec7c finishes five paired pause/resume cycles; user thinks responsiveness remained and screenshot felt more durable. Window untested, full input/audio/rotation/device-loss/restoration matrix unconfirmed. No universal fix credited."
+            "remaining": "Corrected source must pass exact Apple package and actual ordinary launch before full lifecycle matrix;42c92f2withdrawn after startupSIGSEGV."
           },
           {
             "id": "M1-D4",
@@ -1200,16 +1202,18 @@
           {
             "id": "M9-D4",
             "criterion": "Resize/pause/resume/device-loss/baseline restoration checks",
-            "status": "inconclusive",
+            "status": "regression",
             "evidence": [
               "docs/performance/17-metalfx-spatial-prototype.md",
               "docs/performance/runs/E-M4-005.md",
               "docs/performance/runs/E-M4-006.md",
               "docs/performance/runs/E-M4-009.md",
               "docs/performance/runs/E-M4-010.md",
-              "docs/performance/runs/E-M4-010.analysis.json"
+              "docs/performance/runs/E-M4-010.analysis.json",
+              "docs/performance/runs/E-M4-011.md",
+              "docs/performance/runs/E-M4-011.json"
             ],
-            "remaining": "E-M4-009 screenshot/input freeze retained as prior-build regression. E-M4-010395ec7c finishes five paired pause/resume cycles; user thinks responsiveness remained and screenshot felt more durable. Window untested, full input/audio/rotation/device-loss/restoration matrix unconfirmed. No universal fix credited."
+            "remaining": "Corrected source must pass exact Apple package and actual ordinary launch before full lifecycle matrix;42c92f2withdrawn after startupSIGSEGV."
           }
         ],
         "E": [
@@ -1322,6 +1326,6 @@
       }
     }
   ],
-  "source_sha": "42c92f297979435a6d193257dab51ce35fddf202",
+  "source_sha": "1584db6457c75c02d7d91d0eb7420cb338231e3c",
   "evidence_id": "E-M4-009"
 }

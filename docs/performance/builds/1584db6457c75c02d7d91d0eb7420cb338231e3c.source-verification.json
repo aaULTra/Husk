@@ -1,0 +1,26 @@
+{
+  "source_sha": "1584db6457c75c02d7d91d0eb7420cb338231e3c",
+  "verified_paths": [
+    "docs/performance/38-launch-regression-restore.md",
+    ".github/workflows/build-husk-ipa.yml",
+    "PROJECT_PLAN.md",
+    "docs/performance/builds/42c92f297979435a6d193257dab51ce35fddf202.md",
+    "src/app/Husk/NativeAudioSession.swift",
+    "src/app/Husk/TLUnityView.swift",
+    "src/translation-layer-next/husk-tl-audio.c",
+    "src/translation-layer-next/husk-tl-audio.h",
+    "src/translation-layer-next/husk-tl-pcm.h",
+    "src/translation-layer-next/husk-tl-pipeline-diagnostics.c",
+    "src/translation-layer-next/husk-tl-pipeline-diagnostics.h",
+    "src/translation-layer-next/husk-tl-unity-app.c",
+    "src/translation-layer-next/husk-tl-unity-app.h",
+    "src/translation-layer-next/husk-tl-vulkan-routing.h",
+    "src/translation-layer-next/husk-tl-vulkan.m",
+    "tests/translation-layer/test_driver_profile.py",
+    "tests/translation-layer/test_render_inventory.py",
+    "tests/translation-layer/test_runtime_audio.py",
+    "tests/translation-layer/test_runtime_input_vulkan.py",
+    "tests/translation-layer/test_vk_frame_timing.py"
+  ],
+  "all_byte_exact_or_deleted": true
+}
