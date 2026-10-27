@@ -26,6 +26,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     private var gpuExcludedStart: (Double, Double)?
     private var dropped = 0, previousBatteryMonitoring = false
     private var gameVisible = false
+    private var gameSceneActive = false
     private var panelVisible = false
     @Published var phase = "Unmarked"
     @Published var gpuSampling = false
@@ -68,6 +69,10 @@ final class EfficiencyDiagnostics: ObservableObject {
         if running { metadata["launch_configuration"] = attached; event("launch_configuration", "Actual launch values captured; selected settings may require restart") }
     }
     func visible(_ value: Bool) { gameVisible = value; refreshExclusion() }
+    func sceneActive(_ value: Bool) { gameSceneActive = value; refreshExclusion() }
+    func lifecycleEvent(_ reason: String) {
+        if running { event("runtime", "[M1/M6/M9 lifecycle] " + reason) }
+    }
     func panel(_ value: Bool) { panelVisible = value; refreshExclusion() }
     func markPhase(_ value: String) {
         phase = value
@@ -142,7 +147,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     private func refreshExclusion() {
         guard running else { return }
         let reason = UIApplication.shared.applicationState != .active ? "application inactive" :
-            !gameVisible ? "game view not attached" : panelVisible ? "diagnostics panel" : interrupted ? "manual interruption" : ""
+            !gameVisible ? "game view not attached" : !gameSceneActive ? "owning game scene inactive" : panelVisible ? "diagnostics panel" : interrupted ? "manual interruption" : ""
         transitionExclusion(reason)
     }
     private func transitionExclusion(_ reason: String) {
@@ -571,7 +576,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     func prepareNativeArchive() {
         let (a, control, _) = archiveInspection()
         if let reason = NativeArchivePresentation.preparationBlocker(running: running, exporting: exporting,
-            preparing: nativePreparing, gameVisible: gameVisible, active: UIApplication.shared.applicationState == .active) {
+            preparing: nativePreparing, gameVisible: gameVisible, active: gameSceneActive && UIApplication.shared.applicationState == .active) {
             recordArchiveInspection(action: "prepare_blocked", stats: a, control: control,
                 status: .init(code: "prepare_blocked", message: reason)); return
         }
@@ -592,7 +597,13 @@ final class EfficiencyDiagnostics: ObservableObject {
         var cpu = tl_em_process(); tl_em_process_sample(false, &cpu); let cpuBefore = cpu.cpu_seconds
         husk_unity_set_paused(true)
         DispatchQueue.global(qos: .utility).async {
-            let result = tl_vk_archive_prepare()
+            // The activity now acknowledges pause on its own thread. Waiting is
+            // worker-only and bounded; never prepare concurrently with an
+            // unacknowledged lifecycle callback or block UIKit for this.
+            let pauseAcknowledged = tl_lifecycle_wait_paused(2000)
+            let result: Int32
+            if pauseAcknowledged { result = tl_vk_archive_prepare() }
+            else { _ = tl_vk_archive_cancel_prepare(); result = -2 }
             DispatchQueue.main.async {
                 let elapsed = self.now - started
                 var afterCPU = tl_em_process(); tl_em_process_sample(false, &afterCPU)
@@ -604,6 +615,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                     "started_monotonic_seconds": started, "ended_monotonic_seconds": started + elapsed,
                     "result": result, "measured_host_wall_seconds": elapsed,
                     "estimated_process_cpu_seconds": deltaCPU.map { $0 as Any } ?? NSNull(),
+                    "pause_acknowledged": pauseAcknowledged,
                     "before": before, "after": self.nativeArchiveReport(),
                     "scope": "Explicit extra preparation, game paused. Process CPU includes host and excludes compiler/system processes; wall includes callback scheduling. Pause requested, not a GPU-idle measurement. No measured watts/temperature/hits or energy saving. Include receipt in total-session comparisons."]
                 do {
@@ -611,12 +623,20 @@ final class EfficiencyDiagnostics: ObservableObject {
                     try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
                     let file = dir.appendingPathComponent(UUID().uuidString + ".json")
                     try EfficiencyMath.json(receipt).write(to: file, options: .atomic); self.archiveFiles = [file]
-                    self.archiveMessage = "Preparation result \(result). Receipt saved in Files > Husk > PipelinePreparation. Return to gameplay or share the receipt; benefit unverified."
+                    self.archiveMessage = pauseAcknowledged ? "Preparation result \(result). Receipt saved in Files > Husk > PipelinePreparation. Return to gameplay or share the receipt; benefit unverified." : "Preparation skipped: the activity did not acknowledge pause within 2 seconds. No preparation was started. Share the receipt; do not repeatedly retry."
                 } catch { self.archiveMessage = "Preparation result \(result); receipt export failed: \(error.localizedDescription)" }
                 self.nativePreparing = false
-                if self.gameVisible && UIApplication.shared.applicationState == .active { husk_unity_set_paused(false) }
+                TLUnityUIView.reconcileNativeLifecycle()
             }
         }
+    }
+    private func lifecycleReport() -> [String: Any] {
+        var s = tl_lifecycle_stats(); tl_lifecycle_snapshot(&s)
+        return ["plan_ids": ["M1", "M6", "M9"], "subsystem": "native_lifecycle", "observed_monotonic_seconds": now,
+                "ready": s.ready, "requested_paused": s.requested_paused, "applied_paused": s.applied_paused,
+                "applying": s.applying, "requested_sequence": s.requested_sequence, "applied_sequence": s.applied_sequence,
+                "requests": s.requests, "duplicates": s.duplicates, "transitions": s.transitions,
+                "scope": "Latest desired and activity-UiThread acknowledged state; event begin/complete logs bracket callbacks. Process lifetime, includes excluded work. Not proof of GPU idle, guest responsiveness or OS termination cause."]
     }
     private func syncReport() -> [String: Any] {
         var s = tl_em_sync_stats(); tl_em_sync_snapshot(&s); var counts = s.counts
@@ -697,7 +717,7 @@ final class EfficiencyDiagnostics: ObservableObject {
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
         stoppedReport = ["schema_version": 13, "metadata": metadata, "duration_seconds": now - origin,
-                         "summary": stats(total), "native_display_sampling": nativeDisplayReport(), "delayed_os_reports": EfficiencyMetricKit.shared.summary, "component_sampling": componentReport(), "driver_phases": driverPhaseReport(), "native_pipeline_archive": nativeArchiveReport(), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "swapchain_budget": swapchainBudgetReport(), "queue_execution_options": queueExecutionReport(), "initialization_waits": initializationWaitReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
+                         "summary": stats(total), "native_display_sampling": nativeDisplayReport(), "delayed_os_reports": EfficiencyMetricKit.shared.summary, "component_sampling": componentReport(), "driver_phases": driverPhaseReport(), "native_pipeline_archive": nativeArchiveReport(), "native_lifecycle": lifecycleReport(), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "swapchain_budget": swapchainBudgetReport(), "queue_execution_options": queueExecutionReport(), "initialization_waits": initializationWaitReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
                          "battery_arithmetic_rate_pp_per_hour": battery.arithmeticRate.map { $0 as Any } ?? NSNull(),

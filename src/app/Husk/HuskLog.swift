@@ -22,19 +22,8 @@ import os
 enum HuskLog {
     private static let osLog = Logger(subsystem: "com.husk.app", category: "husk")
 
-    /// Exposed because a C signal handler closure cannot capture context.
-    fileprivate static var rawLogFD: Int32 { logFD }
     private static var logFD: Int32 = -1
-    fileprivate static var pipeReadFD: Int32 = -1
-
-    /// Scratch space for the crash handler, taken before it is needed.
-    /// Nothing inside a signal handler may allocate.
-    fileprivate static let crashBuf =
-        UnsafeMutableRawPointer.allocate(byteCount: 8192, alignment: 16)
-
-    /// Frame pointers for the crash backtrace, taken before they are needed.
-    fileprivate static let crashFrames =
-        UnsafeMutablePointer<UnsafeMutableRawPointer?>.allocate(capacity: 64)
+    private static var pipeReadFD: Int32 = -1
     private static var pipeWriteFD: Int32 = -1
     private static var started = false
     private static let writeLock = NSLock()
@@ -202,69 +191,8 @@ enum HuskLog {
     /// than treat it as fatal. Stealing them here would break JIT detection.
     /// SIGPIPE is already set to SIG_IGN in start() and must stay that way.
     private static func installCrashHandlers() {
-        let fatal: [Int32] = [SIGSEGV, SIGABRT, SIGILL, SIGFPE, SIGSYS]
-        for sig in fatal {
-            signal(sig) { received in
-                // Async-signal-safe only: write(2) straight to the fds, no
-                // allocation, no locks, no Swift runtime.
-                let msg = "\n*** FATAL SIGNAL \(received) -- process is dying ***\n"
-                msg.withCString { p in
-                    let n = strlen(p)
-                    if HuskLog.rawLogFD >= 0 { _ = write(HuskLog.rawLogFD, p, n) }
-                }
-                // Drain whatever C wrote but the reader thread never got to.
-                //
-                // QEMU's own abort messages -- assertion text, error_report --
-                // go to stderr, which is a pipe read by a thread. When the
-                // process aborts, that thread has usually not been scheduled
-                // since the write, so the message dies in the pipe buffer and
-                // the log shows the fatal signal with nothing before it. That
-                // happened on the first virtio-sound boot and cost the whole
-                // diagnosis: a correct command line, a device that exists, and
-                // no reason given.
-                //
-                // read(2) and write(2) are async-signal-safe; the non-blocking
-                // flag is what stops this hanging when the pipe is empty.
-                if HuskLog.pipeReadFD >= 0 {
-                    // Reading a file now, so this cannot block and cannot
-                    // miss anything: whatever the tailer has not reached is
-                    // still on disk at this descriptor's offset.
-                    // A buffer allocated up front, because this one did not
-                    // work: creating an array here allocates, and abort() can
-                    // be raised while the allocator's lock is held -- so the
-                    // drain deadlocked inside malloc and took the fsync with
-                    // it. The marker was written and nothing after it, which
-                    // looked exactly like "QEMU printed nothing".
-                    while true {
-                        let n = read(HuskLog.pipeReadFD, HuskLog.crashBuf, 8192)
-                        if n <= 0 { break }
-                        if HuskLog.rawLogFD >= 0 {
-                            _ = write(HuskLog.rawLogFD, HuskLog.crashBuf, n)
-                        }
-                    }
-                }
-                // Where it died.
-                //
-                // Six months of "FATAL SIGNAL 11" with no frames is six months
-                // of guessing which of QEMU, ANGLE, the audio ring or our own
-                // Swift was at fault. backtrace_symbols_fd is documented
-                // async-signal-safe and writes straight to a descriptor, which
-                // is the only reason it can be used here -- and the frame
-                // buffer is taken at startup because nothing in a signal
-                // handler may allocate.
-                if HuskLog.rawLogFD >= 0 {
-                    let header = "\n--- backtrace ---\n"
-                    header.withCString { p in
-                        _ = write(HuskLog.rawLogFD, p, strlen(p))
-                    }
-                    let n = backtrace(HuskLog.crashFrames, 64)
-                    backtrace_symbols_fd(HuskLog.crashFrames, n, HuskLog.rawLogFD)
-                }
-                if HuskLog.rawLogFD >= 0 { fsync(HuskLog.rawLogFD) }
-                signal(received, SIG_DFL)
-                raise(received)
-            }
-        }
+        let installed = husk_crash_install(logFD, pipeWriteFD)
+        if installed != 5 { log("boot", "WARNING: installed \(installed)/5 minimal fatal signal handlers") }
         NSSetUncaughtExceptionHandler { ex in
             HuskLog.log("crash", "uncaught exception: \(ex.name.rawValue) -- \(ex.reason ?? "")")
             HuskLog.log("crash", ex.callStackSymbols.prefix(20).joined(separator: " | "))

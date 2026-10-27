@@ -56,7 +56,7 @@ static int configure(const tl_na_config*c){assert(c->version==TL_NATIVE_ARCHIVE_
 static int snapshot(tl_na_stats*s){s->requested=s->supported=1;s->pending=2;return 1;}
 static int prepare(void){atomic_store(&entered,true);while(!atomic_load(&leave)){}return 1;}
 static void forget(void){forgets++;}
-enum{HUSK_UNITY_RUNNING=1,ENGINE_JAVA,ENGINE_GAMEMAKER,ENGINE_FLUTTER,ENGINE_GODOT,ENGINE_GTA,ENGINE_UE4,ENGINE_SDL,ENGINE_GAMEACTIVITY,ENGINE_COCOS};
+enum{HUSK_UNITY_RUNNING=1,HUSK_UNITY_STARTING=20,ENGINE_JAVA,ENGINE_GAMEMAKER,ENGINE_FLUTTER,ENGINE_GODOT,ENGINE_GTA,ENGINE_UE4,ENGINE_SDL,ENGINE_GAMEACTIVITY,ENGINE_COCOS};
 static struct{_Atomic int state;int engine;}A={1,ENGINE_UE4};static unsigned pauses,resumes,touches;
 #define STUB(name) static void name(bool p){(void)p;}
 STUB(tl_javaapp_set_paused) STUB(tl_gm_set_paused) STUB(tl_flutter_set_paused) STUB(tl_godot_set_paused) STUB(tl_gta_set_paused)
@@ -75,14 +75,15 @@ int main(void){
  husk_ue4_set_native_archive(1);tl_npa_configure("Dungeons","cache",true);assert(!configs);
  husk_ue4_set_native_archive(2);tl_npa_configure("Other","cache",true);tl_npa_configure("Dungeons","cache",false);assert(!configs);
  tl_npa_configure("Dungeons","cache",true);assert(configs==1);tl_npa_device((void*)1);
+ assert(tl_vk_archive_begin_prepare());assert(tl_vk_archive_cancel_prepare()&&!tl_vk_archive_preparing());assert(!tl_vk_archive_cancel_prepare());
  assert(tl_vk_archive_begin_prepare()&&tl_vk_archive_preparing()&&!tl_vk_archive_begin_prepare());
- husk_unity_set_paused(false);assert(!resumes);husk_unity_set_paused(true);assert(pauses==2);
+ husk_unity_set_paused(false);assert(!resumes);husk_unity_set_paused(true);assert(pauses==1);
  husk_unity_touch(1,1,5,6);assert(touches==2); // input forwarding remains unchanged; no unrelated pause variable/guard
  tl_na_stats s;tl_vk_archive_snapshot(&s);assert(s.preparing&&s.pending==2);
  pthread_t t;assert(!pthread_create(&t,0,job,0));while(!atomic_load(&entered)){}
- assert(tl_vk_archive_prepare()==0);assert(tl_vk_archive_preparing());
+ assert(!tl_vk_archive_cancel_prepare());assert(tl_vk_archive_prepare()==0);assert(tl_vk_archive_preparing());
  tl_npa_forget((void*)2);assert(!forgets);tl_npa_forget((void*)1);assert(forgets==1&&tl_vk_archive_preparing());
- atomic_store(&leave,true);pthread_join(t,0);assert(!tl_vk_archive_preparing());husk_unity_set_paused(false);assert(resumes==2);
+ atomic_store(&leave,true);pthread_join(t,0);assert(!tl_vk_archive_preparing());husk_unity_set_paused(false);assert(resumes==1);
  tl_npa_configure("Dungeons","cache",true);tl_npa_device((void*)3);assert(tl_vk_archive_begin_prepare());
  tl_npa_forget((void*)3);assert(!tl_vk_archive_preparing()&&tl_vk_archive_prepare()==0);return 0;
 }

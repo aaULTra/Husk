@@ -20,6 +20,7 @@ final class CrashReport: ObservableObject {
         let when: Date?
         /// The previous run's last lines, for the sheet.
         let excerpt: [String]
+        let context: [String: Any]
     }
 
     enum Cause {
@@ -46,7 +47,7 @@ final class CrashReport: ObservableObject {
             case .startFailed:
                 return "The runtime could not start it. The report says which part was missing."
             case .unknown:
-                return "Nothing was recorded, which usually means iOS ended Husk for using too much memory, or Husk was closed from the app switcher."
+                return "No fatal cause was recorded. A hang/watchdog, an operating-system termination, a host failure or closing the app can leave this record. The log alone does not distinguish them; an iPadOS/LiveContainer incident report may identify the cause."
             case .diagnosed(let d):
                 return d.detail
             }
@@ -62,37 +63,50 @@ final class CrashReport: ObservableObject {
     // MARK: the note
 
     private static var running: TLApp?
+    private static var session: RunningGameSession?
     private static var observers: [NSObjectProtocol] = []
 
     /// A game is starting: if Husk ends before `gameEnded`, the next launch will say so.
     ///
-    /// Not while Husk is in the background, though: iOS ends background apps when it wants the memory, without a word,
-    /// and that is not the game's doing. Nor while it is only inactive: swiping it away from the app switcher ends it with
-    /// no background notice at all (it is merely inactive while the switcher is up), which read as a crash every time
-    /// (a Geometry Dash session closed that way). The note goes when Husk stops being active and comes back with it.
+    /// Keep interruption context rather than deleting evidence during inactive
+    /// transitions. An uncleared marker reports an unclean end, not a proven
+    /// crash, memory kill or watchdog. Normal game closure still removes it.
     static func gameStarted(_ app: TLApp) {
+        if running?.id != app.id || session == nil {
+            session = RunningGameSession(id: app.id, label: app.label,
+                build: Bundle.main.object(forInfoDictionaryKey: "HuskBuildCommit") as? String ?? "UNAVAILABLE",
+                time: Date().timeIntervalSince1970)
+        }
         running = app
         writeMarker()
         if observers.isEmpty {
             let nc = NotificationCenter.default
             observers.append(nc.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { _ in
-                try? FileManager.default.removeItem(at: marker)
+                noteLifecycle("application_inactive")
             })
             observers.append(nc.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in
-                writeMarker()
+                noteLifecycle("application_active")
+            })
+            observers.append(nc.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { _ in
+                noteLifecycle("application_background")
             })
         }
     }
 
     private static func writeMarker() {
-        guard let app = running else { return }
-        let info: [String: Any] = ["id": app.id, "label": app.label, "time": Date().timeIntervalSince1970]
-        if let data = try? JSONSerialization.data(withJSONObject: info) { try? data.write(to: marker, options: .atomic) }
+        guard running != nil, let session else { return }
+        if let data = try? JSONEncoder().encode(session) { try? data.write(to: marker, options: .atomic) }
+    }
+    static func noteLifecycle(_ name: String) {
+        guard running != nil else { return }
+        session?.note(name, time: Date().timeIntervalSince1970)
+        writeMarker()
     }
 
     /// The game was closed the normal way.
     static func gameEnded() {
         running = nil
+        session = nil
         try? FileManager.default.removeItem(at: marker)
     }
 
@@ -101,19 +115,20 @@ final class CrashReport: ObservableObject {
         guard let data = try? Data(contentsOf: Self.marker),
               let info = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
         try? FileManager.default.removeItem(at: Self.marker)
-        let lines = ((try? String(contentsOf: Self.previousLogURL, encoding: .utf8)) ?? "")
-            .split(separator: "\n", omittingEmptySubsequences: true).map(String.init)
+        let mainLog = (try? String(contentsOf: Self.previousLogURL, encoding: .utf8)) ?? ""
+        let nativeLog = (try? String(contentsOf: HuskLog.previousNativeLogURL, encoding: .utf8)) ?? ""
+        let lines = RuntimeLogEvidence.currentLines(mainLog + "\n" + nativeLog)
         var cause = Cause.unknown
-        if let fatal = lines.last(where: { $0.contains("*** FATAL SIGNAL") }),
-           let n = fatal.split(separator: " ").compactMap({ Int($0) }).first {
+        if let n = RuntimeLogEvidence.fatalSignal(lines) {
             cause = .signal(n)
         } else if lines.contains(where: { $0.contains("the game could not be started") || $0.contains("native: launch refused") }) {
             cause = .startFailed
         }
-        if let d = AppDiagnosis.fromLog(lines.joined(separator: "\n")) { cause = .diagnosed(d) }
+        // A warning/heuristic must never override a recorded fatal signal.
+        if case .unknown = cause, let d = AppDiagnosis.fromLog(lines.joined(separator: "\n")) { cause = .diagnosed(d) }
         let time = (info["time"] as? Double).map { Date(timeIntervalSince1970: $0) }
         pending = Report(game: info["label"] as? String ?? "A game", appID: info["id"] as? String ?? "",
-                         cause: cause, when: time, excerpt: Array(Self.interesting(lines).suffix(14)))
+                         cause: cause, when: time, excerpt: Array(Self.interesting(lines).suffix(14)), context: info)
         HuskLog.log("crash", "\(pending!.game) did not close normally last run: \(cause.title)")
         switch cause {
         case .signal: GameStatusStore.shared.record(pending!.appID, .crashed)
@@ -143,9 +158,14 @@ final class CrashReport: ObservableObject {
         What     : \(r.cause.title)
         Started  : \(r.when.map { ISO8601DateFormatter().string(from: $0) } ?? "?")
         Husk     : \(info["CFBundleShortVersionString"] as? String ?? "?") (\(info["CFBundleVersion"] as? String ?? "?")) \(info["HuskBuildCommit"] as? String ?? "")
+        Run build: \(r.context["build"] as? String ?? "UNAVAILABLE: older marker did not retain run build")
         Device   : \(HuskLog.deviceModel), \(UIDevice.current.systemName) \(UIDevice.current.systemVersion)
 
         """
+        if let data = try? JSONSerialization.data(withJSONObject: r.context, options: [.prettyPrinted, .sortedKeys]),
+           let context = String(data: data, encoding: .utf8) {
+            text += "\n---- recorded lifecycle context (not a proven cause) ----\n" + context + "\n"
+        }
         if let app = TranslationLayerStore.shared.apps.first(where: { $0.id == r.appID }) {
             text += "Package  : \(app.packageName ?? "?")\n"
             text += "APKs     : \(app.apks.map { ($0 as NSString).lastPathComponent }.joined(separator: ", "))\n"

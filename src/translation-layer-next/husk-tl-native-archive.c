@@ -63,6 +63,7 @@ bool tl_vk_archive_begin_prepare(void){
  pthread_mutex_unlock(&lock);return valid;
 }
 bool tl_vk_archive_preparing(void){return (atomic_load(&preparation_phase)!=0);}
+bool tl_vk_archive_cancel_prepare(void){int expected=1;return atomic_compare_exchange_strong(&preparation_phase,&expected,0);}
 int tl_vk_archive_prepare(void){
  int expected=1;if(!atomic_compare_exchange_strong(&preparation_phase,&expected,2))return 0;
  pthread_mutex_lock(&lock);int(*prepare)(void)=configured?api.prepare:NULL;pthread_mutex_unlock(&lock);

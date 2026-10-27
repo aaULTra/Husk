@@ -38,6 +38,7 @@ void husk_ue4_set_native_archive(int mode);
 void husk_ue4_set_native_archive_verification(bool enabled);
 void tl_vk_archive_configure(const char *project,const char *directory);
 bool tl_vk_archive_begin_prepare(void);
+bool tl_vk_archive_cancel_prepare(void); /* only a reservation, never interrupts Metal */
 int tl_vk_archive_prepare(void);
 bool tl_vk_archive_preparing(void);
 void tl_vk_archive_snapshot(tl_na_stats *out);

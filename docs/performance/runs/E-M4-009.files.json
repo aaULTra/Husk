@@ -1,0 +1,38 @@
+{
+  "evidence": "E-M4-009",
+  "source": "e9835d95ec530da3efd515ac298200b6d386f46e-dirty",
+  "files": [
+    {
+      "original_name": "1-husk.log",
+      "archived": "E-M4-009.husk.log.gz",
+      "raw_bytes": 10471,
+      "sha256": "9b832a427baf6e6c513262a46b29504a14ac34a384a7d56067703290a902c718",
+      "gzip_bytes": 2842,
+      "gzip_sha256": "f6a125558514f4061b7651c0378ac207368aab27ad4eed08cc4aa6ef34a2882c"
+    },
+    {
+      "original_name": "2-husk-prev.log",
+      "archived": "E-M4-009.husk-prev.log.gz",
+      "raw_bytes": 227891,
+      "sha256": "f81c620a196944985a027ca957698e63bb1eca575137b64a576eaf8aca16c19e",
+      "gzip_bytes": 22596,
+      "gzip_sha256": "7e57100f87df7e2684c7a4ff536b2e6dcdd4c9fe160ec3ce300afc83eaf39484"
+    },
+    {
+      "original_name": "3-husk-native-prev.log",
+      "archived": "E-M4-009.husk-native-prev.log.gz",
+      "raw_bytes": 218360,
+      "sha256": "ff3711771273b87c8baaac17963a3e9b21d8a15efc101a609425aad35b7ee3bf",
+      "gzip_bytes": 20803,
+      "gzip_sha256": "21539e9f204bb727f6aa968ced8737564b1fa51d13095844787fc93c89a08e58"
+    },
+    {
+      "original_name": "4-husk-native.log",
+      "archived": "E-M4-009.husk-native.log.gz",
+      "raw_bytes": 1417,
+      "sha256": "51289d51cfa1ddd51134cba4b36722b6be798fb1f73dcd8ba0c35fb354095547",
+      "gzip_bytes": 716,
+      "gzip_sha256": "7a432c8480125102c8ac9552cfe0bdabfc05f4383189e68424de1c51dd4414bb"
+    }
+  ]
+}

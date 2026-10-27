@@ -23,6 +23,8 @@
 #include "husk-tl-pipeline-feedback.h"
 #include "husk-tl-spatial.h"
 #include "husk-tl-native-archive.h"
+#include "husk-tl-lifecycle.h"
+#include "husk-tl-audio.h"
 #include "husk-tl-jni.h"
 #include "husk-tl-internal.h"
 #include "husk-tl-ld.h"
@@ -411,11 +413,30 @@ bool tl_na_start(const tl_ga_config *cfg)
     return true;
 }
 
+static void deliver_lifecycle(void)
+{
+    bool paused;uint64_t sequence;
+    for(unsigned i=0;i<8&&tl_lifecycle_next(&paused,&sequence);i++){
+        tl_log_line("[M1/M6/M9 lifecycle] apply begin sequence %llu paused %d on activity UiThread",(unsigned long long)sequence,paused);
+        if(paused){
+            tl_thread_policy_suspend();tl_pc_checkpoint_async();
+            if(N.callbacks.onWindowFocusChanged)N.callbacks.onWindowFocusChanged(&N.na,0);
+            if(N.callbacks.onPause)N.callbacks.onPause(&N.na);
+        }else{
+            if(N.callbacks.onResume)N.callbacks.onResume(&N.na);
+            if(N.callbacks.onWindowFocusChanged)N.callbacks.onWindowFocusChanged(&N.na,1);
+        }
+        tl_audio_set_paused(paused);
+        tl_lifecycle_complete(paused,sequence);
+        tl_log_line("[M1/M6/M9 lifecycle] apply complete sequence %llu paused %d",(unsigned long long)sequence,paused);
+    }
+}
 static void *ui_main(void *arg)
 {
     (void)arg;
     pthread_setname_np("UiThread");
-    ((void *(*)(int))tl_bionic_find("ALooper_prepare"))(0);
+    void *looper=((void *(*)(int))tl_bionic_find("ALooper_prepare"))(0);
+    tl_lifecycle_bind((void (*)(void *))tl_bionic_find("ALooper_wake"),looper);
     void *env = tl_jni_env();
     jobj *activity = N.activity;
 
@@ -478,10 +499,16 @@ static void *ui_main(void *arg)
         if (resume_init) resume_init(env, activity);
     }
     tl_log_line("ue4: lifecycle delivered");
+    tl_lifecycle_ready(false);
 
     /* The activity's message loop: nothing to serve beyond keeping the thread (and its looper) alive. */
     int (*poll_once)(int, int *, int *, void **) = tl_bionic_find("ALooper_pollOnce");
-    for (;;) { poll_once(200, NULL, NULL, NULL); if (tl_jni_pending()) tl_jni_clear(); }
+    for (;;) {
+        /* Bounded/coalesced desired state. Callbacks stay on the ANativeActivity
+         * owner thread, and no mailbox lock is held while guest glue waits. */
+        deliver_lifecycle();
+        poll_once(200, NULL, NULL, NULL); if (tl_jni_pending()) tl_jni_clear();
+    }
     return NULL;
 }
 
@@ -512,17 +539,5 @@ void tl_na_touch(int phase, int id, float x, float y) { tl_inq_touch(phase, id, 
  * silences its audio instead of feeding a GPU iOS will no longer let it have. Only real changes are passed on. */
 void tl_na_set_paused(bool paused)
 {
-    static atomic_bool is_paused;
-    if (!N.started || !N.callbacks.onResume) return;
-    if (atomic_exchange(&is_paused, paused) == paused) return;
-    tl_log_line("ue4: %s", paused ? "pausing" : "resuming");
-    if (paused) {
-        tl_thread_policy_suspend();
-        tl_pc_checkpoint_async();
-        if (N.callbacks.onWindowFocusChanged) N.callbacks.onWindowFocusChanged(&N.na, 0);
-        if (N.callbacks.onPause) N.callbacks.onPause(&N.na);
-    } else {
-        if (N.callbacks.onResume) N.callbacks.onResume(&N.na);
-        if (N.callbacks.onWindowFocusChanged) N.callbacks.onWindowFocusChanged(&N.na, 1);
-    }
+    tl_lifecycle_request(paused);
 }

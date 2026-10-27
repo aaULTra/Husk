@@ -2,6 +2,8 @@
 #define _DARWIN_C_SOURCE
 #include "husk-tl-unity-app.h"
 #include "husk-tl-native-archive.h"
+#include "husk-tl-lifecycle.h"
+#include "husk-tl-crash-signal.h"
 #include "husk-console-host.h"
 
 #include <dlfcn.h>
@@ -77,78 +79,17 @@ static struct {
 
 /* -------------------------------------------------------------- crash report */
 
-static int find_lib(uintptr_t bias, const char *name, const void *phdr, unsigned phnum, void *user)
+/* Publish immutable guest image ranges outside any fatal handler. The signal
+ * path never walks loader structures or dereferences an arbitrary frame chain. */
+static int record_guest_image(uintptr_t bias,const char *name,const void *phdr,unsigned phnum,void *unused)
 {
-    struct { uintptr_t addr; const char *name; uintptr_t off; } *r = user;
-    const struct { uint32_t type, flags; uint64_t off, vaddr, paddr, filesz, memsz, align; } *p = phdr;
-    for (unsigned i = 0; i < phnum; i++)
-        if (p[i].type == 1 && r->addr >= bias + p[i].vaddr && r->addr < bias + p[i].vaddr + p[i].memsz) {
-            r->name = name; r->off = r->addr - bias;
-            return 1;
-        }
+    (void)unused;
+    const struct {uint32_t type,flags;uint64_t off,vaddr,paddr,filesz,memsz,align;} *p=phdr;
+    for(unsigned i=0;i<phnum;i++)if(p[i].type==1&&p[i].memsz&&p[i].vaddr<=UINTPTR_MAX-bias&&p[i].memsz<=UINTPTR_MAX-(bias+p[i].vaddr))
+        husk_crash_note_image(name,bias,bias+p[i].vaddr,bias+p[i].vaddr+p[i].memsz);
     return 0;
 }
-
-static void where(char *out, size_t n, uintptr_t addr)
-{
-    struct { uintptr_t addr; const char *name; uintptr_t off; } r = { addr, NULL, 0 };
-    tl_ld_iterate(find_lib, &r);
-    if (r.name) snprintf(out, n, "%s+%#lx", r.name, (unsigned long)r.off);
-    else snprintf(out, n, "%#lx", (unsigned long)addr);
-}
-
-static struct sigaction g_prev[32];
-
-/*
- * A fault in guest code ends the process, as it would on Android, but not before the log says where:
- * the guest library and offset of the faulting instruction and of the code that called it. The app's
- * own crash handling (which keeps the log file) runs after.
- */
-static void on_fatal(int sig, siginfo_t *info, void *uctx)
-{
-    ucontext_t *uc = uctx;
-    char tn[40] = "", a[200], b[200], c[200];
-    pthread_getname_np(pthread_self(), tn, sizeof(tn));
-    where(a, sizeof(a), (uintptr_t)uc->uc_mcontext->__ss.__pc);
-    where(b, sizeof(b), (uintptr_t)uc->uc_mcontext->__ss.__lr);
-    where(c, sizeof(c), (uintptr_t)info->si_addr);
-    tl_log_line("=== FATAL signal %d on thread '%s': fault address %p (%s)", sig, tn, info->si_addr, c);
-    tl_log_line("    pc %s", a);
-    tl_log_line("    lr %s", b);
-    uintptr_t fp = uc->uc_mcontext->__ss.__fp;
-    for (int i = 0; i < 12 && fp && (fp & 7) == 0 && fp > 0x100000000ull; i++) {
-        uintptr_t *f = (uintptr_t *)fp;
-        char w[200];
-        where(w, sizeof(w), f[1]);
-        tl_log_line("    frame %s", w);
-        if (f[0] <= fp) break;
-        fp = f[0];
-    }
-    for (int i = 0; i < 29; i += 4)
-        tl_log_line("    x%d=%#llx x%d=%#llx x%d=%#llx x%d=%#llx", i, uc->uc_mcontext->__ss.__x[i], i + 1, uc->uc_mcontext->__ss.__x[i + 1],
-                    i + 2, i + 2 < 29 ? uc->uc_mcontext->__ss.__x[i + 2] : 0ull, i + 3, i + 3 < 29 ? uc->uc_mcontext->__ss.__x[i + 3] : 0ull);
-    if (g_prev[sig].sa_flags & SA_SIGINFO) {
-        if (g_prev[sig].sa_sigaction) { g_prev[sig].sa_sigaction(sig, info, uctx); return; }
-    } else if (g_prev[sig].sa_handler != SIG_DFL && g_prev[sig].sa_handler != SIG_IGN && g_prev[sig].sa_handler) {
-        g_prev[sig].sa_handler(sig);
-        return;
-    }
-    signal(sig, SIG_DFL);                       /* nobody else handles it: re-fault with the default action */
-}
-
-static void install_crash_reporter(void)
-{
-    static bool done;
-    if (done) return;
-    done = true;
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_sigaction = on_fatal;
-    sa.sa_flags = SA_SIGINFO | SA_NODEFER;
-    sigemptyset(&sa.sa_mask);
-    static const int sigs[] = { SIGSEGV, SIGBUS, SIGILL };      /* not SIGTRAP: the app's brk guard owns it */
-    for (size_t i = 0; i < sizeof(sigs) / sizeof(sigs[0]); i++) sigaction(sigs[i], &sa, &g_prev[sigs[i]]);
-}
+static void install_crash_reporter(void){husk_crash_native_sink(tl_log_sink_fd);}
 
 /* ------------------------------------------------------------------- launch */
 
@@ -410,6 +351,7 @@ static void *launch_thread(void *arg)
         atomic_store(&A.state, HUSK_UNITY_FAILED);
         return NULL;
     }
+    tl_ld_iterate(record_guest_image,NULL);
     atomic_store(&A.state, HUSK_UNITY_RUNNING);
     pthread_t hb;
     if (pthread_create(&hb, NULL, heartbeat_thread, NULL) == 0) pthread_detach(hb);
@@ -668,14 +610,17 @@ void husk_unity_touch(int phase, int id, float x, float y)
 }
 void husk_unity_set_paused(bool paused)
 {
-    if (atomic_load(&A.state) != HUSK_UNITY_RUNNING) return;
-    if(!paused&&A.engine==ENGINE_UE4&&tl_vk_archive_preparing())return;
+    int state=atomic_load(&A.state);
+    if(A.engine==ENGINE_UE4&&(state==HUSK_UNITY_STARTING||state==HUSK_UNITY_RUNNING)){
+        if(!paused&&tl_vk_archive_preparing())return;
+        tl_na_set_paused(paused);return; /* includes audio on the activity owner */
+    }
+    if (state != HUSK_UNITY_RUNNING) return;
     if (A.engine == ENGINE_JAVA) { tl_javaapp_set_paused(paused); tl_audio_set_paused(paused); }
     else if (A.engine == ENGINE_GAMEMAKER) { tl_gm_set_paused(paused); tl_audio_set_paused(paused); }
     else if (A.engine == ENGINE_FLUTTER) { tl_flutter_set_paused(paused); tl_audio_set_paused(paused); }
     else if (A.engine == ENGINE_GODOT) { tl_godot_set_paused(paused); tl_audio_set_paused(paused); }
     else if (A.engine == ENGINE_GTA) { tl_gta_set_paused(paused); tl_audio_set_paused(paused); }
-    else if (A.engine == ENGINE_UE4) { tl_na_set_paused(paused); tl_audio_set_paused(paused); }
     else if (A.engine == ENGINE_SDL) { tl_sdl_set_paused(paused); tl_audio_set_paused(paused); }
     else if (A.engine == ENGINE_GAMEACTIVITY) { tl_ga_set_paused(paused); tl_audio_set_paused(paused); }
     else if (A.engine == ENGINE_COCOS) { tl_cocos_set_paused(paused); tl_audio_set_paused(paused); }

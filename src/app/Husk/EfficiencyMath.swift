@@ -40,6 +40,7 @@ enum EfficiencyMath {
         else if detail.hasPrefix("ue4 cache") { ids = ["M2", "CACHE-01"]; subsystem = "cache" }
         else if detail.hasPrefix("thread-policy") { ids = ["M7", "WORK-01", "WORK-02"]; subsystem = "worker_policy" }
         else if detail.hasPrefix("ue4 timing") { ids = ["M4", "BUG-02"]; subsystem = "frame_pacing" }
+        else if detail.hasPrefix("[M1/M6/M9 lifecycle]") { ids = ["M1", "M6", "M9"]; subsystem = "native_lifecycle" }
         else if detail.hasPrefix("[M2/M5 native-archive]") { ids = ["M2", "M5", "M3"]; subsystem = "native_pipeline_archive" }
         else if detail.hasPrefix("[M4/M6 present-clock]") { ids = ["M4", "M6", "M3"]; subsystem = "presentation_clock" }
         else if detail.hasPrefix("[M6/M8 queue-options]") { ids = ["M6", "M8"]; subsystem = "queue_configuration" }

@@ -79,7 +79,7 @@ struct AppDiagnosis: Identifiable, Equatable {
 
     /// The reason a run stopped, from its log; nil when nothing in it explains the end (the app closed the normal way).
     static func fromLog(_ text: String) -> AppDiagnosis? {
-        let lines = text.split(separator: "\n", omittingEmptySubsequences: true).map(String.init)
+        let lines = RuntimeLogEvidence.currentLines(text)
 
         // No executable memory: on iOS with TXM only a debugger can grant it, and without it the loader cannot load Android's own
         // libraries, so everything after (java.lang.System failing to initialise, missing natives) follows from this
@@ -99,7 +99,7 @@ struct AppDiagnosis: Identifiable, Equatable {
         }
 
         // A native crash: the runtime's crash handler names the library the bad instruction was in
-        if let i = lines.lastIndex(where: { $0.contains("=== CRASH:") || $0.contains("*** FATAL SIGNAL") }) {
+        if let i = lines.lastIndex(where: { $0.contains("=== CRASH:") || $0.contains("=== FATAL signal") || $0.contains("*** FATAL SIGNAL") }) {
             let head = lines[i]
             let lib = lines[(i + 1)..<min(lines.count, i + 4)].compactMap { l -> String? in
                 guard l.contains("pc ") else { return nil }
@@ -108,8 +108,7 @@ struct AppDiagnosis: Identifiable, Equatable {
             let signal = head.range(of: "signal \\d+", options: .regularExpression).map { String(head[$0]) } ?? "a fatal signal"
             if let lib, !lib.hasPrefix("libhusk"), !lib.contains("Husk") {
                 return AppDiagnosis(kind: .nativeCrash, title: "Crashed in \(lib)",
-                                    detail: "The app's own native code (\(lib)) stopped with \(signal). It most likely needs something from Android "
-                                        + "that Husk does not provide yet, or does something iOS does not allow.",
+                                detail: "The recorded instruction was in \(lib) when the process stopped with \(signal). The fault location alone does not establish whether game code, translation or another component caused it.",
                                     evidence: head)
             }
             return AppDiagnosis(kind: .nativeCrash, title: "The app crashed",
@@ -176,10 +175,9 @@ struct AppDiagnosis: Identifiable, Equatable {
         }
 
         // A game whose data comes as an expansion file the store did not install
-        if let l = lines.first(where: { $0.contains("expansion file (OBB) is missing") }) {
+        if let l = RuntimeLogEvidence.requiredOBBStartupFailure(lines) {
             return AppDiagnosis(kind: .missingSplits, title: "Missing game data",
-                                detail: "This game keeps most of its data in an expansion file (OBB) that the Play Store downloads separately "
-                                    + "from the app. Husk installed the app itself but not that file, so the game cannot load.",
+                                detail: "Startup failed and the log reports a missing main expansion file (OBB). Check the supplied game data. An optional patch-file probe alone does not establish a crash cause, and the APK's download source is not the diagnosis.",
                                 evidence: l)
         }
 

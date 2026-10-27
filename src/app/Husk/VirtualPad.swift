@@ -154,6 +154,7 @@ final class PadView: UIView {
     private var controls: [Control] = []
     private var fingers: [UITouch: Finger] = [:]
     private var shown = VirtualPad.State()
+    private var interruptionObservers: [NSObjectProtocol] = []
     private let haptic = UIImpactFeedbackGenerator(style: .light)
     var hapticsEnabled = true
 
@@ -181,8 +182,26 @@ final class PadView: UIView {
         isOpaque = false
         backgroundColor = .clear
         contentMode = .redraw
+        for name in [UIApplication.willResignActiveNotification, UIApplication.didEnterBackgroundNotification,
+                     UIScene.willDeactivateNotification, UIScene.didEnterBackgroundNotification] {
+            interruptionObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                guard let self else { return }
+                if let scene = note.object as? UIScene, scene !== self.window?.windowScene { return }
+                self.resetInput()
+            })
+        }
     }
     required init?(coder: NSCoder) { fatalError("not used") }
+
+    deinit { for observer in interruptionObservers { NotificationCenter.default.removeObserver(observer) } }
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window == nil { resetInput() }
+    }
+    private func resetInput() {
+        fingers.removeAll(); drag = nil; shown = VirtualPad.State()
+        pad.send(shown); setNeedsDisplay()
+    }
 
     // MARK: layout
 
@@ -362,9 +381,7 @@ final class PadView: UIView {
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if editing { drag = nil; return }
-        for t in touches { fingers[t] = nil }
-        apply()
+        resetInput()
     }
 
     /// A stick's push: how far the finger is from its centre, as a fraction of the stick's radius, capped at one.

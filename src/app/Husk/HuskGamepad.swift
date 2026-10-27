@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import Foundation
 import GameController
+import UIKit
 
 /// Game controllers for the native runtime's games.
 ///
@@ -25,6 +26,7 @@ final class HuskGamepads: ObservableObject {
     private var controllerIn: [Int: GCController] = [:]
     private var timer: Timer?
     private var started = false
+    private var active = UIApplication.shared.applicationState == .active
 
     private init() {}
 
@@ -39,6 +41,20 @@ final class HuskGamepads: ObservableObject {
         }
         NotificationCenter.default.addObserver(forName: .GCControllerDidDisconnect, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.sync() }
+        }
+        for name in [UIApplication.willResignActiveNotification, UIApplication.didEnterBackgroundNotification,
+                     UIApplication.didBecomeActiveNotification] {
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.active = name == UIApplication.didBecomeActiveNotification
+                    if !self.active {
+                        self.timer?.invalidate(); self.timer = nil
+                        for slot in self.controllerIn.keys { husk_gamepad_update(Int32(slot), 0, 0, 0, 0, 0, 0, 0) }
+                    }
+                    self.sync()
+                }
+            }
         }
         sync()
     }
@@ -61,7 +77,7 @@ final class HuskGamepads: ObservableObject {
             HuskLog.log("pad", "controller \(slot) connected: \(name) (\(controller.productCategory))")
         }
         names = (0..<Self.slots).compactMap { controllerIn[$0]?.vendorName ?? controllerIn[$0]?.productCategory }
-        if controllerIn.isEmpty {
+        if controllerIn.isEmpty || !active {
             timer?.invalidate(); timer = nil
         } else if timer == nil {
             // 120 times a second, on the main run loop in every mode so that scrolling elsewhere does not stop it.
@@ -74,6 +90,7 @@ final class HuskGamepads: ObservableObject {
     }
 
     private func poll() {
+        guard active else { return }
         for (slot, controller) in controllerIn {
             guard let pad = controller.extendedGamepad else { continue }
             var buttons: UInt32 = 0

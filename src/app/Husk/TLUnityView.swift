@@ -72,6 +72,16 @@ final class TLUnityUIView: UIView, UIKeyInput {
     var onStats: ((String) -> Void)?
     /// Active touches by UITouch identity, each given a small stable id like Android's pointer ids.
     private var pointers: [ObjectIdentifier: Int32] = [:]
+    private var pointerPositions: [Int32: CGPoint] = [:]
+    private static weak var nativeLifecycleView: TLUnityUIView?
+    static func reconcileNativeLifecycle() {
+        guard let view = nativeLifecycleView else { husk_unity_set_paused(true); return }
+        view.applyLifecycle("native_preparation_finished", force: true)
+    }
+    private var lifecycle = NativeGameLifecycle()
+    private var applicationActive = UIApplication.shared.applicationState == .active
+    private var owningSceneActive = true
+    private var attachmentGeneration = 0
 
     /// "58 fps · 11.2 ms" in the corner, as the other screen has: frames the game finished per second, and the
     /// mean time one frame takes it. Refreshed once a second from the runtime's own counters.
@@ -106,6 +116,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
         self.engine = engine
         self.extraApks = extraApks
         super.init(frame: .zero)
+        if engine == .ue4 { Self.nativeLifecycleView = self }
         backgroundColor = .black
         isMultipleTouchEnabled = true
         // Two pixels per point unless the game's settings say otherwise: sharp enough, and a third of the pixels a 3x phone would
@@ -174,14 +185,31 @@ final class TLUnityUIView: UIView, UIKeyInput {
         }
         // The GPU is not the app's while it is in the background: stop drawing, and carry on when it returns.
         lifecycleObservers.append(NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
-            husk_unity_set_paused(true)
-            self?.statsTimer?.invalidate()
-            self?.statsTimer = nil
+            guard let self else { return }
+            self.applicationActive = false
+            self.applyLifecycle("application_will_resign")
         })
         lifecycleObservers.append(NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
             guard let self, self.window != nil else { return }
-            husk_unity_set_paused(false)
-            self.updateStatsTimer()
+            self.applicationActive = true
+            self.applyLifecycle("application_did_activate")
+        })
+        lifecycleObservers.append(NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in
+            guard let self else { return }; self.applicationActive = false
+            self.applyLifecycle("application_did_background")
+        })
+        for name in [UIScene.willDeactivateNotification, UIScene.didEnterBackgroundNotification, UIScene.didActivateNotification] {
+            lifecycleObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                guard let self, let scene = note.object as? UIWindowScene, scene === self.window?.windowScene else { return }
+                self.owningSceneActive = name == UIScene.didActivateNotification
+                self.applyLifecycle(name == UIScene.didActivateNotification ? "owning_scene_did_activate" : "owning_scene_deactivated")
+            })
+        }
+        lifecycleObservers.append(NotificationCenter.default.addObserver(forName: UIApplication.userDidTakeScreenshotNotification, object: nil, queue: .main) { [weak self] _ in
+            guard let self, self.launched, self.window != nil else { return }
+            // A screenshot is an observation, not a request to tear down or pause
+            // a live drawable. Actual app/scene deactivation is handled above.
+            self.recordLifecycle("screenshot_observed")
         })
     }
 
@@ -241,7 +269,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
     private func updateStatsTimer() {
         statsTimer?.invalidate()
         statsTimer = nil
-        guard window != nil, UIApplication.shared.applicationState == .active else { return }
+        guard window != nil, applicationActive, owningSceneActive else { return }
         statsTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in self?.updateStats() }
         statsTimer?.tolerance = 0.1
     }
@@ -293,13 +321,39 @@ final class TLUnityUIView: UIView, UIKeyInput {
         super.didMoveToWindow()
         updateStatsTimer()
         if engine == .ue4 { EfficiencyDiagnostics.shared.visible(window != nil) }
-        if window != nil {
-            husk_unity_set_paused(UIApplication.shared.applicationState != .active)
+        attachmentGeneration += 1
+        if let window {
+            applicationActive = UIApplication.shared.applicationState == .active
+            owningSceneActive = window.windowScene.map { $0.activationState == .foregroundActive } ?? applicationActive
+            applyLifecycle("view_attached")
         } else {
-            husk_unity_set_paused(true)
+            cancelActiveTouches()
             if isFirstResponder { resignFirstResponder() }
+            let generation = attachmentGeneration
+            // Fullscreen/window reparenting can detach and reattach in one main
+            // turn. Keep the same layer and avoid a synthetic pause/resume pair.
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.attachmentGeneration == generation, self.window == nil else { return }
+                self.applyLifecycle("view_detached")
+            }
         }
         setNeedsLayout()
+    }
+
+    private func recordLifecycle(_ reason: String) {
+        guard launched else { return }
+        HuskLog.log("lifecycle", "[M1/M6/M9 lifecycle] \(reason); attached \(window != nil), app-active \(applicationActive), owning-scene-active \(owningSceneActive), touches \(pointers.count); fixed render target retained")
+        CrashReport.noteLifecycle(reason)
+        if engine == .ue4 { EfficiencyDiagnostics.shared.lifecycleEvent(reason) }
+    }
+    private func applyLifecycle(_ reason: String, force: Bool = false) {
+        if engine == .ue4 { EfficiencyDiagnostics.shared.sceneActive(owningSceneActive && applicationActive) }
+        guard let paused = lifecycle.update(attached: window != nil, appActive: applicationActive,
+                                             sceneActive: owningSceneActive, force: force) else { return }
+        if paused { cancelActiveTouches(); statsTimer?.invalidate(); statsTimer = nil }
+        husk_unity_set_paused(paused)
+        if !paused { updateStatsTimer() }
+        recordLifecycle(reason)
     }
 
     private func launch(width: Int, height: Int) {
@@ -419,6 +473,7 @@ final class TLUnityUIView: UIView, UIKeyInput {
         case .unity: started = husk_unity_launch(apk, dataDir, layerPtr, Int32(width), Int32(height), angle, ca)
         }
         if !started { HuskLog.log("tl", "native: launch refused") }
+        else { applyLifecycle("launch_visibility", force: true) }
     }
 
     // MARK: keyboard (cocos2d-x and SDL games)
@@ -746,21 +801,34 @@ final class TLUnityUIView: UIView, UIKeyInput {
 
     private func send(_ touches: Set<UITouch>, phase: Int32) {
         for t in touches {
+            if phase != 0, pointers[ObjectIdentifier(t)] == nil { continue }
             let p = t.location(in: self)
             let pid = id(for: t)
             var x = Float(p.x * contentScaleFactor), y = Float(p.y * contentScaleFactor)
             if engine == .ue4 { tl_vk_spatial_touch(&x, &y) }
+            pointerPositions[pid] = CGPoint(x: CGFloat(x), y: CGFloat(y))
             husk_unity_touch(phase, pid, x, y)
-            if phase == 2 || phase == 3 { pointers[ObjectIdentifier(t)] = nil }
+            if phase == 2 || phase == 3 { pointers[ObjectIdentifier(t)] = nil; pointerPositions[pid] = nil }
         }
+    }
+
+    private func cancelActiveTouches() {
+        guard !pointers.isEmpty else { return }
+        // NDK ACTION_CANCEL cancels the whole gesture. Other engine adapters
+        // receive a release for every tracked pointer, including fingers UIKit
+        // omitted from an interruption's cancellation subset.
+        for (id, point) in pointerPositions {
+            husk_unity_touch(engine == .ue4 ? 3 : 2, id, Float(point.x), Float(point.y))
+            if engine == .ue4 { break }
+        }
+        pointers.removeAll(); pointerPositions.removeAll()
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)     { send(touches, phase: 0) }
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)     { send(touches, phase: 1) }
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)     { send(touches, phase: 2) }
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        send(touches, phase: 2)
-        pointers.removeAll()
+        cancelActiveTouches()
     }
 }
 
