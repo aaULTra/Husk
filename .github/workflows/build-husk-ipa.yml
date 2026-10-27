@@ -76,6 +76,7 @@ jobs:
           python3 tests/translation-layer/test_roadmap_progress.py -v
           python3 tests/translation-layer/test_roadmap_projection.py -v
           python3 tests/translation-layer/test_comparison_campaign.py -v
+          python3 tests/translation-layer/test_external_efficiency.py -v
           python3 tests/translation-layer/test_spatial.py -v
           python3 tests/translation-layer/test_spatial_lifetime.py -v
           python3 tests/translation-layer/test_native_archive.py -v

@@ -31,6 +31,7 @@ static guest_obj object;static int made;
 static void *make(uint32_t v){assert(v==123);atomic_fetch_add(&init_count,1);pause_ns(10000000);made=345;return &made;}
 static void *object_worker(void*unused){(void)unused;assert(obj_host(&object,make)==&made&&made==345);return NULL;}
 static bool pending(const void*word){return atomic_load_explicit((const _Atomic int*)word,memory_order_acquire)==0;}
+static unsigned predicate_checks;static bool just_published(const void *word){(void)word;return predicate_checks++==0;}
 static void *wait_worker(void*word){tl_publication_wait(word,pending);atomic_fetch_add(&done,1);return NULL;}
 static double stamp(clockid_t clock){struct timespec t;clock_gettime(clock,&t);return t.tv_sec+t.tv_nsec/1e9;}
 int main(int argc,char**argv){assert(argc==2);husk_ue4_set_initialization_parking(true);pthread_t threads[12];
@@ -42,6 +43,9 @@ int main(int argc,char**argv){assert(argc==2);husk_ue4_set_initialization_parkin
   assert(atomic_load(&init_count)==1&&atomic_load(&once_word)==1);
   tl_publication_stats before,after;tl_publication_snapshot(&before);for(unsigned i=0;i<100000;i++)b_once(&once_word,initializer);tl_publication_snapshot(&after);assert(before.waits==after.waits);
   if(bench)printf("{\"cpu_seconds\":%.9f,\"wall_seconds\":%.9f,\"parked_waits\":%llu}\n",stamp(CLOCK_PROCESS_CPUTIME_ID)-cpu,stamp(CLOCK_MONOTONIC)-wall,(unsigned long long)after.waits);
+ }else if(!strcmp(argv[1],"ready-race")){
+  _Atomic int word=1;tl_publication_wait(&word,pending);tl_publication_wait(&word,just_published);
+  tl_publication_stats s;tl_publication_snapshot(&s);assert(s.waits==0&&s.fallbacks==0);
  }else if(!strcmp(argv[1],"object")){
   object.value=123;for(unsigned i=0;i<12;i++)assert(!pthread_create(&threads[i],NULL,object_worker,NULL));for(unsigned i=0;i<12;i++)pthread_join(threads[i],NULL);
   assert(atomic_load(&init_count)==1&&atomic_load(&object.magic)==MAGIC_READY);
@@ -70,6 +74,7 @@ class PublicationTests(unittest.TestCase):
  def setUpClass(cls):cls.tmp=tempfile.TemporaryDirectory();cls.addClassCleanup(cls.tmp.cleanup);cls.exe=build_harness(cls.tmp.name)
  def run_case(self,name):subprocess.run([str(self.exe),name],check=True,timeout=15)
  def test_once_publication_and_completed_fast_path(self):self.run_case('once')
+ def test_publication_finishing_before_block_is_not_a_parked_wait(self):self.run_case('ready-race')
  def test_guest_object_creation_and_memory_publication(self):self.run_case('object')
  def test_publication_before_or_during_wait_has_no_lost_wake(self):self.run_case('races')
  def test_spurious_wake_and_hash_collision_preserve_predicate(self):self.run_case('collisions')

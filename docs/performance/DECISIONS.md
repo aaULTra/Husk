@@ -135,3 +135,8 @@ Audit confirms1.4.2 still latest stable on2026-10-26;no version-only upgrade. Mi
 
 
 B6 build history: do not treat a passing native component/driver build as a passing app.4a7 source exposed missing archive-verification forwarding and driver-profile bridge declarations during full app compilation. Correct both fullscreen/windowed paths and bridge import,retain failure evidence,run full Apple validation on0ff0758 and refuse stale IPA packaging.
+
+
+2026-10-27 — Complete whole-plan feasible source work,not another narrow batch stopping point. Implement independent public MoltenVK queue/buffering controls,predicate parking for source-confirmed polling,immutable spatial-output reuse,RenderPass2/core coverage,guarded supported lifetime footprint and external-data arithmetic. Keep existing defaults/active user test and single-variable comparisons. Count actual pending blocks,not a race that published before blocking. Synthetic host CPU reduction is mechanism evidence only. Temporal/live scene control remains unimplemented with actual missing engine contracts;no dummy toggle/fake motion vectors. No guessed Duo defaults.
+
+Apple integration is genuinely blocked:GitHub workflow active but dispatchHTTP422saysActionsdisabled;permission read403. No fresh IPA/check run exists,so preserve deferred Apple gates and older tested artifact identity. Continue offline implementation despite this service blocker;do not relabel local checks as clean iOS packaging. User positive subjective comfort on latest parkedMetalFXIPA recorded asE-M4-008,not electrical or numerical cooling evidence. Fixed overall28.67%unchanged.

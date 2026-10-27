@@ -11,7 +11,7 @@
  * guest's bytes with room to spare.
  *
  * A zeroed object has magic 0 and is initialised on first use, racing safely: one
- * thread wins the transition to "initialising" and the others spin until it is done.
+ * thread wins "initialising"; others yield, or use opt-in predicate parking.
  */
 #define _DARWIN_C_SOURCE
 #include "husk-tl-component-scope.h"
@@ -360,9 +360,11 @@ static int b_once(_Atomic int *once, void (*fn)(void))
         atomic_store_explicit(once,1,memory_order_release);
         tl_publication_notify(once);
     } else {
-        if(expect==2)tl_em_sync_event(TL_SYNC_ONCE_WAIT);
-        if(tl_publication_parking())tl_publication_wait(once,once_initializing);
-        else while (atomic_load_explicit(once,memory_order_acquire) == 2) sched_yield();
+        if(expect==2){
+            tl_em_sync_event(TL_SYNC_ONCE_WAIT);
+            if(tl_publication_parking())tl_publication_wait(once,once_initializing);
+            else while (atomic_load_explicit(once,memory_order_acquire) == 2) sched_yield();
+        }
     }
     return 0;
 }

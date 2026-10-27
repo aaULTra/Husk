@@ -229,3 +229,12 @@ B6 correction:4a7/run40415776642 passed261checks/31suites/zero skips,pinned driv
 ### B6 final Apple candidate,physical validation deferred
 
 `0ff0758b658befbe4cc083c9e5e4bf7dfaa40696-dirty`,[run40417268695](https://github.com/aaULTra/Husk/actions/runs/40417268695),job121902611843:261/261checks/31suites/zero skips,driver/seven exports,SDK24structures/69offsets,app,IPA,upload pass. [Artifact12697876945](https://github.com/aaULTra/Husk/actions/runs/40417268695/artifacts/12697876945),ZIP SHA256cea9667361324d1a6ca604c277fc8ea9c1315d3e96351c3e0017c43cb5800180,expires2026-11-02T23:30:12Z. [Final handover](builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md)/[receipt](builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json),combined pin/patch/ABI recorded. B1–B10implementation10/10,new device0/4,benefit0/3;whole28.67%(+0),M4-only31.86%,Duo0. No physical/power/temperature result. Candidate parked,priorC6 instructions retained. All unresolved experiments and4a7 app-wiring failure kept.
+
+
+### 2026-10-27 — E-M4-008 and whole-plan implementation continuation
+
+[E-M4-008](runs/E-M4-008.md):user reports latest parkedIPA,MetalFXON,roughly10–20minutes,subjectively not warm overall. Source0ff0758 inferred,not export-confirmed. Positive comfort observation,not numerical temperature/electrical power or new-source validation. Existing test remains active.
+
+[Whole implementation inventory](28-whole-plan-implementation-inventory.md)/[handover](30-implementation-closure-handover.md) cover parked initialization/public queue/buffering controls,M9 immutable output-binding reuse,M2 core-v4,M1 guarded lifetime footprint andM3 external importer/comparison. [Local331-check receipt](runs/IMPLEMENTATION-CLOSURE-7.local-tests.json):322pass,9Apple-onlydeferred,36suites,zero failures. Actual SDK31structures/96offsets passes. [Synthetic parked-wait CPU evidence](runs/IMPLEMENTATION-CLOSURE-7b.parked-waits.json)/[completed-once evidence](runs/IMPLEMENTATION-CLOSURE-7b.completed-once.json) are host synthetic work,not Dungeons/M4 power. [External protocol](29-external-power-temperature-analysis.md) does not fabricate tool attachment/calibration.
+
+GitHub Actions dispatch rejectedHTTP422,Actions disabled for repository;workflow active,Actions-permissions read403. No new run/IPA or Apple success is claimed. Whole score28.67%,M4-only31.86%,Duo0;all unverified benefits/engine-input dependencies remain open.

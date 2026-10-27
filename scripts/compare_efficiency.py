@@ -306,6 +306,64 @@ def compare_pair(left, right, recipe, context=None):
                            'Independent monitoring-off traces, physical correctness/quality and supported power/temperature evidence remain external/reviewed tasks.']}
 
 
+def external_pair_audit(left, right, baseline, candidate, diagnostic_hashes):
+    """Attach supplied electrical/surface evidence, with strict identity and coverage checks.
+
+    This is descriptive one-pair arithmetic, never an automatic causal/gate decision.
+    """
+    from external_efficiency import identity, SCHEMA
+    blockers, warnings = [], []
+    results = (baseline, candidate)
+    for side, data, result, sha in zip(('baseline', 'candidate'), (left, right), results, diagnostic_hashes):
+        if result.get('schema') != SCHEMA or result.get('identity') != identity(data):
+            blockers.append(side + ': external analysis identity/schema mismatch')
+        if result.get('inputs_sha256', {}).get('diagnostics') != sha:
+            blockers.append(side + ': external analysis does not hash this diagnostic file')
+        if result.get('conditions', {}).get('charging_state') != 'unplugged':
+            blockers.append(side + ': external electrical session is not unplugged')
+        cover = result.get('power_coverage_fraction')
+        if not finite(cover) or not .99 <= cover <= 1.000000001:
+            blockers.append(side + ': external power covers less than99% of included intervals')
+        power = result.get('power', {}).get('average_watts')
+        if not finite(power) or power < 0:
+            blockers.append(side + ': valid average external system power unavailable')
+        if result.get('provenance', {}).get('power', {}).get('quantity') != 'whole_device_system_power':
+            blockers.append(side + ': external power quantity is not whole-device system power')
+        if result.get('configuration') != data.get('metadata', {}).get('launch_configuration', {}):
+            blockers.append(side + ': external analysis configuration mismatch')
+    for key in ('route', 'cache_state', 'brightness', 'case_accessories', 'starting_temperature', 'ambient_conditions'):
+        values = [r.get('conditions', {}).get(key) for r in results]
+        if any(v is None or v == '' for v in values) or values[0] != values[1]:
+            blockers.append('External condition missing or different: ' + key)
+    for key in ('power', 'temperature', 'displayed_frames'):
+        provenance = [r.get('provenance', {}).get(key) for r in results]
+        if provenance[0] != provenance[1]:
+            # Raw source references should differ, but measurement methodology must match.
+            methods = [{k: v for k, v in (p or {}).items() if k not in ('raw_source_reference', 'coverage_seconds')} for p in provenance]
+            if methods[0] != methods[1]:
+                blockers.append('External instrument/method differs: ' + key)
+    durations = [r.get('power_covered_seconds') for r in results]
+    if any(not finite(x) or x <= 0 for x in durations) or max(durations) > min(durations) * 1.1:
+        blockers.append('External covered durations invalid or differ by more than10%')
+    if baseline.get('alignment') != candidate.get('alignment'):
+        warnings.append('Clock alignment differs; review whole-period uncertainty, clipping and exclusions')
+    delta = {}
+    for output, section, field in [('average_watts', 'power', 'average_watts'),
+                                   ('max_sampled_surface_above_ambient_c', 'temperature', 'max_surface_above_ambient_c'),
+                                   ('joules_per_displayed_frame', 'displayed_frames', 'energy_per_displayed_frame_joules')]:
+        a, b = (r.get(section, {}).get(field) for r in results)
+        if finite(a) and finite(b):
+            delta[output] = b - a
+    a, b = (r.get('power', {}).get('average_watts') for r in results)
+    if finite(a) and finite(b) and a > 0:
+        delta['average_watts_relative_change_percent'] = (b - a) / a * 100
+    return {'status': 'BLOCKED FOR CONTROLLED INFERENCE' if blockers else 'DESCRIPTIVE EXTERNAL PAIR; REVIEW REPEATS AND CORRECTNESS',
+            'blockers': sorted(set(blockers)), 'warnings': warnings, 'candidate_minus_baseline': delta,
+            'energy_improvement': 'UNVERIFIED: inspect main preflight, matched visual/pacing correctness, instrument accuracy and at least3 repeats for small effects',
+            'roadmap_gates_automatically_passed': [],
+            'scope': 'Supplied whole-device electrical/surface evidence; no automatic app attribution or causal benefit claim'}
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('baseline', type=Path)
@@ -313,11 +371,26 @@ def main():
     p.add_argument('--recipe', choices=RECIPES, required=True)
     p.add_argument('--context', type=Path, help='Optional user-reported matched conditions; never taken as direct telemetry')
     p.add_argument('--output', type=Path)
+    p.add_argument('--external-baseline', type=Path, help='Optional normalized external analysis for exact baseline diagnostic file')
+    p.add_argument('--external-candidate', type=Path, help='Required together with --external-baseline')
     args = p.parse_args()
+    inputs = [x.resolve() for x in (args.baseline, args.candidate, args.context, args.external_baseline, args.external_candidate) if x]
+    if args.output and args.output.resolve() in inputs:
+        p.error('Output must not overwrite input evidence')
     left, lp = load_export(args.baseline)
     right, rp = load_export(args.candidate)
     result = compare_pair(left, right, args.recipe, json.loads(args.context.read_text()) if args.context else None)
     result['inputs'] = {'baseline': lp, 'candidate': rp}
+    if bool(args.external_baseline) != bool(args.external_candidate):
+        p.error('External comparison requires both baseline and candidate analyses')
+    if args.external_baseline:
+        from external_efficiency import load_bytes, read_json
+        eraw = [load_bytes(x) for x in (args.external_baseline, args.external_candidate)]
+        result['external_measurements'] = external_pair_audit(left, right, *(read_json(x) for x in eraw),
+                                                            [lp['decoded_sha256'], rp['decoded_sha256']])
+        result['external_measurements']['analysis_files_sha256'] = [hashlib.sha256(x).hexdigest() for x in eraw]
+        if result['external_measurements']['blockers']:
+            result['status'] = 'BLOCKED FOR CONTROLLED INFERENCE'
     payload = json.dumps(result, indent=2, allow_nan=False) + '\n'
     if args.output:
         args.output.write_text(payload)

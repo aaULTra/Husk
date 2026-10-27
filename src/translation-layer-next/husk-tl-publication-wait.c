@@ -25,23 +25,30 @@ static unsigned index_for(const void *address){uintptr_t n=(uintptr_t)address>>2
 void husk_ue4_set_initialization_parking(bool value){if(value)atomic_store(&ever_enabled,true);atomic_store(&requested,value);}
 bool tl_publication_parking(void){return atomic_load_explicit(&requested,memory_order_relaxed);}
 static void unlock(void *mutex){pthread_mutex_unlock(mutex);}
-void tl_publication_wait(const void *address,bool (*pending)(const void *)){
- if(!address||!pending)return;
- pthread_once(&initialized,initialize);
- atomic_fetch_add_explicit(&waits,1,memory_order_relaxed);
- if(!available){
-  atomic_fetch_add_explicit(&fallbacks,1,memory_order_relaxed);
-  while(pending(address)){struct timespec delay={0,100000};nanosleep(&delay,NULL);}return;
+static void sleep_until_ready(const void *address,bool (*pending)(const void *),bool counted){
+ bool fallback_counted=false;
+ while(pending(address)){
+  if(!counted){atomic_fetch_add_explicit(&waits,1,memory_order_relaxed);counted=true;}
+  if(!fallback_counted){atomic_fetch_add_explicit(&fallbacks,1,memory_order_relaxed);fallback_counted=true;}
+  struct timespec delay={0,100000};nanosleep(&delay,NULL);
  }
+}
+void tl_publication_wait(const void *address,bool (*pending)(const void *)){
+ if(!address||!pending||!pending(address))return;
+ pthread_once(&initialized,initialize);
+ if(!available){sleep_until_ready(address,pending,false);return;}
  unsigned i=index_for(address);pthread_mutex_lock(&buckets[i].mutex);
  /* Recheck under the same mutex used by notification: no lost publication.
   * Hash collisions only cause harmless predicate rechecks. No callback holds
   * this mutex while running an initializer, allowing nested initialization. */
- bool failed=false;
+ bool failed=false,counted=false;
  pthread_cleanup_push(unlock,&buckets[i].mutex);
- while(pending(address))if(pthread_cond_wait(&buckets[i].condition,&buckets[i].mutex)){failed=true;break;}
+ while(pending(address)){
+  if(!counted){atomic_fetch_add_explicit(&waits,1,memory_order_relaxed);counted=true;}
+  if(pthread_cond_wait(&buckets[i].condition,&buckets[i].mutex)){failed=true;break;}
+ }
  pthread_cleanup_pop(1);
- if(failed){atomic_fetch_add_explicit(&fallbacks,1,memory_order_relaxed);while(pending(address)){struct timespec delay={0,100000};nanosleep(&delay,NULL);}}
+ if(failed)sleep_until_ready(address,pending,counted);
 }
 void tl_publication_notify(const void *address){
  if(!address||!atomic_load_explicit(&ever_enabled,memory_order_relaxed))return;
