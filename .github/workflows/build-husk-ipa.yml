@@ -98,6 +98,23 @@ jobs:
           brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
           xcodebuild -version
 
+      - name: Ensure Metal compiler component
+        timeout-minutes: 15
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe_dir="${RUNNER_TEMP}/husk-metal-compiler"
+          mkdir -p "$probe_dir"
+          printf '%s\n' '#include <metal_stdlib>' 'using namespace metal;' \
+            'kernel void husk_probe(device uint* p [[buffer(0)]], uint i [[thread_position_in_grid]]) { p[i] = i; }' \
+            > "$probe_dir/probe.metal"
+          if ! xcrun --sdk iphoneos metal -c "$probe_dir/probe.metal" -o "$probe_dir/probe.air" > "$probe_dir/check.log" 2>&1; then
+            cat "$probe_dir/check.log"
+            xcodebuild -downloadComponent MetalToolchain
+            xcrun --sdk iphoneos metal -c "$probe_dir/probe.metal" -o "$probe_dir/probe.air"
+          fi
+          test -s "$probe_dir/probe.air"
+
       - name: Download verified official base libraries and game resources
         shell: bash
         run: |

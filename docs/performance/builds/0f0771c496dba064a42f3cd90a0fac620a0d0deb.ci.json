@@ -1,0 +1,14 @@
+{
+  "source_sha": "0f0771c496dba064a42f3cd90a0fac620a0d0deb",
+  "run_id": 40440228528,
+  "job_id": 121978549101,
+  "conclusion": "failure",
+  "checks_passed": 365,
+  "suites": 40,
+  "app_build": "failed before packaging",
+  "failure": "cannot execute tool metal due to missing Metal Toolchain; xcodebuild -downloadComponent MetalToolchain required",
+  "classification": "Hosted Apple runner provisioning; not a source compilation diagnostic",
+  "artifact": null,
+  "stale_app_packaging": "not attempted;early build failure stops workflow",
+  "next_action": "Compiler smoke compile and automatic MetalToolchain installation before app/driver builds; new exact-source run required."
+}
