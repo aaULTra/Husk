@@ -1,0 +1,44 @@
+{
+  "source_sha": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+  "attempts": [
+    {
+      "run_id": 40543425959,
+      "job_id": 122327562402,
+      "kind": "push",
+      "regressions": "step passed; full log unavailable before cancellation",
+      "early_app": "passed",
+      "driver": "in progress for26minutes before cancellation request,previous identical driver inputs completed in6.5minutes",
+      "normal_cancel": "requested2026-10-27T17:18UTC,not yet completed at17:19:29Z",
+      "force_cancel": "accepted2026-10-27T17:19:29Z; final state pending",
+      "package": "not reached",
+      "cause": "UNKNOWN; do not label an app/compiler regression or a specific network failure without logs",
+      "final_state": "cancelled",
+      "completed_observed_utc": "2026-10-27T17:27Z",
+      "log_availability": "GitHub job log BlobNotFound404 after cancellation as well; precise stall location/cause unavailable"
+    },
+    {
+      "run_id": 40549564483,
+      "kind": "workflow_dispatch",
+      "trigger_head_sha": "365c0f404cff889d5e59578be8999cd3c6b763c5",
+      "source_ref": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+      "state": "cancelled while pending; no runner/check/package"
+    },
+    {
+      "run_id": 40550061152,
+      "kind": "workflow_dispatch independent concurrency retry",
+      "trigger_branch": "codex/capture-opt-ci-retry",
+      "trigger_head_sha": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+      "source_ref": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+      "state": "success",
+      "reason": "normal and force cancellation have not released original Actions concurrency slot; same source/checks, no new app/driver input",
+      "job_id": 122351064933,
+      "checks": 378,
+      "suites": 43,
+      "skips": 0,
+      "early_and_final_app": "passed",
+      "driver_and_sdk_abi": "fresh driver11exports/31structures96offsetspassed",
+      "artifact_id": 12755812971
+    }
+  ],
+  "meaning": "Infrastructure/build attempt history; no new physical or energy acceptance."
+}

@@ -2,7 +2,7 @@
   "model": "HUSK-ROADMAP-v1",
   "gate_version": "whole-milestones-1",
   "updated": "2026-10-27",
-  "scope": "E-M4-010 comprehensive four-document assessment: reopen M2-I4 for four newly observed expensive incomplete layout groups; M4-D2 actual host/direct-drawable pacing assessment; M8-I4 scoped negative JNI/sync investigation. Latest screenshot responsiveness tentatively positive, window untested; full matrices inconclusive. CAPTURE-OPT-v1 source published, exact Apple packaging pending until build receipt.",
+  "scope": "E-M4-010 four-document assessment: M2-I4 reopened, M4-D2 pacing assessment and M8-I4 scoped negative JNI/sync decision pass. CAPTURE-OPT-v1 exact-source1f46b41 Apple378checks/driver/SDK/app/IPA independently verified,5/5implementation/build;new physical0/4,netenergyunmeasured. Tentative screenshot recovery,window untested;fullmatrixinconclusive.",
   "milestones": [
     {
       "id": "M0",
@@ -62,7 +62,9 @@
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -80,7 +82,9 @@
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -100,7 +104,9 @@
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           }
@@ -184,7 +190,9 @@
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -203,7 +211,9 @@
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -222,7 +232,9 @@
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -307,7 +319,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -323,7 +337,9 @@
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -340,7 +356,9 @@
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -424,7 +442,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -436,7 +456,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -448,7 +470,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           }
@@ -526,7 +550,9 @@
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           },
@@ -546,7 +572,9 @@
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           },
@@ -566,7 +594,9 @@
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
               "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           }
@@ -643,7 +673,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -657,7 +689,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -672,7 +706,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": "Code/research gate only: historical timestamp mismatch plus pinned native present/feedback source supports isolated clock adapter. Sizing, buffering, async, physical cadence and energy remain open."
           },
@@ -687,7 +723,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": "Implementation checks/build/rollback only. Supported bounded immutable chain, clock mapping, native results and passive feedback tested; hardware acceptance open."
           }
@@ -747,7 +785,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -759,7 +799,9 @@
               "docs/performance/builds/1950280348c4030aaecadf17d3a68444b6381f86.md",
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -771,7 +813,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -784,7 +828,9 @@
               "docs/performance/13-cyport-source-review.md",
               "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           }
@@ -851,7 +897,9 @@
               "docs/performance/EVIDENCE.md",
               "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -875,7 +923,9 @@
               "tests/translation-layer/test_swapchain_budget.py",
               "tests/translation-layer/test_queue_options.py",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -889,7 +939,9 @@
               "docs/performance/runs/E-M4-007.md",
               "docs/performance/25-implementation-completion-batch.md",
               "docs/performance/runs/E-M4-010.md",
-              "docs/performance/runs/E-M4-010.analysis.json"
+              "docs/performance/runs/E-M4-010.analysis.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": "Scoped negative investigation permitted by existing plan:6,652one-in64 JNI samples total12.766884msCPU/16.253mswall;instrumented futex/contended slow counters0 except one negligible once. No further broad JNI/futex rewrite justified. Sampling aliasing,fast completed-once/outside-scope work,unmarked scene and no energy extrapolation remain explicit; reopen with contrary representative evidence."
           },
@@ -960,7 +1012,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -973,7 +1027,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -988,7 +1044,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": null
           },
@@ -1003,7 +1061,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": "Implementation/build gate only: actual useful scene input, correctness, colour, lifetime/lifecycle and benefit remain in M9-D/E and legacy M9-A R3/R4."
           },
@@ -1018,7 +1078,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": "Actual-component Apple doubles cover fixed-input reuse, ownership, failure, concurrent serialization, destruction/reconfiguration; physical GPU lifetime, colour, resize/lifecycle remain in D2/D4."
           },
@@ -1032,7 +1094,9 @@
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
               "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
-              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json"
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
             ],
             "remaining": "Research/retained-decision gate only. Automatic dynamic resolution and temporal MetalFX remain unimplemented/deferred with reopening conditions; no optimal budget or energy benefit established."
           }

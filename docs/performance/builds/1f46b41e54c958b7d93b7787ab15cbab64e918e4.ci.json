@@ -1,0 +1,208 @@
+{
+  "source_sha": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+  "run_id": 40550061152,
+  "job_id": 122351064933,
+  "verification_branch": "codex/capture-opt-ci-retry",
+  "conclusion": "success",
+  "checks": 378,
+  "suites": 43,
+  "skips": 0,
+  "failures": [],
+  "metal_compiler_smoke_check": "passed",
+  "early_app_and_final_app": "passed",
+  "driver_build": "pinned1.4.2 fresh compilation passed",
+  "vulkan_observer_sdk_abi": {
+    "structures": 31,
+    "offsets": 96,
+    "result": "passed"
+  },
+  "driver_exports": [
+    "_vkHuskSpatialConfigure",
+    "_vkHuskSpatialSnapshot",
+    "_vkHuskSpatialObservations",
+    "_vkHuskSpatialBindings",
+    "_vkHuskDisplayConfigure",
+    "_vkHuskDisplaySnapshot",
+    "_vkHuskArchiveConfigure",
+    "_vkHuskArchiveSnapshot",
+    "_vkHuskArchivePrepare",
+    "_vkHuskArchiveForget",
+    "_vkHuskArchivePriority"
+  ],
+  "artifact_id": 12755812971,
+  "artifact_link": "https://github.com/aaULTra/Husk/actions/runs/40550061152/artifacts/12755812971",
+  "expires_at": "2026-11-03T17:44:11Z",
+  "artifact_digest": "sha256:b520331ee57061031d70ec7f3cecc5764481522f7dfc061cf2fa0a7d85f429d8",
+  "xcode": "26.6 /17F113",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1
+    },
+    {
+      "name": "Check out Husk fork",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2
+    },
+    {
+      "name": "Verify sharp-resolution source and run regression checks",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3
+    },
+    {
+      "name": "Install XcodeGen",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4
+    },
+    {
+      "name": "Ensure Metal compiler component",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5
+    },
+    {
+      "name": "Download verified official base libraries and game resources",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6
+    },
+    {
+      "name": "Install Rust iOS target",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7
+    },
+    {
+      "name": "Cache Rust pairing dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8
+    },
+    {
+      "name": "Build pairing library",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9
+    },
+    {
+      "name": "Compile app before expensive experimental driver build",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10
+    },
+    {
+      "name": "Build separate pinned MetalFX experimental driver",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11
+    },
+    {
+      "name": "Build this fork's Husk app and package IPA",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12
+    },
+    {
+      "name": "Upload the installable IPA",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13
+    },
+    {
+      "name": "Upload compiler log on failure",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 14
+    },
+    {
+      "name": "Post Cache Rust pairing dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27
+    },
+    {
+      "name": "Post Check out Husk fork",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 28
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 29
+    }
+  ],
+  "relevant_log_lines": [
+    "2026-10-27T17:25:45.0121470Z Xcode 26.6",
+    "2026-10-27T17:25:45.0132210Z Build version 17F113",
+    "2026-10-27T17:28:38.0440800Z \u001b[36;1mgrep 'BUILD SUCCEEDED' /tmp/husk_ipa/build.log\u001b[0m",
+    "2026-10-27T17:33:15.8785090Z ** BUILD SUCCEEDED **",
+    "2026-10-27T17:41:23.0047520Z M2 actual Vulkan SDK observer ABI: 31 structures / 96 field offsets passed",
+    "2026-10-27T17:43:30.5120480Z 00000000000bdcf0 T _vkHuskSpatialConfigure",
+    "2026-10-27T17:43:30.6120450Z 00000000000bdfa8 T _vkHuskSpatialSnapshot",
+    "2026-10-27T17:43:30.7048020Z 00000000000be060 T _vkHuskSpatialObservations",
+    "2026-10-27T17:43:30.7945280Z 00000000000be10c T _vkHuskSpatialBindings",
+    "2026-10-27T17:43:30.8770080Z 00000000000bffbc T _vkHuskDisplayConfigure",
+    "2026-10-27T17:43:30.9747600Z 00000000000c047c T _vkHuskDisplaySnapshot",
+    "2026-10-27T17:43:31.0835670Z 000000000008a448 T _vkHuskArchiveConfigure",
+    "2026-10-27T17:43:31.2297110Z 000000000008a6ec T _vkHuskArchiveSnapshot",
+    "2026-10-27T17:43:31.3612970Z 000000000008a7a8 T _vkHuskArchivePrepare",
+    "2026-10-27T17:43:31.4891550Z 000000000008b364 T _vkHuskArchiveForget",
+    "2026-10-27T17:43:31.6022840Z 000000000008a630 T _vkHuskArchivePriority",
+    "2026-10-27T17:43:31.6030290Z M9-SPATIAL separate driver built; original donor framework preserved",
+    "2026-10-27T17:43:44.3522880Z ** BUILD SUCCEEDED **"
+  ],
+  "attempt_history": "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci-attempts.json",
+  "package_verification": {
+    "source_sha": "1f46b41e54c958b7d93b7787ab15cbab64e918e4",
+    "artifact_zip_sha256": "b520331ee57061031d70ec7f3cecc5764481522f7dfc061cf2fa0a7d85f429d8",
+    "artifact_zip_bytes": 142044913,
+    "inner_ipa_sha256": "748bf61b38b44b87469c44a114d9c12d6acac32a0c3650da664d7586ae22ba3c",
+    "inner_ipa_bytes": 142044783,
+    "zip_crc_checks": "outer and inner passed",
+    "source_stamp": "1f46b41e54c958b7d93b7787ab15cbab64e918e4-dirty",
+    "build_date": "2026-10-27 17:43 UTC",
+    "bundle_identifier": "com.husk.app",
+    "bundle_version": "129",
+    "minimum_os": "15.5",
+    "original_and_experimental_drivers_present": true,
+    "capture_consolidation_binary_strings": {
+      "gpu_recent_records": true,
+      "mach_thread_id": true,
+      "previous_user_inspection": true,
+      "share_inspection": true,
+      "prepare_finished": true,
+      "pipeline_identity_registry": true,
+      "shader_lookup_probes": true,
+      "missing_object_references": true,
+      "incomplete_object_references": true,
+      "[M1/M6/M9 lifecycle] apply begin sequence": true,
+      "screenshot_observed": true
+    },
+    "driver_manifest": {
+      "schema": 1,
+      "upstream_commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+      "upstream_version": "1.4.2",
+      "husk_spatial_patch_sha256": "584dfa2366061f345e6ab08f3b37225b79c98cd81594c8026ab8ef13be87af5a",
+      "husk_native_pipeline_patch_sha256": "584dfa2366061f345e6ab08f3b37225b79c98cd81594c8026ab8ef13be87af5a",
+      "native_archive_abi": 2,
+      "native_archive_cache_schema": 2,
+      "native_archive_compatibility_id": "a734100aa2a773b1e782c33b541593c02e7bba35aa28a5524ea30f2025202c50",
+      "native_archive_compatibility_inputs": {
+        "schema": 2,
+        "upstream_commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+        "spirv_cross_revision": "6c09849fe88c48eaed08413aa022aaa136a3a057",
+        "compiler_contract": "husk-native-default-mvk-compiler-contract-v1",
+        "archive_format_owner": "Metal binary archive"
+      },
+      "feature": "M9-SPATIAL-v3+M5-NATIVE-ARCHIVE-v1+M4-DISPLAY-v1",
+      "default_enabled": false
+    }
+  }
+}
