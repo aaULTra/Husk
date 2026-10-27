@@ -1,0 +1,221 @@
+{
+  "source_sha": "d8fa46e82106a5c9940f70918e5ce82a934280ee",
+  "observed_utc": "2026-10-27T01:55:59.884199+00:00",
+  "workflow": "build-husk-ipa.yml",
+  "workflow_id": 393900122,
+  "dispatch_returncode": 1,
+  "dispatch_stdout": "",
+  "dispatch_stderr": "could not create workflow dispatch event: HTTP 422: Actions has been disabled for this repository. (https://api.github.com/repos/aaULTra/Husk/actions/workflows/393900122/dispatches)\n",
+  "run_id": null,
+  "artifact_id": null,
+  "packaged_identity": null,
+  "ipa_sha256": null,
+  "apple_validation": "NOT RUN: GitHub Actions repository disablement",
+  "local_test_receipt": "../runs/IMPLEMENTATION-CLOSURE-7.local-tests.json",
+  "sdk_abi_check": {
+    "environment": "Linux host, actual fetched Vulkan headers",
+    "structures": 31,
+    "offsets": 96,
+    "result": "passed"
+  },
+  "prior_active_user_test_source_inferred": "0ff0758b658befbe4cc083c9e5e4bf7dfaa40696",
+  "energy_improvement": "UNVERIFIED",
+  "overall_accepted_percent": 28.67,
+  "m4_scope_percent": 31.855555555555558,
+  "duo_percent": 0,
+  "scoring_model": "HUSK-ROADMAP-v1/whole-milestones-1",
+  "source_runtime_test_build_readback_sha256": [
+    {
+      "path": ".github/workflows/build-husk-ipa.yml",
+      "sha256": "2a063724da3c1273e4c449bf1ce2f08f8be1367d7d0dcb849867f87d3837fc3f"
+    },
+    {
+      "path": "patches/metalfx/HuskSpatial.inc",
+      "sha256": "74d6cff49c80e5260c88563b2e02ed3254d613802497d2d30045e996d53b3979"
+    },
+    {
+      "path": "scripts/analyse_efficiency.py",
+      "sha256": "caf2a81fcc61568f973f197561005b7afed3dbb3c8c94fa5cef6e4655fcb0806"
+    },
+    {
+      "path": "scripts/benchmark_initialization_waits.py",
+      "sha256": "0c3a311a922b691e349c617baf5ba6e1108a8820a3755aa1acc856ef0b16bc79"
+    },
+    {
+      "path": "scripts/benchmark_once.py",
+      "sha256": "dc2ddd5217f74a2597a05ea0ba0a527d385701209f03baf764453adb196d15bc"
+    },
+    {
+      "path": "scripts/build_spatial_moltenvk_ios.sh",
+      "sha256": "2136f6c8055c0397b73d471930478193fff497c1839ae418a6f5752ed729425d"
+    },
+    {
+      "path": "scripts/compare_efficiency.py",
+      "sha256": "7254d10fd224a4393d7d9ed6489f8fc17d31cd95c5fc443dd590a4f2d57d2a10"
+    },
+    {
+      "path": "scripts/external_efficiency.py",
+      "sha256": "1f95b3b7d7c754e440062df18ea95ae994a6ba9bca4bcdb12e320cd14b436c1e"
+    },
+    {
+      "path": "scripts/prepare_spatial_driver.py",
+      "sha256": "6f464170ecb30e3c1db6e0eedc64b59c68e9f3add48681ebd9b7807b75b7bcb5"
+    },
+    {
+      "path": "scripts/verify_vulkan_observer_abi.py",
+      "sha256": "5e741afde341cf2a258bcd21a0eb72cb7de7f77db2d285fac9459fbf9e18e217"
+    },
+    {
+      "path": "src/app/Husk/AppWindows.swift",
+      "sha256": "6a1bc3d68422f976b7f90cc799df1bb470c6d0c4bd866683f0c2bae623d9f6b2"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyComponentTriage.swift",
+      "sha256": "550c9311102750e8b44f35aba2bc05e4ed392c10922cb89f88cfa3c9c6007d01"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyDiagnostics.swift",
+      "sha256": "6339d2f13e9a906d7f37bf4cb115d868a3548e3b2c8825a399c1ed8bb42c12e4"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyMath.swift",
+      "sha256": "fe355149cfaab7e41c66724f4fd77743a243bc743cd132dd1a805140f3f302af"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyMetricKit.swift",
+      "sha256": "e606278c70b5a7973879c91d55f88d2a319f6e0ab2021e53c8f46ff498fb22c1"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyProfileStore.swift",
+      "sha256": "b84f0219760e554bc386525f9fb981b7f9bd62c1d31c44fc7280b35ae03143b4"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyProfilesView.swift",
+      "sha256": "68c548159febf8f2ad92fa030d4235e7ef2c0db3098d0f7ba91ef5acb1524961"
+    },
+    {
+      "path": "src/app/Husk/HuskBridge.h",
+      "sha256": "409dde9c0d6c17e38622968daad4bf3a0a7eebadedb4e02a0c1c0cc72c77f611"
+    },
+    {
+      "path": "src/app/Husk/HuskExecutionOptions.swift",
+      "sha256": "1114cf14450068d220f22de52de2c310650b392155bd23cbf7aaf48c9c841efa"
+    },
+    {
+      "path": "src/app/Husk/TLAppSettings.swift",
+      "sha256": "588017b6e2354043b39a4729cf7eec4ef1cf52e8120af77daab0ae94a53cd28e"
+    },
+    {
+      "path": "src/app/Husk/TLUnityView.swift",
+      "sha256": "f3a9455e45bd596f79e869770fa5b1c1a0d72b2ead975460acc770e4c90e00c8"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-bionic-pthread.c",
+      "sha256": "05175ea60a1420d13fefc173a2f2bb1730d7298984fce39aa7a7abec534c85ad"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-efficiency.c",
+      "sha256": "921295e702f9c4e369ac9d853a27b2d50c6294465e4f64e1039d10c25e2a4f27"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-pipeline-diagnostics.c",
+      "sha256": "f3f27cc96aeb0d9aa31fc893f03c32c9c4e622b7e9e0a401dd3a08cb5f16e09f"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-pipeline-objects.h",
+      "sha256": "5536c1248c94d966b0360189d3d6c694564be176f38c035b8ddcc65ab7ca77cd"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-publication-wait.c",
+      "sha256": "a424882e5db63bece67b32868d39de48bb027c78d552f7e42893430bbd5dbbc9"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-publication-wait.h",
+      "sha256": "c6e40ca23f34d07e614eb1651b0066acff04d9673deb334d7fb299037a1b5eb8"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-queue-options.c",
+      "sha256": "40065a538a8e19d2952f455cdbcca3001cdb2c102f46878e96103ee1ad630e69"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-queue-options.h",
+      "sha256": "b719050f83882aa661eeb343a0a930f817ba563fe0851e2f5238ad6c5811239b"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-spatial.h",
+      "sha256": "e339f4e4822c5b8290d0baa5f5e0fc5dd27e21324d4c303918f62bdb0a8da20b"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-swapchain-budget.c",
+      "sha256": "e3056deb7e52dc43f5204a11cc6778e8a5e11d6eaaea67f31c966d9a85584942"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-swapchain-budget.h",
+      "sha256": "9218377938ba83f35b2d0be229e9d251bb81ef46c40739e29c7ae07fd7bd39ba"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-vulkan.m",
+      "sha256": "da7572156674fa1d9b7408b91b162c259b7b16d34067da3f351c048e807f1a8d"
+    },
+    {
+      "path": "tests/translation-layer/test_comparison_campaign.py",
+      "sha256": "ae7790ac4015ad0540b8da6bf301fa8aecd5681501b706861a7be149691aa236"
+    },
+    {
+      "path": "tests/translation-layer/test_compat_sync.py",
+      "sha256": "e0adb1167af5dbd7e328710a18a397bee5478d6a3074d0698bb0bc734a8e24d7"
+    },
+    {
+      "path": "tests/translation-layer/test_cpu_threads.py",
+      "sha256": "c96939cf9f915d44170a8afb23dd4f13501e0cceab97d1205abdcb1a26e29c7f"
+    },
+    {
+      "path": "tests/translation-layer/test_device_profiles.py",
+      "sha256": "3eb65572de65c8c2e85467053a84d6a5a3405298404aeeb4391f58fbba185e28"
+    },
+    {
+      "path": "tests/translation-layer/test_driver_profile.py",
+      "sha256": "e3ef60eb48b6578a30f94edfae14fc0c66b148dc4ecb3eecdeea13892841ac43"
+    },
+    {
+      "path": "tests/translation-layer/test_efficiency.py",
+      "sha256": "60c65c2504cb7170a462d2ef5206c9cc870396b81113d6c10c684aa31abd79ad"
+    },
+    {
+      "path": "tests/translation-layer/test_external_efficiency.py",
+      "sha256": "2e9f77e5f88fb4e798289e43bda23b7763d8b99ef1603de1dc76911b25aa41cb"
+    },
+    {
+      "path": "tests/translation-layer/test_pipeline_core_state.py",
+      "sha256": "8f2b2c6d513dd1db74f7b0b9ab61fecda42d105b93c5c43c9d47b0239de899d5"
+    },
+    {
+      "path": "tests/translation-layer/test_process_metrics.py",
+      "sha256": "58f0407480a7a64a0a31a93a0afb11572e172e0023540a661a0ab2a6293ff1a0"
+    },
+    {
+      "path": "tests/translation-layer/test_publication_wait.py",
+      "sha256": "8bcda9652f5f2a4c97e7934163d7771e4fe54ac05d8d7e9ebfbac612906ac8ae"
+    },
+    {
+      "path": "tests/translation-layer/test_queue_options.py",
+      "sha256": "8c04bd175aa7217808724335a8b4d7a55666af3b0ef8f75ae4dd93694c835ac7"
+    },
+    {
+      "path": "tests/translation-layer/test_spatial_lifetime.py",
+      "sha256": "a47f46ae77dfd53de759c2a8a890de78c5f1635a8125ff5e9226183a96f108f0"
+    },
+    {
+      "path": "tests/translation-layer/test_swapchain_budget.py",
+      "sha256": "bd668d013f5d333f07eb0772ebdaffd4bd9d0d7420d91b91d6217fe7562b01c4"
+    },
+    {
+      "path": "tests/translation-layer/test_vk_frame_timing.py",
+      "sha256": "2b47727759209de982ce383a18633bb268934808e107a4bdd35655cd98c47ff4"
+    }
+  ],
+  "local_check_count": 331,
+  "local_pass_count": 322,
+  "apple_only_deferred_count": 9,
+  "local_failures": 0
+}
