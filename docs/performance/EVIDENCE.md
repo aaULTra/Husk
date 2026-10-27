@@ -1,6 +1,6 @@
 # Husk performance evidence register
 
-2026-10-27 inspection feedback issue: user reports Inspect produces no visible change, exact device/build/capture state unknown. Source confirms unchanged-message acknowledgement and silent preparation-guard defects. [M1→M2→M5 correction](33-native-inspection-feedback.md) adds explicit state/acknowledgement/export; device validation and Apple build pending. No FPS/energy result or roadmap gate awarded.
+2026-10-27 inspection feedback issue: user reports Inspect produces no visible change, exact device/build/capture state unknown. Source confirms unchanged-message acknowledgement and silent preparation-guard defects. [M1→M2→M5 correction](33-native-inspection-feedback.md) adds explicit state/acknowledgement/export; final corrected source`e9835d95ec530da3efd515ac298200b6d386f46e`passes367Apple checks/41suites/full app/driver/IPA and independent package validation;device acknowledgement/export validation pending. No FPS/energy result or roadmap gate awarded.
 
 Updated: 2026-10-26. Source of priorities: [PROJECT_PLAN.md](../../PROJECT_PLAN.md).
 
@@ -254,3 +254,5 @@ Resumed d8fa46e passes331checks/IPA;ca18cbe359/IPA;0f0771c365checksbutappfailsmi
 
 
 2026-10-27 — IMPLEMENTATION-100-AUDIT:[eight exact gate dependencies](32-remaining-implementation-gates.md),[raw-input hashes/field sufficiency](runs/IMPLEMENTATION-100-AUDIT.json). All8archivedJSONcaptures M4;pipeline groups0,IDs/feedbackOFForabsent,new component/native archive fields absent. Existing partial GPU/CPU/driver evidence retained. Latest stable still1.4.2. No invented variant/power/Duo evidence,no new gate or runtime/build. CurrentI78.37%,overall29.09%unchanged;current5b76202IPA already provides the targeted next collectors.
+
+Inspection-fix final source`e9835d95ec530da3efd515ac298200b6d386f46e`,[run40510055929](https://github.com/aaULTra/Husk/actions/runs/40510055929),artifact12737019203. [Receipt](builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json)/[handover](builds/e9835d95ec530da3efd515ac298200b6d386f46e.md). Originalfe860d9passed367tests but failed immutable inout app compilation;no IPA. Corrected build/source stamp and manifest verified,graphics/defaults/compiler cache identity preserved. Only action feedback/state/export repair,not measured cooling or a completed pipeline investigation. All scores/gates unchanged.

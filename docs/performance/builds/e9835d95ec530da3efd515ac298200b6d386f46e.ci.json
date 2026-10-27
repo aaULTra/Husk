@@ -1,0 +1,110 @@
+{
+  "source_sha": "e9835d95ec530da3efd515ac298200b6d386f46e",
+  "packaged_identity": "e9835d95ec530da3efd515ac298200b6d386f46e-dirty",
+  "run_id": 40510055929,
+  "job_id": 122210445130,
+  "conclusion": "success",
+  "checks": 367,
+  "suites": 41,
+  "skips": 0,
+  "metal_compiler_smoke_check": "passed",
+  "early_app_and_final_app": "passed",
+  "driver_build": "pinned1.4.2passed",
+  "driver_exports": [
+    "_vkHuskArchiveConfigure",
+    "_vkHuskArchiveForget",
+    "_vkHuskArchivePrepare",
+    "_vkHuskArchivePriority",
+    "_vkHuskArchiveSnapshot",
+    "_vkHuskDisplayConfigure",
+    "_vkHuskDisplaySnapshot",
+    "_vkHuskSpatialBindings",
+    "_vkHuskSpatialConfigure",
+    "_vkHuskSpatialObservations",
+    "_vkHuskSpatialSnapshot"
+  ],
+  "vulkan_observer_sdk_abi": {
+    "structures": 31,
+    "offsets": 96,
+    "result": "passed"
+  },
+  "artifact_id": 12737019203,
+  "artifact_link": "https://github.com/aaULTra/Husk/actions/runs/40510055929/artifacts/12737019203",
+  "expires_at": "2026-11-03T13:34:47Z",
+  "package_verification": {
+    "artifact_zip_sha256": "9aa83e052f17e9fa81712a83b4a452a95446036597169edff144c8365ff60797",
+    "artifact_zip_bytes": 142025959,
+    "inner_ipa_sha256": "25e27589128d0ac6bee577ce0690dfe2d00291cfe26b8848f64f3896ab5d15b4",
+    "inner_ipa_bytes": 142025829,
+    "zip_crc_checks": "outer and inner passed",
+    "source_stamp": "e9835d95ec530da3efd515ac298200b6d386f46e-dirty",
+    "build_date": "2026-10-27 13:34 UTC",
+    "bundle_identifier": "com.husk.app",
+    "bundle_version": "129",
+    "minimum_os": "15.5",
+    "original_and_experimental_drivers_present": true,
+    "inspection_ui_strings": {
+      "Share archive inspection": true,
+      "Inspect captured native pipelines": true,
+      "Native counters: UNAVAILABLE": true
+    },
+    "driver_manifest": {
+      "schema": 1,
+      "upstream_commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+      "upstream_version": "1.4.2",
+      "husk_spatial_patch_sha256": "1cf500d2e8056ea96feafb16a60b52ffe8ceb6d4c4ef15cda82545b59037948b",
+      "husk_native_pipeline_patch_sha256": "1cf500d2e8056ea96feafb16a60b52ffe8ceb6d4c4ef15cda82545b59037948b",
+      "native_archive_abi": 2,
+      "native_archive_cache_schema": 2,
+      "native_archive_compatibility_id": "a734100aa2a773b1e782c33b541593c02e7bba35aa28a5524ea30f2025202c50",
+      "native_archive_compatibility_inputs": {
+        "schema": 2,
+        "upstream_commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+        "spirv_cross_revision": "6c09849fe88c48eaed08413aa022aaa136a3a057",
+        "compiler_contract": "husk-native-default-mvk-compiler-contract-v1",
+        "archive_format_owner": "Metal binary archive"
+      },
+      "feature": "M9-SPATIAL-v3+M5-NATIVE-ARCHIVE-v1+M4-DISPLAY-v1",
+      "default_enabled": false
+    }
+  },
+  "changed_runtime_test_workflow_files": [
+    {
+      "path": ".github/workflows/build-husk-ipa.yml",
+      "sha256": "251115c3e398c543db2d1b823efbb3d826ffa93b81aef886f9367e5ac6e0ae93"
+    },
+    {
+      "path": "src/app/Husk/EfficiencyDiagnostics.swift",
+      "sha256": "76484c8e207572ead1724a4af2b3714ad79c495777757239c25f0c628dc7d11b"
+    },
+    {
+      "path": "src/app/Husk/NativeArchivePresentation.swift",
+      "sha256": "9a6d8168aaa5ed8acf2be2bddb563ffcc38c5ef7301d55a6848e237adbbd0cf7"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-native-archive.c",
+      "sha256": "0be350fa592ec1470390d0f531cc65058e81a3612776df196d17690bd5fdf76b"
+    },
+    {
+      "path": "src/translation-layer-next/husk-tl-native-archive.h",
+      "sha256": "90c29f841732519afe5744967a71053f7fd1a22285347c0748ec7362d6603179"
+    },
+    {
+      "path": "tests/translation-layer/test_native_archive.py",
+      "sha256": "3f4ed4313f382ef4a9424dc778e9964c40cc50ce0f4f9e53a7ec6b9eaf8f37b9"
+    },
+    {
+      "path": "tests/translation-layer/test_native_archive_status.py",
+      "sha256": "09a3102d5f5eb73a9e0aa19e9db66659879ad6cec7c5608070e3453b337bfd88"
+    }
+  ],
+  "inspection_fix": {
+    "implementation_checks_passed": 3,
+    "implementation_checks_total": 3,
+    "device_checks_passed": 0,
+    "device_checks_total": 2,
+    "energy_improvement": "UNVERIFIED"
+  },
+  "prior_failed_source": "fe860d9f5b56f3661cab5cd2ec5bbbe7190eab79",
+  "no_new_device_or_energy_gates": true
+}

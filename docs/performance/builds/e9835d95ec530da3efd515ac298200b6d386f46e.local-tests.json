@@ -1,0 +1,304 @@
+{
+  "suites": 41,
+  "tests": 359,
+  "skipped": 11,
+  "failed_suites": [],
+  "rows": [
+    {
+      "path": "tests/translation-layer/test_ue4_graphics.py",
+      "returncode": 0,
+      "tests": 18,
+      "skipped": 0,
+      "seconds": 0.153
+    },
+    {
+      "path": "tests/translation-layer/test_ue4_resolution_hook.py",
+      "returncode": 0,
+      "tests": 6,
+      "skipped": 0,
+      "seconds": 0.141
+    },
+    {
+      "path": "tests/translation-layer/test_source_efficiency.py",
+      "returncode": 0,
+      "tests": 6,
+      "skipped": 0,
+      "seconds": 0.374
+    },
+    {
+      "path": "tests/translation-layer/test_compat_sync.py",
+      "returncode": 0,
+      "tests": 6,
+      "skipped": 0,
+      "seconds": 0.358
+    },
+    {
+      "path": "tests/translation-layer/test_publication_wait.py",
+      "returncode": 0,
+      "tests": 8,
+      "skipped": 0,
+      "seconds": 0.609
+    },
+    {
+      "path": "tests/translation-layer/test_queue_options.py",
+      "returncode": 0,
+      "tests": 5,
+      "skipped": 0,
+      "seconds": 0.146
+    },
+    {
+      "path": "tests/translation-layer/test_swapchain_budget.py",
+      "returncode": 0,
+      "tests": 11,
+      "skipped": 0,
+      "seconds": 0.173
+    },
+    {
+      "path": "tests/translation-layer/test_thread_policy.py",
+      "returncode": 0,
+      "tests": 36,
+      "skipped": 0,
+      "seconds": 0.174
+    },
+    {
+      "path": "tests/translation-layer/test_vk_frame_timing.py",
+      "returncode": 0,
+      "tests": 11,
+      "skipped": 0,
+      "seconds": 0.712
+    },
+    {
+      "path": "tests/translation-layer/test_present_clock.py",
+      "returncode": 0,
+      "tests": 8,
+      "skipped": 0,
+      "seconds": 0.248
+    },
+    {
+      "path": "tests/translation-layer/test_pipeline_store.py",
+      "returncode": 0,
+      "tests": 9,
+      "skipped": 0,
+      "seconds": 0.181
+    },
+    {
+      "path": "tests/translation-layer/test_component_profile.py",
+      "returncode": 0,
+      "tests": 7,
+      "skipped": 0,
+      "seconds": 0.472
+    },
+    {
+      "path": "tests/translation-layer/test_component_triage.py",
+      "returncode": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.068
+    },
+    {
+      "path": "tests/translation-layer/test_device_profiles.py",
+      "returncode": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.077
+    },
+    {
+      "path": "tests/translation-layer/test_driver_profile.py",
+      "returncode": 0,
+      "tests": 10,
+      "skipped": 0,
+      "seconds": 0.218
+    },
+    {
+      "path": "tests/translation-layer/test_efficiency.py",
+      "returncode": 0,
+      "tests": 15,
+      "skipped": 0,
+      "seconds": 0.153
+    },
+    {
+      "path": "tests/translation-layer/test_process_metrics.py",
+      "returncode": 0,
+      "tests": 8,
+      "skipped": 0,
+      "seconds": 0.116
+    },
+    {
+      "path": "tests/translation-layer/test_cpu_threads.py",
+      "returncode": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.075
+    },
+    {
+      "path": "tests/translation-layer/test_efficiency_math.py",
+      "returncode": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.078
+    },
+    {
+      "path": "tests/translation-layer/test_pipeline_core_state.py",
+      "returncode": 0,
+      "tests": 12,
+      "skipped": 0,
+      "seconds": 0.221
+    },
+    {
+      "path": "tests/translation-layer/test_pipeline_diagnostics.py",
+      "returncode": 0,
+      "tests": 11,
+      "skipped": 0,
+      "seconds": 0.198
+    },
+    {
+      "path": "tests/translation-layer/test_pipeline_feedback.py",
+      "returncode": 0,
+      "tests": 13,
+      "skipped": 0,
+      "seconds": 0.127
+    },
+    {
+      "path": "tests/translation-layer/test_game_chrome.py",
+      "returncode": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.062
+    },
+    {
+      "path": "tests/translation-layer/test_gpu_timing.py",
+      "returncode": 0,
+      "tests": 10,
+      "skipped": 0,
+      "seconds": 0.135
+    },
+    {
+      "path": "tests/translation-layer/test_gpu_metal.py",
+      "returncode": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.066
+    },
+    {
+      "path": "tests/translation-layer/test_gpu_vk_queue.py",
+      "returncode": 0,
+      "tests": 3,
+      "skipped": 0,
+      "seconds": 0.111
+    },
+    {
+      "path": "tests/translation-layer/test_render_inventory.py",
+      "returncode": 0,
+      "tests": 6,
+      "skipped": 0,
+      "seconds": 0.124
+    },
+    {
+      "path": "tests/translation-layer/test_efficiency_analysis.py",
+      "returncode": 0,
+      "tests": 23,
+      "skipped": 0,
+      "seconds": 0.433
+    },
+    {
+      "path": "tests/translation-layer/test_roadmap_progress.py",
+      "returncode": 0,
+      "tests": 6,
+      "skipped": 0,
+      "seconds": 0.078
+    },
+    {
+      "path": "tests/translation-layer/test_roadmap_projection.py",
+      "returncode": 0,
+      "tests": 7,
+      "skipped": 0,
+      "seconds": 0.181
+    },
+    {
+      "path": "tests/translation-layer/test_comparison_campaign.py",
+      "returncode": 0,
+      "tests": 27,
+      "skipped": 0,
+      "seconds": 0.445
+    },
+    {
+      "path": "tests/translation-layer/test_external_efficiency.py",
+      "returncode": 0,
+      "tests": 30,
+      "skipped": 0,
+      "seconds": 0.253
+    },
+    {
+      "path": "tests/translation-layer/test_spatial.py",
+      "returncode": 0,
+      "tests": 5,
+      "skipped": 1,
+      "seconds": 0.421
+    },
+    {
+      "path": "tests/translation-layer/test_spatial_lifetime.py",
+      "returncode": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.077
+    },
+    {
+      "path": "tests/translation-layer/test_native_archive.py",
+      "returncode": 0,
+      "tests": 3,
+      "skipped": 1,
+      "seconds": 0.237
+    },
+    {
+      "path": "tests/translation-layer/test_native_archive_status.py",
+      "returncode": 0,
+      "tests": 1,
+      "skipped": 1,
+      "seconds": 0.07
+    },
+    {
+      "path": "tests/translation-layer/test_archive_compatibility.py",
+      "returncode": 0,
+      "tests": 5,
+      "skipped": 0,
+      "seconds": 0.125
+    },
+    {
+      "path": "tests/translation-layer/test_native_preparation_audit.py",
+      "returncode": 0,
+      "tests": 8,
+      "skipped": 0,
+      "seconds": 0.198
+    },
+    {
+      "path": "tests/translation-layer/test_native_display.py",
+      "returncode": 0,
+      "tests": 12,
+      "skipped": 0,
+      "seconds": 0.54
+    },
+    {
+      "path": "tests/translation-layer/test_upstream_native.py",
+      "returncode": 0,
+      "tests": 6,
+      "skipped": 0,
+      "seconds": 0.187
+    },
+    {
+      "path": "tests/translation-layer/test_apk_order.py",
+      "returncode": 0,
+      "tests": 0,
+      "skipped": 1,
+      "seconds": 0.063
+    }
+  ],
+  "base_sha": "ab765e375dac8ba6168c9092cb5677e667d83aa0",
+  "scope": "Required IPA workflow suites executed on Linux. Swift/Metal/Apple-specific checks remain required on Apple CI; class-level skips may expand into multiple Apple tests. Local run preceded the Swift error-domain buffer correction; final exact-source Apple367checks/41suites/zero skips and full app/driver/IPA are authoritative.",
+  "passed": 348,
+  "plan_ids": [
+    "M1",
+    "M2",
+    "M5"
+  ],
+  "energy_benefit": "UNVERIFIED"
+}

@@ -2,7 +2,7 @@
   "model": "HUSK-ROADMAP-v1",
   "gate_version": "whole-milestones-1",
   "updated": "2026-10-27",
-  "scope": "Final5b76202Apple365-check driver/app/IPA;accepted scoped M8-I3 isolated candidate implementation from d8fa46e,all physical/energy gates unchanged.",
+  "scope": "Apple367-check host/UI inspection feedback correction. Existing gate statuses unchanged from final5b76202; no new device/energy acceptance.",
   "milestones": [
     {
       "id": "M0",
@@ -58,7 +58,9 @@
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
             ],
             "remaining": null
           },
@@ -72,7 +74,9 @@
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
             ],
             "remaining": null
           },
@@ -88,7 +92,9 @@
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
             ],
             "remaining": null
           }
@@ -164,7 +170,9 @@
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
             ],
             "remaining": null
           },
@@ -179,7 +187,9 @@
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
             ],
             "remaining": null
           },
@@ -194,7 +204,9 @@
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
             ],
             "remaining": null
           },
@@ -477,7 +489,9 @@
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
             ],
             "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           },
@@ -493,7 +507,9 @@
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
             ],
             "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           },
@@ -509,7 +525,9 @@
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
               "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
               "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
-              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json"
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
             ],
             "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
           }
@@ -1112,6 +1130,6 @@
       }
     }
   ],
-  "source_sha": "5b7620237dc50906959e6a0aecf290f1e7ef6f11",
-  "evidence_id": "CONTINUATION-8-final"
+  "source_sha": "e9835d95ec530da3efd515ac298200b6d386f46e",
+  "evidence_id": "NATIVE-INSPECTION-FIX-final"
 }
