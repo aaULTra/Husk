@@ -1,6 +1,6 @@
 # Whole-plan implementation inventory
 
-**Current runtime continuation:** [M0–M10 disposition and outstanding-repair review](37-runtime-completion.md), source42c92f2. Actual M6/M8 audio/input/controller/Vulkan improvements implemented; Apple40561530921 pending. E-M4-010 still determines physical status. Existing weightedI79.80%,32/39,overall31.11%,M4-only34.57%,Duo0; no new generic test requested. Historical sections below retain their earlier source/score and do not override this current snapshot.
+**Current runtime continuation:** [M0–M10 disposition and outstanding-repair review](37-runtime-completion.md), source42c92f2. Actual M6/M8 audio/input/controller/Vulkan improvements implemented; Apple40561530921 passes397checks/45suites/zero skips,app/driver/SDK/IPA and independent package verification. E-M4-010 still determines physical status. Existing weightedI79.80%,32/39,overall31.11%,M4-only34.57%,Duo0; no new generic test requested. Historical sections below retain their earlier source/score and do not override this current snapshot.
 
 Current continuation: [CONTINUATION-8 source, official audit and mechanisms](31-log-led-upstream-continuation.md). User requests complete feasible implementation before later testing. This inventory covers every M0–M10 milestone; a small source checklist is not whole-plan completion. Implementation/build, physical correctness, measured work and electrical benefit remain distinct.
 

@@ -1,0 +1,19 @@
+{
+  "docs_commit": "5037f32e54221947297173091a1dd6722794f2ad",
+  "verified_paths": [
+    "docs/performance/builds/42c92f297979435a6d193257dab51ce35fddf202.ci-attempts.json",
+    "docs/performance/builds/42c92f297979435a6d193257dab51ce35fddf202.local-tests.json",
+    "docs/performance/builds/42c92f297979435a6d193257dab51ce35fddf202.md",
+    "docs/performance/builds/42c92f297979435a6d193257dab51ce35fddf202.sanitizer.json",
+    "docs/performance/builds/42c92f297979435a6d193257dab51ce35fddf202.source-verification.json",
+    "docs/performance/progress/42c92f297979435a6d193257dab51ce35fddf202.ledger.json",
+    "docs/performance/progress/42c92f297979435a6d193257dab51ce35fddf202.score.json",
+    "PROJECT_PLAN.md",
+    "docs/performance/28-whole-plan-implementation-inventory.md",
+    "docs/performance/32-remaining-implementation-gates.md",
+    "docs/performance/37-runtime-completion.md",
+    "docs/performance/DECISIONS.md",
+    "docs/performance/EVIDENCE.md"
+  ],
+  "all_byte_exact": true
+}

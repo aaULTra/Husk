@@ -21,9 +21,12 @@
       "source_sha": "42c92f297979435a6d193257dab51ce35fddf202",
       "run_id": 40561530921,
       "job_id": 122391544678,
-      "conclusion": "in_progress",
+      "conclusion": "success",
       "regression_step": "passed",
-      "ipa_verification": "pending"
+      "ipa_verification": "independent ZIP/IPA/source/driver manifest verification passed",
+      "checks": 397,
+      "suites": 45,
+      "skips": 0
     }
   ],
   "old_logs_retained": true
