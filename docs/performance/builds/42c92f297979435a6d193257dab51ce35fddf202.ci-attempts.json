@@ -1,0 +1,30 @@
+{
+  "final_source_sha": "42c92f297979435a6d193257dab51ce35fddf202",
+  "attempts": [
+    {
+      "source_sha": "0e7dcbc5b733c8d3f6f1addc5a2c15c19de88a32",
+      "run_id": 40561031113,
+      "job_id": 122389767006,
+      "conclusion": "failure",
+      "failed_step": "Verify sharp-resolution source and run regression checks",
+      "failed_tests": [
+        "test_actual_touch_adapter_cancels_every_pointer_and_ignores_late_events",
+        "test_touch_coordinates_fixed_target_resizing_offsets_and_invalid_geometry"
+      ],
+      "cause": "Foundation-only host build of geometry helper/harness did not import CoreGraphics explicitly; CGRect extensions were unavailable.",
+      "reported_checks_before_workflow_stop": 355,
+      "reported_suites_before_workflow_stop": 39,
+      "ipa_produced": false,
+      "repair_source_sha": "42c92f297979435a6d193257dab51ce35fddf202"
+    },
+    {
+      "source_sha": "42c92f297979435a6d193257dab51ce35fddf202",
+      "run_id": 40561530921,
+      "job_id": 122391544678,
+      "conclusion": "in_progress",
+      "regression_step": "passed",
+      "ipa_verification": "pending"
+    }
+  ],
+  "old_logs_retained": true
+}

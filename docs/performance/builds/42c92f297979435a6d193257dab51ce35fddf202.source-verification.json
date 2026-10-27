@@ -1,0 +1,31 @@
+{
+  "source_sha": "42c92f297979435a6d193257dab51ce35fddf202",
+  "verified_paths": [
+    "src/app/Husk/NativeAudioSession.swift",
+    "src/app/Husk/NativeTouchCoordinates.swift",
+    "src/translation-layer-next/husk-tl-pcm.h",
+    "src/translation-layer-next/husk-tl-vulkan-routing.h",
+    "tests/translation-layer/test_runtime_audio.py",
+    "tests/translation-layer/test_runtime_input_vulkan.py",
+    ".github/workflows/build-husk-ipa.yml",
+    "src/app/Husk/EfficiencyComponentTriage.swift",
+    "src/app/Husk/HuskGamepad.swift",
+    "src/app/Husk/TLUnityView.swift",
+    "src/translation-layer-next/husk-tl-audio.c",
+    "src/translation-layer-next/husk-tl-audio.h",
+    "src/translation-layer-next/husk-tl-gamepad.c",
+    "src/translation-layer-next/husk-tl-pipeline-diagnostics.c",
+    "src/translation-layer-next/husk-tl-pipeline-diagnostics.h",
+    "src/translation-layer-next/husk-tl-unity-app.c",
+    "src/translation-layer-next/husk-tl-unity-app.h",
+    "src/translation-layer-next/husk-tl-vulkan.m",
+    "tests/translation-layer/test_component_triage.py",
+    "tests/translation-layer/test_driver_profile.py",
+    "tests/translation-layer/test_lifecycle_resilience.py",
+    "tests/translation-layer/test_render_inventory.py",
+    "tests/translation-layer/test_vk_frame_timing.py"
+  ],
+  "all_byte_exact": true,
+  "base_runtime_source": "0e7dcbc5b733c8d3f6f1addc5a2c15c19de88a32",
+  "followup": "Explicit CoreGraphics imports in actual touch helper and Apple test harness"
+}

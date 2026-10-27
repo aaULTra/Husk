@@ -1,0 +1,1263 @@
+{
+  "model": "HUSK-ROADMAP-v1",
+  "gate_version": "whole-milestones-1",
+  "updated": "2026-10-27",
+  "scope": "RUNTIME-COMPLETE-v1: actual audio/controller/Vulkan/touch repairs; unchanged existing I/D/E gates, exact Apple validation pending. Current device evidence remains E-M4-010395ec7c; no new device or energy acceptance.",
+  "milestones": [
+    {
+      "id": "M0",
+      "name": "Durable handover",
+      "weight": 2,
+      "documentation": [
+        {
+          "id": "M0-DOC1",
+          "criterion": "Instructions/master plan saved and user-approved",
+          "status": "passed",
+          "evidence": [
+            "AGENTS.md",
+            "PROJECT_PLAN.md"
+          ],
+          "remaining": null
+        },
+        {
+          "id": "M0-DOC2",
+          "criterion": "Evidence/history/test protocols retained",
+          "status": "passed",
+          "evidence": [
+            "docs/performance/EVIDENCE.md",
+            "docs/performance/DECISIONS.md",
+            "docs/performance/TEST_PROTOCOL.md"
+          ],
+          "remaining": null
+        },
+        {
+          "id": "M0-DOC3",
+          "criterion": "Required IPA progress/device handover contract recorded",
+          "status": "passed",
+          "evidence": [
+            "docs/performance/IPA_HANDOVER.md",
+            "docs/performance/ROADMAP_PROGRESS.md"
+          ],
+          "remaining": null
+        }
+      ]
+    },
+    {
+      "id": "M1",
+      "name": "Lightweight measurement",
+      "weight": 12,
+      "tracks": {
+        "I": [
+          {
+            "id": "M1-I1",
+            "criterion": "Optional bounded CPU/memory/battery/thermal/frame collection and export implemented",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M1-I2",
+            "criterion": "Exclusions, independent frame ring and truthful loss/battery labels implemented",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M1-I3",
+            "criterion": "Required tests and clean iOS packaging for measurement foundation",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
+              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          }
+        ],
+        "D": [
+          {
+            "id": "M1-D1",
+            "criterion": "Real-device exports and window/summary arithmetic reconcile",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/runs/E-M4-004.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M1-D2",
+            "criterion": "Frame/host loss separation observed without mixed-loss anchor reset",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/runs/E-M4-004.md"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M1-D3",
+            "criterion": "Full relevant panel/window/lifecycle/input/audio regression matrix",
+            "status": "inconclusive",
+            "evidence": [
+              "docs/performance/runs/E-M4-009.md",
+              "docs/performance/runs/E-M4-010.md",
+              "docs/performance/runs/E-M4-010.analysis.json"
+            ],
+            "remaining": "E-M4-009 screenshot/input freeze retained as prior-build regression. E-M4-010395ec7c finishes five paired pause/resume cycles; user thinks responsiveness remained and screenshot felt more durable. Window untested, full input/audio/rotation/device-loss/restoration matrix unconfirmed. No universal fix credited."
+          },
+          {
+            "id": "M1-D4",
+            "criterion": "CPU/memory/battery readings calibrated and long-session coverage validated",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/runs/E-M4-007.md"
+            ],
+            "remaining": "E-M4-007 loss-free frame/host/event export; CPU thread reads succeed. Battery flat/single5point API step and no independent CPU/memory calibration keep this gate open."
+          }
+        ],
+        "E": [
+          {
+            "id": "M1-E1",
+            "criterion": "Matched monitoring-off/on overhead is acceptable",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No controlled overhead result"
+          },
+          {
+            "id": "M1-E2",
+            "criterion": "Representative repeatable baseline with quantified measurement limits",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Current runs useful but not controlled repeat baseline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M2",
+      "name": "Pipeline identity/cache evidence",
+      "weight": 10,
+      "tracks": {
+        "I": [
+          {
+            "id": "M2-I1",
+            "criterion": "Bounded stable shader/state groups and explicit incomplete-state semantics",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M2-I2",
+            "criterion": "Passive valid creation feedback path without inferred cache hits",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M2-I3",
+            "criterion": "Collision-resolved group costs and required executable/build checks",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M2-I4",
+            "criterion": "State coverage sufficient to distinguish the identified expensive full variants",
+            "status": "inconclusive",
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md",
+              "docs/performance/28-whole-plan-implementation-inventory.md",
+              "docs/performance/runs/E-M4-009.md",
+              "docs/performance/runs/E-M4-009.analysis.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/runs/E-M4-010.md",
+              "docs/performance/runs/E-M4-010.analysis.json"
+            ],
+            "remaining": "E-M4-009 nine full slow variants remain historical. E-M4-010 adds four expensive layout-incomplete0x2001b groups (245.947/159.183/139.802/127.070ms). Source fixes one-shot metadata loss/indexed shader lookup and exposes missing versus incomplete references; actual new-device coverage not yet proven. Unsupported dependency descriptions remain partial; first/repeat/restart still required."
+          }
+        ],
+        "D": [
+          {
+            "id": "M2-D1",
+            "criterion": "Same expensive event first/repeat/restart identifiers collected",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/runs/E-M4-009.md"
+            ],
+            "remaining": "First/repeat same-ID examples now observed; controlled phase-marked persisted-cache restart correlation still absent."
+          },
+          {
+            "id": "M2-D2",
+            "criterion": "Actual supported feedback and cache reuse evidence assessed",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/runs/E-M4-009.md",
+              "docs/performance/runs/E-M4-009.analysis.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json"
+            ],
+            "remaining": "E-M4-009 scoped assessment: all9 emitted >=16.67ms individual slow variants have distinct core-v4 identities,full-core1/coverage0x1f;346 emitted valid feedback records,stage hits observed but no pipeline-level application hit. Not all dropped/unknown variants covered,not replay recipes,not persisted-seed attribution or measured benefit. First/repeat/restart campaign,phase correlation and E gates stay open."
+          },
+          {
+            "id": "M2-D3",
+            "criterion": "Expensive groups correlated with gameplay hitches using trustworthy timestamps",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/runs/E-M4-009.md"
+            ],
+            "remaining": "Host completion timestamps and coarse frame windows observed; gameplay phase/exclusive causal hitch attribution remains unavailable."
+          }
+        ],
+        "E": [
+          {
+            "id": "M2-E1",
+            "criterion": "Cache-effectiveness decision established with first/repeat/restart evidence",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Persistence mechanism works; actual reuse benefit unknown"
+          },
+          {
+            "id": "M2-E2",
+            "criterion": "Targeted diagnostic/implementation overhead acceptable",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No matched diagnostic cost result"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M3",
+      "name": "GPU/power/temperature baseline",
+      "weight": 18,
+      "tracks": {
+        "I": [
+          {
+            "id": "M3-I1",
+            "criterion": "Scoped GPU-buffer sampler candidate and clean Apple build",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M3-I2",
+            "criterion": "Explicit clock/coverage/drop/callback semantics in exports",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
+              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M3-I3",
+            "criterion": "Repeatable offline audit/analysis of export arithmetic and attribution limits",
+            "status": "passed",
+            "evidence": [
+              "scripts/analyse_efficiency.py",
+              "tests/translation-layer/test_efficiency_analysis.py",
+              "docs/performance/builds/af11056edcfa565042884a801c01d3cc3826c557.md",
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
+              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M3-I4",
+            "criterion": "Practical supported power/temperature capture and attribution workflow established for this host",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md",
+              "docs/performance/29-external-power-temperature-analysis.md"
+            ],
+            "remaining": "External importer/comparison and direct-versus-estimated display observer implemented. Actual supported host power capture/calibration/attribution and external surface measurements remain unavailable; software does not fabricate instruments."
+          }
+        ],
+        "D": [
+          {
+            "id": "M3-D1",
+            "criterion": "Actual M4 GPU timestamps, queue attribution and exclusions validated",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/runs/E-M4-005.md",
+              "docs/performance/runs/E-M4-005.audit.json",
+              "docs/performance/runs/E-M4-006.md",
+              "docs/performance/runs/E-M4-006.audit.json"
+            ],
+            "remaining": "Verified for E-M4-005 B bounded conditions and E-M4-006 direct media-clock panel/lifecycle exclusions on retained records; raw export truncation/later coverage and broad overhead/energy attribution remain separate."
+          },
+          {
+            "id": "M3-D2",
+            "criterion": "Representative CPU/GPU/presentation attribution with coverage limits",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/runs/E-M4-007.md"
+            ],
+            "remaining": "E-M4-007 adds direct process-thread/submit CPU vs wall and limited native presentation feedback. GPU sampling disabled; representative CPU/GPU/presentation attribution and coverage still incomplete."
+          },
+          {
+            "id": "M3-D3",
+            "criterion": "Practical unplugged power capture attributed appropriately",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "External measurement pending"
+          },
+          {
+            "id": "M3-D4",
+            "criterion": "Numerical surface/ambient temperature baseline captured",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Subjective warmth is not numerical temperature"
+          }
+        ],
+        "E": [
+          {
+            "id": "M3-E1",
+            "criterion": "Repeatable useful GPU/work evidence guides a concrete intervention",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Sampler hardware validation pending"
+          },
+          {
+            "id": "M3-E2",
+            "criterion": "Electrical energy/temperature baseline and instrumentation cost quantified",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Watts/temperature unmeasured"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M4",
+      "name": "Independent frame pacing",
+      "weight": 6,
+      "tracks": {
+        "I": [
+          {
+            "id": "M4-I1",
+            "criterion": "Reversible engine-only limiter control with baseline default",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M4-I2",
+            "criterion": "Thermal/30 FPS safeguards preserved by actual-wrapper checks",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M4-I3",
+            "criterion": "Clean iOS build and separate A/B protocol",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          }
+        ],
+        "D": [
+          {
+            "id": "M4-D1",
+            "criterion": "Matched dual/engine-only runs with cap verified",
+            "status": "inconclusive",
+            "evidence": [
+              "docs/performance/runs/E-M4-007.md"
+            ],
+            "remaining": "E-M4-007 confirms same031d9d2/only engine-only launch change, actual engine60/host60->0 and sleep0; unequal durations and unconfirmed route/cache/starting warmth prevent controlled-match acceptance."
+          },
+          {
+            "id": "M4-D2",
+            "criterion": "Display/host pacing and p95/p99/late events assessed",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/runs/E-M4-007.md",
+              "docs/performance/runs/E-M4-010.md",
+              "docs/performance/runs/E-M4-010.analysis.json"
+            ],
+            "remaining": "E-M4-010 scoped assessment:70,884valid direct-drawable intervals, p95/p9920.9ms, lateevents and all host windows/losses assessed. Host p95/p9920.9/21.2ms; timedclockON does not eliminate tail. Not complete physical display accounting or matched ON/OFF benefit; other D/E gates unchanged."
+          },
+          {
+            "id": "M4-D3",
+            "criterion": "Lifecycle/thermal fallback/input/audio checks",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Candidate-specific device regression pending"
+          }
+        ],
+        "E": [
+          {
+            "id": "M4-E1",
+            "criterion": "Meaningful pacing or CPU-work improvement without regression",
+            "status": "inconclusive",
+            "evidence": [
+              "docs/performance/runs/E-M4-007.md"
+            ],
+            "remaining": "E-M4-007 demonstrates no pacing/CPU improvement in this pair; p95/p99 unchanged, no causal regression claim from unequal/uncontrolled sessions. Retain usual limiter, no benefit credit."
+          },
+          {
+            "id": "M4-E2",
+            "criterion": "Net energy effect measured under matched conditions",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/runs/E-M4-007.md"
+            ],
+            "remaining": "E-M4-007 flat40% versus one40->35% API step is not a measured sustained energy effect; no watts or numerical temperature."
+          }
+        ]
+      }
+    },
+    {
+      "id": "M5",
+      "name": "Selective preparation",
+      "weight": 8,
+      "tracks": {
+        "I": [
+          {
+            "id": "M5-I1",
+            "criterion": "Complete valid pipeline creation state and safe early preparation route",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/23-native-pipeline-and-clock-batch.md",
+              "docs/performance/24-native-benefit-review.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.ci.json",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
+          },
+          {
+            "id": "M5-I2",
+            "criterion": "Bounded selective prototype with lifetime/synchronisation/loading budget",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/23-native-pipeline-and-clock-batch.md",
+              "docs/performance/24-native-benefit-review.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.ci.json",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
+          },
+          {
+            "id": "M5-I3",
+            "criterion": "Relevant tests and clean build for preparation candidate",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/23-native-pipeline-and-clock-batch.md",
+              "docs/performance/24-native-benefit-review.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.ci.json",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.md",
+              "docs/performance/builds/0ff0758b658befbe4cc083c9e5e4bf7dfaa40696.ci.json",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.md",
+              "docs/performance/builds/e9835d95ec530da3efd515ac298200b6d386f46e.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": "Implementation/build only; native support,reuse,first/repeat/restart stall benefit and total preparation-plus-gameplay energy remain pending on M4."
+          }
+        ],
+        "D": [
+          {
+            "id": "M5-D1",
+            "criterion": "Same-event gameplay stall comparison with matched cold/warm conditions",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/23-native-pipeline-and-clock-batch.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md"
+            ],
+            "remaining": "Same-event first/repeat/restart and same-driver archive1vs2 comparison pending."
+          },
+          {
+            "id": "M5-D2",
+            "criterion": "No corruption/device loss/lifecycle/cache regression",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/23-native-pipeline-and-clock-batch.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md"
+            ],
+            "remaining": "Native support, preparation, graphics/input/audio/lifecycle/cache regression checks pending on M4."
+          },
+          {
+            "id": "M5-D3",
+            "criterion": "Loading and gameplay critical-path work measured separately",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/23-native-pipeline-and-clock-batch.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md"
+            ],
+            "remaining": "Separate preparation CPU/wall receipt implemented; physical receipt and loading/gameplay attribution pending."
+          }
+        ],
+        "E": [
+          {
+            "id": "M5-E1",
+            "criterion": "Gameplay severe stalls reduced with correctness preserved",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/23-native-pipeline-and-clock-batch.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md"
+            ],
+            "remaining": "No new device result; reduced representative gameplay severe stalls not demonstrated."
+          },
+          {
+            "id": "M5-E2",
+            "criterion": "Loading plus gameplay net energy cost acceptable",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/23-native-pipeline-and-clock-batch.md",
+              "docs/performance/builds/c6f7a33bd106fe4657a80356826fe1c5ad57cdbb.md"
+            ],
+            "remaining": "No measured loading-plus-gameplay net energy or physical temperature result."
+          }
+        ]
+      }
+    },
+    {
+      "id": "M6",
+      "name": "Sizing/submission/buffering",
+      "weight": 7,
+      "tracks": {
+        "I": [
+          {
+            "id": "M6-I1",
+            "criterion": "Boundary observations distinguish view points/drawable pixels/transforms",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M6-I2",
+            "criterion": "Independent opt-in async submission control while retaining Driver Default",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M6-I3",
+            "criterion": "Trace-supported buffering/synchronisation or sizing candidate/decision",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/20-core-efficiency-batch.md",
+              "docs/performance/runs/E-M4-003.md",
+              "docs/performance/builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": "Code/research gate only: historical timestamp mismatch plus pinned native present/feedback source supports isolated clock adapter. Sizing, buffering, async, physical cadence and energy remain open."
+          },
+          {
+            "id": "M6-I4",
+            "criterion": "Required candidate-specific correctness checks/build and rollback design",
+            "status": "passed",
+            "evidence": [
+              "tests/translation-layer/test_present_clock.py",
+              "tests/translation-layer/test_vk_frame_timing.py",
+              "docs/performance/builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": "Implementation checks/build/rollback only. Supported bounded immutable chain, clock mapping, native results and passive feedback tested; hardware acceptance open."
+          }
+        ],
+        "D": [
+          {
+            "id": "M6-D1",
+            "criterion": "Actual sizing/compositing and suboptimal consequences understood",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Point/pixel logs alone do not prove wasted pixels"
+          },
+          {
+            "id": "M6-D2",
+            "criterion": "Independent async/default comparison without other changes",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "A/B pending"
+          },
+          {
+            "id": "M6-D3",
+            "criterion": "Aspect/input/latency/lifecycle/buffering regressions excluded",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device capture pending"
+          }
+        ],
+        "E": [
+          {
+            "id": "M6-E1",
+            "criterion": "Relevant redundant work/latency/pacing benefit established",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Unverified"
+          },
+          {
+            "id": "M6-E2",
+            "criterion": "Matched sustained energy/thermal result",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Unmeasured"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M7",
+      "name": "Adaptive versus Balanced",
+      "weight": 8,
+      "tracks": {
+        "I": [
+          {
+            "id": "M7-I1",
+            "criterion": "Guarded admission/rollback controller, classification and critical-role preservation",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M7-I2",
+            "criterion": "Structured controller requests versus last self-observed QoS export and clean Apple build",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/builds/1950280348c4030aaecadf17d3a68444b6381f86.md",
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M7-I3",
+            "criterion": "Executable QoS failure/restore/role/rollback checks and protected launch forwarding",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M7-I4",
+            "criterion": "Independent Balanced/Adaptive procedure and no core-affinity assumption",
+            "status": "passed",
+            "evidence": [
+              "docs/08-adaptive-worker-and-upscaling.md",
+              "docs/performance/13-cyport-source-review.md",
+              "docs/performance/builds/0ec6b2d7be2e9f79d6277e258e32d2c5788c50e5.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          }
+        ],
+        "D": [
+          {
+            "id": "M7-D1",
+            "criterion": "Admission and actual worker self-applied QoS observed",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Balanced runs do not exercise admitted Adaptive treatment"
+          },
+          {
+            "id": "M7-D2",
+            "criterion": "Rollback applied at checkpoints with delays/failures visible",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Controller request alone is insufficient"
+          },
+          {
+            "id": "M7-D3",
+            "criterion": "Critical roles, lifecycle and graphics correctness on M4",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device validation pending"
+          },
+          {
+            "id": "M7-D4",
+            "criterion": "Matched pacing and scheduling traces, without inferred P/E residency",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device comparison pending"
+          }
+        ],
+        "E": [
+          {
+            "id": "M7-E1",
+            "criterion": "Energy benefit versus Balanced measured",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Required before Adaptive optimisation completion"
+          },
+          {
+            "id": "M7-E2",
+            "criterion": "Smoothness/quality sustained across repeated matched runs",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No admitted matched comparison"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M8",
+      "name": "Translation/driver research",
+      "weight": 7,
+      "tracks": {
+        "I": [
+          {
+            "id": "M8-I1",
+            "criterion": "Targeted CyPort/source review and bounded guest-yield observation",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M8-I2",
+            "criterion": "Profile confirmed repeated encoding/resource/binding/allocation costs",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "Structured driver phases/component sampling implemented; representative repeated encoding/resource/binding/allocation costs still not established."
+          },
+          {
+            "id": "M8-I3",
+            "criterion": "Assess sync/frame-in-flight overhead with an isolated candidate or evidence-based rejection",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/builds/d8fa46e82106a5c9940f70918e5ce82a934280ee.apple-ci.json",
+              "src/translation-layer-next/husk-tl-swapchain-budget.c",
+              "src/translation-layer-next/husk-tl-queue-options.c",
+              "tests/translation-layer/test_swapchain_budget.py",
+              "tests/translation-layer/test_queue_options.py",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M8-I4",
+            "criterion": "Profile meaningful JNI/Bionic/futex overhead before a targeted change",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/runs/CORE-BATCH-4.once-benchmark.json",
+              "docs/performance/20-core-efficiency-batch.md",
+              "docs/performance/runs/E-M4-007.md",
+              "docs/performance/25-implementation-completion-batch.md",
+              "docs/performance/runs/E-M4-010.md",
+              "docs/performance/runs/E-M4-010.analysis.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": "Scoped negative investigation permitted by existing plan:6,652one-in64 JNI samples total12.766884msCPU/16.253mswall;instrumented futex/contended slow counters0 except one negligible once. No further broad JNI/futex rewrite justified. Sampling aliasing,fast completed-once/outside-scope work,unmarked scene and no energy extrapolation remain explicit; reopen with contrary representative evidence."
+          },
+          {
+            "id": "M8-I5",
+            "criterion": "Compatible stable MoltenVK version benchmarking and retained decision",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "2026-10-26 upstream latest stable independently reports1.4.2, already bundled; no newer stable candidate exists. Version benchmarking reopens with compatible stable release; no speculative upgrade or gate credit."
+          }
+        ],
+        "D": [
+          {
+            "id": "M8-D1",
+            "criterion": "Representative cost trace validates targeted hypothesis",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Trace pending"
+          },
+          {
+            "id": "M8-D2",
+            "criterion": "Isolated compatibility/driver candidate preserves graphics/lifecycle",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "CORE-BATCH-4 once/futex candidate built only; physical graphics/lifecycle compatibility comparison pending."
+          },
+          {
+            "id": "M8-D3",
+            "criterion": "Same-scene host/GPU/pacing results and driver version recorded",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device comparison pending"
+          }
+        ],
+        "E": [
+          {
+            "id": "M8-E1",
+            "criterion": "Targeted mechanism removes confirmed cost or research rejection supported",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No representative trace/experiment"
+          },
+          {
+            "id": "M8-E2",
+            "criterion": "Accepted changes demonstrate net energy/work benefit without quality regression",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Unverified"
+          }
+        ]
+      }
+    },
+    {
+      "id": "M9",
+      "name": "Resolution/MetalFX",
+      "weight": 12,
+      "tracks": {
+        "I": [
+          {
+            "id": "M9-I1",
+            "criterion": "Runtime spatial capability query with explicit unavailable reasons",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/17688ce3f2f7059bdce865bed6be836deed4903c.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M9-I2",
+            "criterion": "Current presentation path and alternative integration requirements audited",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/14-gpu-sampling-and-metalfx-inputs.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M9-I3",
+            "criterion": "Opt-in bounded render-target/area inventory with executable and Apple build checks",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/builds/1950280348c4030aaecadf17d3a68444b6381f86.md",
+              "docs/performance/EVIDENCE.md",
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": null
+          },
+          {
+            "id": "M9-I4",
+            "criterion": "Safe lower scene input -> scaler -> distinct baseline output integration",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/builds/9d298c5c7c56af87c715ba2b8ad03111a48dcbac.md",
+              "docs/performance/builds/70de1bb9f27d99fa168ba583a306f8579d5115b4.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": "Implementation/build gate only: actual useful scene input, correctness, colour, lifetime/lifecycle and benefit remain in M9-D/E and legacy M9-A R3/R4."
+          },
+          {
+            "id": "M9-I5",
+            "criterion": "Reversible controls and scaler-specific correctness/build/lifecycle checks",
+            "status": "passed",
+            "evidence": [
+              "tests/translation-layer/test_spatial_lifetime.py",
+              "tests/translation-layer/test_spatial.py",
+              "docs/performance/builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": "Actual-component Apple doubles cover fixed-input reuse, ownership, failure, concurrent serialization, destruction/reconfiguration; physical GPU lifetime, colour, resize/lifecycle remain in D2/D4."
+          },
+          {
+            "id": "M9-I6",
+            "criterion": "Separate fixed-budget/dynamic-resolution investigation and retained decision",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/21-fixed-and-dynamic-resolution-decision.md",
+              "docs/performance/builds/031d9d2698f2fbd0439547b2febd45a9c7c2e5b5.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.md",
+              "docs/performance/builds/5b7620237dc50906959e6a0aecf290f1e7ef6f11.ci.json",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md",
+              "docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.ci.json",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.md",
+              "docs/performance/builds/1f46b41e54c958b7d93b7787ab15cbab64e918e4.ci.json"
+            ],
+            "remaining": "Research/retained-decision gate only. Automatic dynamic resolution and temporal MetalFX remain unimplemented/deferred with reopening conditions; no optimal budget or energy benefit established."
+          }
+        ],
+        "D": [
+          {
+            "id": "M9-D1",
+            "criterion": "Actual useful lower-resolution scene input and output dimensions verified",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md",
+              "docs/performance/runs/E-M4-006.md"
+            ],
+            "remaining": "E-M4-006 actual scaler textures1696x1280->2128x1600 and associated HDR/depth/render-area/post-process commands now observed. Independent per-pass scene identity/executed pixel contribution remains unproved; no whole gate awarded from requested dimensions alone."
+          },
+          {
+            "id": "M9-D2",
+            "criterion": "Vulkan/Metal lifetime/synchronisation and colour correctness",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md"
+            ],
+            "remaining": "Default-off prototype now built; Vulkan/Metal lifetime/synchronisation and colour correctness requires physical matched evidence."
+          },
+          {
+            "id": "M9-D3",
+            "criterion": "HUD/detail/motion perceptual quality and input latency acceptable",
+            "status": "passed",
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md"
+            ],
+            "remaining": "Subjective ordinary-play acceptance for E-M4-005: visually probably the same, no issue noticed. No quantified input latency/objective equivalence; matched visual/energy and lifecycle gates remain separate."
+          },
+          {
+            "id": "M9-D4",
+            "criterion": "Resize/pause/resume/device-loss/baseline restoration checks",
+            "status": "inconclusive",
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md",
+              "docs/performance/runs/E-M4-006.md",
+              "docs/performance/runs/E-M4-009.md",
+              "docs/performance/runs/E-M4-010.md",
+              "docs/performance/runs/E-M4-010.analysis.json"
+            ],
+            "remaining": "E-M4-009 screenshot/input freeze retained as prior-build regression. E-M4-010395ec7c finishes five paired pause/resume cycles; user thinks responsiveness remained and screenshot felt more durable. Window untested, full input/audio/rotation/device-loss/restoration matrix unconfirmed. No universal fix credited."
+          }
+        ],
+        "E": [
+          {
+            "id": "M9-E1",
+            "criterion": "Total GPU cost including scaler improves for chosen visual budget",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md"
+            ],
+            "remaining": "Default-off prototype now built; Total GPU cost including scaler improves for chosen visual budget requires physical matched evidence."
+          },
+          {
+            "id": "M9-E2",
+            "criterion": "Comparable quality and smooth 60 FPS under matched conditions",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md"
+            ],
+            "remaining": "User no-issue feedback and ~60 FPS host cadence support ordinary play, but matched quality/smoothness comparison remains unverified."
+          },
+          {
+            "id": "M9-E3",
+            "criterion": "Repeated sustained electrical/battery/temperature benefit",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/17-metalfx-spatial-prototype.md",
+              "docs/performance/runs/E-M4-005.md"
+            ],
+            "remaining": "Default-off prototype now built; Repeated sustained electrical/battery/temperature benefit requires physical matched evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "M10",
+      "name": "Independent Duo profile",
+      "weight": 10,
+      "tracks": {
+        "I": [
+          {
+            "id": "M10-I1",
+            "criterion": "Runtime verified Duo capability inventory and independent baseline",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "Runtime inventory infrastructure coded; actual Duo capabilities and independent baseline still unavailable."
+          },
+          {
+            "id": "M10-I2",
+            "criterion": "Separate tested profile/manual override/cache compatibility",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "Manual exact-device/game profile save/apply/undo/share/delete infrastructure coded with bounds; no tested Duo profile/defaults or cache baseline."
+          },
+          {
+            "id": "M10-I3",
+            "criterion": "Device-specific correctness/measurement tooling checks",
+            "status": "pending",
+            "evidence": [
+              "docs/performance/25-implementation-completion-batch.md"
+            ],
+            "remaining": "Portable storage validation and Apple source checks added; device-specific Duo correctness/measurement still requires hardware baseline."
+          }
+        ],
+        "D": [
+          {
+            "id": "M10-D1",
+            "criterion": "Unfolded actual rendering/visual/pacing baseline",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device unavailable"
+          },
+          {
+            "id": "M10-D2",
+            "criterion": "Sustained warmed-device/lifecycle/profile correctness",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device unavailable"
+          },
+          {
+            "id": "M10-D3",
+            "criterion": "Separate charging/unplugged and display configuration",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "Device unavailable"
+          }
+        ],
+        "E": [
+          {
+            "id": "M10-E1",
+            "criterion": "Independent sustained energy/pacing optimum among tested choices",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No device"
+          },
+          {
+            "id": "M10-E2",
+            "criterion": "Battery/thermal/profile benefit on Duo itself",
+            "status": "pending",
+            "evidence": [],
+            "remaining": "No device"
+          }
+        ]
+      }
+    }
+  ],
+  "source_sha": "42c92f297979435a6d193257dab51ce35fddf202",
+  "evidence_id": "E-M4-009"
+}
