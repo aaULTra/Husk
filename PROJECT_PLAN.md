@@ -125,6 +125,17 @@ CPU time/activity is process-scoped with explicit normalisation. Track footprint
 
 ## 6. Next actions and task handover
 
+Current tested device source: **e9835d95ec530da3efd515ac298200b6d386f46e-dirty**, confirmed by E-M4-009. The earlier inferred0ff0758 association is historical. Latest delivered candidate: **395ec7ca5e72ba09d53bfbfa249e7732c312ccee**, Apple372/372checks/42suites/zero skips plus app/driver/IPA and independent package verification; its user-device result is not yet returned. [Whole-plan consequences of the supplied logs](docs/performance/35-e-m4-009-whole-plan-review.md), [existing build/checklist](docs/performance/builds/395ec7ca5e72ba09d53bfbfa249e7732c312ccee.md).
+
+Current priorities: (1) assess the already requested focused interruption check on the delivered correction before another long efficiency session; (2) reuse that same candidate's existing native inspection/preparation path when actual state is available; (3) retain separate pipeline first/repeat/restart and non-pipeline GPU/presentation/component investigations. Expensive creation despite stage hits and a separate416.52ms non-slow-pipeline window support both investigations; they do not prove every wall-time or energy cause. Preserve [E-M4-008](docs/performance/runs/E-M4-008.md) positive subjective comfort as qualitative history, not measured temperature or evidence for the newer source.
+
+Standing engineering directive remains complete independently feasible work in substantial batches with actual-code checks/early app compile/pinned driver/final package and durable handover. Protected V4/2128x1600/SharpEfficient/60/Balanced/DriverDefault/cache/thermal baseline and separate default-off experiments remain. No new runtime batch or installation is needed merely for this whole-plan review.
+
+Current fixed HUSK-ROADMAP-v1 score **30.84%**, weighted I **80.92%,32/39**, M4-only34.27%,Duo0. M2-I4/M2-D2 are supported by returned e9835d9 coverage/feedback assessment. Resilience code/build5/5,physical0/4;energy unknown. Full matrix,first/repeat/restart/native net cost,non-pipeline timing,Async/buffering,strict Adaptive,relative-worker evidence,encoding/JNI/futex/compatible-version,scaler-inclusive GPU/quality/energy and monitoring overhead remain open. Real power/surface tooling,engine temporal/live-dynamic contracts and Duo hardware remain explicit inputs. This is not every-feature code completion or measured energy saving.
+
+<details>
+<summary>Historical section6 handover, superseded by the current state above</summary>
+
 Current user test:latest parked0ff0758 IPA with MetalFX ON,associated by the user's artifact reference and not yet confirmed by an exported build stamp. [E-M4-008](docs/performance/runs/E-M4-008.md):after roughly10–20minutes,user reports the iPad did not feel warm overall. Retain this positive comfort observation and current settings. No measured watts/temperature/drain or causal comparison is supplied; no new gate is assumed. C6 preparation instructions remain historical/available,but no longer override the current code-first request or this active MetalFX test.
 
 Current engineering directive:**complete all independently implementable work before later testing**,with the complete[whole-plan implementation inventory](docs/performance/28-whole-plan-implementation-inventory.md). These mechanisms are now implemented: M6 public queue/surface-checked images,M8 parked waits/selected official compatibility fixes,M9 binding reuse,M2 core-v4,M1 guarded lifetime peak/schema13,M3 external analysis and M4/M6 direct timing provenance. M5 also has highest-cost bounded preparation/known-satisfied skipping and stable compiler compatibility. Finish final exact-source Apple checks/packaging and review actual new inputs for remaining trace/engine-dependent engineering. Preserve original V4/2128x1600/SharpEfficient/60/Balanced/DriverDefault/cache/thermal baseline;new experimentsdefaultOFF/original selectors. User may keep testing0ff0758;do not request replacement during coding/building.
@@ -132,6 +143,9 @@ Current engineering directive:**complete all independently implementable work be
 Required engineering sequence:(1)finish source and relevant actual-code checks;(2)compile app early,pinned driver/ABI and final IPA,resolve failures;(3)continue independent offline power/temperature ingestion while Apple builds;(4)save full source/build/progress/remaining-blocker handover;(5)only after later user selection,request the shortest named correctness/treatment test. Do not stop merely because a smaller batch is complete. Temporal/live dynamic engine inputs,actual supported electrical/temperature capture and independent Duo hardware are explicit dependencies,not silently implemented features.
 
 All strict Adaptive energy,relative-worker files,pipeline first/repeat/restart/native preparation net cost,non-pipeline pacing,sizing/Async/buffering,translation/JNI/futex/version,spatial useful-scene/colour/lifetime/GPU/net-energy,monitoring overhead and Duo investigations remain tracked. No new physical test is requested now. Fixed whole score28.67%,M4-only31.86%,Duo0 until unchanged gates actually pass.
+
+
+</details>
 
 2026-10-25: User approved the structured plan and authorised saving it to GitHub. M0 documents prepared from the targeted repository inspection and supplied Sections 1–19/new-run summary. No runtime source, defaults, cache files or graphics settings changed. No device tests performed. M1–M10 remain open; all energy claims pending.
 
