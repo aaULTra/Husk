@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage official Husk 3.0 libraries/resources for a source rebuild on macOS.
+"""Stage official Husk 3.1 resources with the protected QEMU library for a source rebuild on macOS.
 
 The app executable and all translation-layer code are rebuilt from this checkout.
 The QEMU/ANGLE/MoltenVK/PS4 libraries are reused without modification. This avoids
@@ -13,12 +13,15 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-SHA256 = "112a1ddbb3143ae25e80c18c5b195b6dfa5067d66cbf99d2188fc03f4ab0f61d"
+SHA256 = "650c062c774ee87debee2c96bb9c921125ff642a814a85a6718dc5e7db2e45cc"
+QEMU_BASE_SHA256 = "112a1ddbb3143ae25e80c18c5b195b6dfa5067d66cbf99d2188fc03f4ab0f61d"
 
 
-def stage(ipa):
+def stage(ipa, qemu_base):
     if hashlib.sha256(ipa.read_bytes()).hexdigest() != SHA256:
-        raise SystemExit("Official Husk 3.0 IPA checksum mismatch; refusing to stage")
+        raise SystemExit("Official Husk 3.1 IPA checksum mismatch; refusing to stage")
+    if hashlib.sha256(qemu_base.read_bytes()).hexdigest() != QEMU_BASE_SHA256:
+        raise SystemExit("Protected Husk 3.0 QEMU donor checksum mismatch; refusing to stage")
     destination = ROOT / "build/graphics-base"
     destination.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(ipa) as archive:
@@ -32,7 +35,6 @@ def stage(ipa):
     app = apps[0]
     frameworks = app / "Frameworks"
     copies = {
-        "libqemu-aarch64-softmmu.dylib": "build/ios-arm64/lib/libqemu-aarch64-softmmu.dylib",
         "libANGLE-shared.dylib": "build/ios-arm64/sysroot/lib/libANGLE-shared.dylib",
         "libhuskps4.dylib": "build/ios-arm64/lib/libhuskps4.dylib",
         "MoltenVK.framework": "build/ios-arm64/lib/MoltenVK.framework",
@@ -45,6 +47,13 @@ def stage(ipa):
             shutil.copytree(source, target, dirs_exist_ok=True)
         else:
             shutil.copy2(source, target)
+    # QEMU changed in3.1; retain the currently tested JIT/guest baseline while
+    # using3.1's matching Java resources. ANGLE/MoltenVK/PS4 file-backed
+    # sections were independently verified identical to the protected donor.
+    target = ROOT / "build/ios-arm64/lib/libqemu-aarch64-softmmu.dylib"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(qemu_base) as baseline:
+        target.write_bytes(baseline.read("Payload/Husk.app/Frameworks/libqemu-aarch64-softmmu.dylib"))
     # Regenerated only in the build workspace. Existing StikJIT headers/modules
     # remain in the repo; the original release's unrelated app binary is unused.
     project = ROOT / "src/app/project.yml"
@@ -72,8 +81,8 @@ def stage(ipa):
     if app.name != "Husk.app":
         raise SystemExit("Unexpected official app name")
     project.write_text(text[:start] + script + text[stop:])
-    print("Staged checksum-verified Husk 3.0 libraries/resources; the app will be rebuilt from source")
+    print("Staged checksum-verified Husk 3.1 resources/protected QEMU; the app will be rebuilt from source")
 
 
 if __name__ == "__main__":
-    stage(Path(sys.argv[1]))
+    stage(Path(sys.argv[1]), Path(sys.argv[2]))

@@ -4,7 +4,7 @@ name: Build Husk IPA
 # Avoids recompiling WebKit ANGLE (which fails on the hosted compiler).
 on:
   push:
-    branches: [codex/dungeons-efficient-native]
+    branches: [codex/dungeons-efficient-native, codex/husk31-compatible]
   workflow_dispatch:
     inputs:
       source_ref:
@@ -89,6 +89,8 @@ jobs:
           python3 tests/translation-layer/test_native_display.py -v
           python3 tests/translation-layer/test_upstream_native.py -v
           python3 tests/translation-layer/test_apk_order.py -v
+          python3 tests/translation-layer/test_husk31_integration.py -v
+          sh tests/translation-layer/run_font_paths.sh
           {
             echo "## Husk IPA source"
             echo "Commit: $(git rev-parse HEAD)"
@@ -127,8 +129,11 @@ jobs:
           curl --fail --location --retry 3 \
             https://github.com/Leviidev/Husk/releases/download/3.0/Husk.ipa \
             --output build/Husk-3.0-base.ipa
-          # Verifies the SHA256 and stages dependencies only, not the donor app executable.
-          python3 scripts/stage_graphics_build.py build/Husk-3.0-base.ipa
+          curl --fail --location --retry 3 \
+            https://github.com/Leviidev/Husk/releases/download/3.1/Husk.ipa \
+            --output build/Husk-3.1-base.ipa
+          # Pin3.1 resources while retaining the tested3.0 QEMU/JIT library.
+          python3 scripts/stage_graphics_build.py build/Husk-3.1-base.ipa build/Husk-3.0-base.ipa
 
       - name: Install Rust iOS target
         shell: bash

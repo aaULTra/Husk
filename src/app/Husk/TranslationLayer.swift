@@ -420,7 +420,7 @@ final class TranslationLayerStore: ObservableObject {
     nonisolated static let iconVersion = 3
 
     nonisolated private static func describe(_ apks: [String], into dir: URL, label wantLabel: Bool = true) {
-        // Same manifest-based order as launch; an asset pack is not the base.
+        // Use the same manifest-based order as launch: a large asset pack is not the base APK.
         for apk in orderedAPKs(apks) {
             guard let manifest = entry(apk, "AndroidManifest.xml", limit: 8 << 20),
                   let arsc = entry(apk, "resources.arsc", limit: 64 << 20) else { continue }
@@ -533,7 +533,7 @@ struct TLChecksView: View {
     @ObservedObject private var store = TranslationLayerStore.shared
 
     var body: some View {
-        Form {
+        HuskForm {
             checksSection
             progressSection
         }
@@ -734,7 +734,9 @@ struct TLAttemptView: View {
     let app: TLApp
 
     var body: some View {
-        content.onAppear { TranslationLayerStore.shared.markPlayed(app) }
+        content
+            .onAppear { TranslationLayerStore.shared.markPlayed(app); Playtime.begin("tl:" + app.id) }
+            .onDisappear { Playtime.end("tl:" + app.id) }
     }
 
     @ViewBuilder

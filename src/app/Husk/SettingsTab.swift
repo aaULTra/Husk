@@ -6,12 +6,18 @@ import SwiftUI
 struct SettingsTab: View {
     @AppStorage(AppWindows.defaultKey) private var multitask = false
     @AppStorage(CompatibilityStore.askKey) private var askCompat = true
+    @ObservedObject private var account = Account.shared
 
     var body: some View {
         NavigationStack {
-            List {
+            HuskPageList {
                 Section {
-                    NavigationLink { AboutSettings() } label: { appCard }
+                    Button { Router.shared.showProfile = true } label: { accountCard }
+                        .foregroundStyle(.primary)
+                } footer: {
+                    if !account.signedIn {
+                        Text("A Husk account keeps your profile, playtime and achievements, here and on itslevii.dev.")
+                    }
                 }
 
                 Section {
@@ -29,6 +35,7 @@ struct SettingsTab: View {
                     row(AppearanceSettings(), "paintbrush.fill", .pink, "Appearance", "Light or dark, accent colour, app icon")
                     row(FontSettings(), "textformat", .indigo, "Fonts", "Chinese, Japanese and Korean text")
                     row(FAQTab(), "questionmark.circle.fill", .teal, "Help", "Answers to common problems")
+                    row(AboutSettings(), "info.circle.fill", .gray, "About Husk", "Version \(Bundle.main.version) · \(Bundle.main.commit)")
                 }
 
                 Section {
@@ -80,7 +87,7 @@ struct SettingsTab: View {
                 } header: {
                     Text("Compatibility")
                 } footer: {
-                    Text("Game pages and the Store show how each app runs for everyone, from antiweb.lol. Your reports go there "
+                    Text("Game pages and the Store show how each app runs for everyone, from itslevii.dev. Your reports go there "
                        + "with your device, iOS version, Husk build and JIT method.")
                 }
 
@@ -101,17 +108,30 @@ struct SettingsTab: View {
         }
     }
 
-    private var appCard: some View {
+    /// The top of Settings, as iOS puts the Apple Account there: the Husk account (or the way to sign in), and which Husk this is.
+    private var accountCard: some View {
         HStack(spacing: 14) {
-            HuskMark(size: 56)
+            ZStack(alignment: .bottomTrailing) {
+                if account.signedIn { AccountAvatar(size: 60) } else { HuskMark(size: 60) }
+            }
             VStack(alignment: .leading, spacing: 2) {
-                Text("Husk").font(.title3.weight(.semibold))
-                Text("Version \(Bundle.main.version) · \(Bundle.main.commit)")
+                Text(account.signedIn ? (account.user?.displayName ?? "Husk Account") : "Sign In")
+                    .font(.title3.weight(.semibold))
+                Text(account.signedIn ? "@" + (account.user?.username ?? "") : "Profile, playtime and achievements")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Text("Husk \(Bundle.main.version) · \(Bundle.main.commit)")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
             }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.tertiary)
         }
         .padding(.vertical, 6)
+        .contentShape(Rectangle())
     }
 
     private func row<D: View>(_ destination: D, _ icon: String, _ tint: Color,
@@ -137,14 +157,14 @@ struct SettingsTab: View {
 }
 
 /// A Form, as the system draws one.
-private struct HuskForm: ViewModifier {
+private struct HuskFormStyle: ViewModifier {
     func body(content: Content) -> some View {
         content.navigationBarTitleDisplayMode(.inline)
     }
 }
 
 extension View {
-    func huskForm() -> some View { modifier(HuskForm()) }
+    func huskForm() -> some View { modifier(HuskFormStyle()) }
 }
 
 // MARK: - Library
@@ -154,7 +174,7 @@ struct LibrarySettings: View {
     @State private var working = false
 
     var body: some View {
-        Form {
+        HuskForm {
             Section {
                 DetailRow(label: "Apps", value: "\(host.packages.count)", mono: false)
                 DetailRow(label: "With icons",
@@ -244,7 +264,7 @@ struct FontSettings: View {
     @ObservedObject private var fonts = CJKFonts.shared
 
     var body: some View {
-        Form {
+        HuskForm {
             Section {
                 if fonts.isInstalled {
                     Label("Installed", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
@@ -279,7 +299,7 @@ struct PerformanceSettings: View {
         UserDefaults.standard.object(forKey: "husk.soundDevice") as? Bool ?? true
 
     var body: some View {
-        Form {
+        HuskForm {
             Section {
                 Picker("Renderer", selection: $gpuMode) {
                     Text("GPU").tag(true)
@@ -368,7 +388,7 @@ struct InputSettings: View {
     }
 
     var body: some View {
-        Form {
+        HuskForm {
             Section {
                 Picker("Screen", selection: $landscapeGuest) {
                     Text("Portrait").tag(false)
@@ -500,7 +520,7 @@ struct NetworkSettings: View {
         UserDefaults.standard.object(forKey: "husk.keepNetwork") as? Bool ?? true
 
     var body: some View {
-        Form {
+        HuskForm {
             Section {
                 Toggle("Keep the network across saves", isOn: $keepNetwork)
                     .onChange(of: keepNetwork) { v in
@@ -548,7 +568,7 @@ struct JITSettings: View {
     }
 
     var body: some View {
-        Form {
+        HuskForm {
             Section {
                 JITCard()
             }
@@ -599,7 +619,7 @@ struct JITSettings: View {
                           mono: false)
                 if let route = husk_ios_jit_self_route() {
                     DetailRow(label: "Made by Husk",
-                              value: String(cString: route) == "MAP_JIT" ? "MAP_JIT (TrollStore entitlement)" : "plain memory (debugged or jailbroken)",
+                              value: String(cString: route) == "MAP_JIT" ? "MAP_JIT (dynamic-codesigning)" : "plain memory (debugged or jailbroken)",
                               mono: false)
                 }
                 // Cached answer only: running the probe from a view body
@@ -707,7 +727,7 @@ struct SavedMachineSettings: View {
     @AppStorage(GuestImage.askUpdatesKey) private var askUpdates = true
 
     var body: some View {
-        Form {
+        HuskForm {
             Section {
                 Toggle("Save automatically", isOn: $autoSave)
                     .onChange(of: autoSave) { v in
@@ -821,7 +841,7 @@ struct AppearanceSettings: View {
     private let iconColumns = [GridItem(.adaptive(minimum: 92), spacing: 14)]
 
     var body: some View {
-        Form {
+        HuskForm {
             Section {
                 Picker("Appearance", selection: $appearance) {
                     ForEach(Theme.Appearance.allCases) { Text($0.title).tag($0) }
@@ -924,7 +944,7 @@ struct AboutSettings: View {
     @AppStorage(TranslationLayer.devInfoKey) private var devInfo = false
 
     var body: some View {
-        List {
+        HuskPageList {
             Section {
                 VStack(spacing: 8) {
                     HuskMark(size: 84)

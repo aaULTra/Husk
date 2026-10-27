@@ -1,0 +1,64 @@
+{
+  "libraries": [
+    {
+      "path": "libqemu-aarch64-softmmu.dylib",
+      "official31_sha256": "0977aea8539c383e0782e4dd51e8d91692c23b68513582f03e1f5650d601e594",
+      "protected_donor_sha256": "fcbb6275bb4ca6319604c9ccd96a0ece69dae56ab24b01cf4c2029fe5295b1ad",
+      "identical": false,
+      "new_bytes": 35538832,
+      "old_bytes": 35556736
+    },
+    {
+      "path": "libANGLE-shared.dylib",
+      "official31_sha256": "d1490048e93238ea8665f8b0be4e3a819318b063d588b7d41a08d23b34462c61",
+      "protected_donor_sha256": "02a2727b9a77bbb4a146a3b58b085ec3496e6e669c8ce597813a1433bb4c6c14",
+      "identical": false,
+      "new_bytes": 5302000,
+      "old_bytes": 5319984
+    },
+    {
+      "path": "libhuskps4.dylib",
+      "official31_sha256": "dfdf728bfba56ac045d177d4be398df0c73361c299a114fd34a4ba96e2a0699e",
+      "protected_donor_sha256": "74d9986c5312897208a66f1b30d2f1be6577b691590f875f5885dda130b19942",
+      "identical": false,
+      "new_bytes": 59146912,
+      "old_bytes": 59164912
+    },
+    {
+      "path": "MoltenVK.framework/MoltenVK",
+      "official31_sha256": "eb8d1f370994a135b6b38b2f35fea09c8bac87048760f9e80653520f0e051fbb",
+      "protected_donor_sha256": "9e3f5828def06efa9be11c159156f12a856418999e2818753af418e6cb5d262d",
+      "identical": false,
+      "new_bytes": 4873984,
+      "old_bytes": 4891984
+    }
+  ],
+  "release_version": "3.1.0",
+  "build": "130",
+  "runtime_resources": [
+    "Payload/Husk.app/java-runtime/com.android.i18n/lib64/libicuuc.so",
+    "Payload/Husk.app/java-runtime/com.android.i18n/lib64/libicu_jni.so",
+    "Payload/Husk.app/java-runtime/com.android.i18n/lib64/libicu.so",
+    "Payload/Husk.app/java-runtime/com.android.i18n/lib64/libicui18n.so",
+    "Payload/Husk.app/java-runtime/com.android.i18n/lib64/libandroidicu.so",
+    "Payload/Husk.app/java-runtime/com.android.i18n/javalib/core-icu4j.jar",
+    "Payload/Husk.app/java-runtime/org.apache.http.legacy.jar",
+    "Payload/Husk.app/java-runtime/husk-framework.dex",
+    "Payload/Husk.app/java-runtime/com.android.conscrypt/lib64/libssl.so",
+    "Payload/Husk.app/java-runtime/com.android.conscrypt/lib64/libcrypto.so",
+    "Payload/Husk.app/java-runtime/com.android.conscrypt/lib64/libjavacrypto.so",
+    "Payload/Husk.app/java-runtime/com.android.conscrypt/javalib/conscrypt.jar",
+    "Payload/Husk.app/java-runtime/com.android.art/lib64/libjavacore.so",
+    "Payload/Husk.app/java-runtime/com.android.art/lib64/libbase.so",
+    "Payload/Husk.app/java-runtime/com.android.art/lib64/libnativehelper.so",
+    "Payload/Husk.app/java-runtime/com.android.art/lib64/libandroidio.so",
+    "Payload/Husk.app/java-runtime/com.android.art/lib64/libopenjdk.so",
+    "Payload/Husk.app/java-runtime/com.android.art/lib64/libc++.so",
+    "Payload/Husk.app/java-runtime/com.android.art/lib64/libexpat.so",
+    "Payload/Husk.app/java-runtime/com.android.art/javalib/bouncycastle.jar",
+    "Payload/Husk.app/java-runtime/com.android.art/javalib/apache-xml.jar",
+    "Payload/Husk.app/java-runtime/com.android.art/javalib/core-oj.jar",
+    "Payload/Husk.app/java-runtime/com.android.art/javalib/okhttp.jar",
+    "Payload/Husk.app/java-runtime/com.android.art/javalib/core-libart.jar"
+  ]
+}
