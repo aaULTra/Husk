@@ -1,3 +1,4 @@
+#include "husk-tl-display.h"
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include "husk-tl-component-scope.h"
 #include "husk-tl-queue-options.h"
@@ -121,6 +122,7 @@ static void vk_load(void)
             tl_log_line("[M9-SPATIAL] experimental driver load failed; original driver fallback %s",V.lib?"loaded":"unavailable");
         }
     }
+    tl_vk_display_driver(V.lib);
     typedef void (*version_fn)(char *, uint32_t, char *, uint32_t);
     version_fn versions = V.lib ? (version_fn)dlsym(V.lib, "vkGetVersionStringsMVK") : NULL;
     char mvk_version[64] = {0}, vulkan_version[64] = {0};
@@ -897,6 +899,13 @@ static void pace_efficient_frame(void)
         tl_dp_report();
         count = late = 0; report_at = now;
     }
+}
+
+bool tl_vk_archive_priority(tl_na_priority *out){
+    if(!out){return false;}
+    memset(out,0,sizeof(*out));out->version=1;out->size=sizeof(*out);
+    typedef int(*fn)(tl_na_priority*);fn snapshot=V.lib?(fn)dlsym(V.lib,"vkHuskArchivePriority"):NULL;
+    return snapshot&&snapshot(out)==1;
 }
 
 /* Same host monotonic clock used by the Bionic clock_gettime shim. A fresh

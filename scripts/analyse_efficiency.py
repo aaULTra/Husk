@@ -131,7 +131,7 @@ def thread_cpu_audit(data):
 
 
 def audit(data):
-    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12):
+    if data.get('schema_version') not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13):
         raise ValueError('Unsupported diagnostic schema; preserve source for a version-aware audit')
     summary, metadata = data.get('summary', {}), data.get('metadata', {})
     windows, samples = data.get('windows', []), data.get('samples', [])
@@ -202,6 +202,17 @@ def audit(data):
     cpu = [(s.get('process_cpu_percent_one_core'), s.get('cpu_sample_elapsed_seconds')) for s in samples if not s.get('excluded')]
     cpu = [(v, dt) for v, dt in cpu if isinstance(v, (int, float)) and isinstance(dt, (int, float)) and dt > 0]
     cpu_mean = sum(v * dt for v, dt in cpu) / sum(dt for _, dt in cpu) if cpu else None
+    display = data.get('native_display_sampling', {})
+    if display.get('available'):
+        hist = display.get('histogram_0_1ms', [])
+        if len(hist) != 512 or any(type(v) is not int or v < 0 for v in hist) or sum(hist) != display.get('valid_intervals'):
+            errors.append('Native display histogram/interval count does not reconcile')
+        direct, estimated = display.get('direct_drawable_events'), display.get('estimated_events')
+        rows, overwritten = display.get('records', []), display.get('record_overwrites')
+        if all(type(v) is int and v >= 0 for v in (direct, estimated, overwritten)) and direct + estimated != len(rows) + overwritten:
+            errors.append('Native display raw-tail accounting does not reconcile')
+        if display.get('contention_drops') or display.get('boundary_events') or display.get('invalid_events'):
+            warnings.append('Native display capture has gaps/invalid/boundary observations; cadence is partial')
     return {'analysis_version': 3, 'build': metadata.get('build_sha'), 'schema_version': data['schema_version'],
             'configuration': metadata.get('launch_configuration', {}), 'errors': errors, 'warnings': warnings,
             'host': {'retained_fps': cadence, 'p95_ms': summary.get('p95_ms'), 'p99_ms': summary.get('p99_ms'),
@@ -214,7 +225,8 @@ def audit(data):
                        'rollbacks': worker.get('rollback_requests_since_launch'), 'waiting_reason': worker.get('waiting_reason'),
                        'normal_utility_last_observations': len(utility), 'core_residency': 'UNAVAILABLE',
                        'scope': 'Last observations, not live thread count or verified placement'},
-            'native_pipeline_archive': data.get('native_pipeline_archive', {}), 'component_sampling': data.get('component_sampling', {}), 'queue_execution_options': data.get('queue_execution_options', {}), 'initialization_waits': data.get('initialization_waits', {}),
+            'native_pipeline_archive': data.get('native_pipeline_archive', {}), 'component_sampling': data.get('component_sampling', {}), 'native_display_sampling': data.get('native_display_sampling', {}),
+            'queue_execution_options': data.get('queue_execution_options', {}), 'initialization_waits': data.get('initialization_waits', {}),
             'driver_phases': data.get('driver_phases', {}), 'component_triage': data.get('component_triage', {}),
             'delayed_os_reports': data.get('delayed_os_reports', {}),
             'presentation_clock': data.get('presentation_clock', {}), 'compatibility_sync': data.get('compatibility_sync', {}),

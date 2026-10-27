@@ -31,6 +31,7 @@ final class EfficiencyDiagnostics: ObservableObject {
     @Published var gpuSampling = false
     @Published var cpuThreadSampling = false
     @Published var componentSampling = false
+    @Published var displaySampling = false
     private var lastThreadAt = -10.0
     private final class GPUWindow {
         var intervals: [(Double, Double)] = []
@@ -107,12 +108,14 @@ final class EfficiencyDiagnostics: ObservableObject {
                     "launch_configuration": attached, "metal_capabilities": metalCapabilities,
                     "process_scope": "Husk/LiveContainer host process; not isolated guest-game utilisation"]
         metadata["component_sampling_requested"] = componentSampling
+        metadata["display_sampling_requested"] = displaySampling
         metadata["cpu_thread_sampling_requested"] = cpuThreadSampling
+        tl_vk_display_monitor(displaySampling);
         tl_cp_start(componentSampling); tl_em_start(); tl_em_cpu_work_enable(cpuThreadSampling); tl_pt_monitor(true); tl_gput_native_start(gpuSampling)
         // Bracket a host-clock read with media-clock reads. Raw values remain
         // authoritative; this mapping supports estimated host/GPU correlation.
         metadata["gpu_clock_alignment"] = gpuClockAlignment()
-        running = true; refreshExclusion(); tl_cp_exclude(!excludedReason.isEmpty); event("phase", phase); sample()
+        running = true; refreshExclusion(); tl_vk_display_exclude(!excludedReason.isEmpty); tl_cp_exclude(!excludedReason.isEmpty); event("phase", phase); sample()
         timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.sample() }
         }
@@ -143,6 +146,7 @@ final class EfficiencyDiagnostics: ObservableObject {
         guard reason != excludedReason else { return }
         let t = now
         var mediaBefore = 0.0, mediaAfter = 0.0
+        tl_vk_display_exclude(!reason.isEmpty)
         tl_cp_exclude(!reason.isEmpty)
         tl_em_exclude(!reason.isEmpty)
         tl_gput_native_exclude(!reason.isEmpty, &mediaBefore, &mediaAfter)
@@ -385,6 +389,40 @@ final class EfficiencyDiagnostics: ObservableObject {
                 "images_created": s.images_created, "encoded_calls": s.encoded, "failures": s.failures,
                 "output_binding_reuse": bindings, "texture_observations": textures, "patch": "M9-SPATIAL-v3", "energy_benefit": "UNVERIFIED"]
     }
+    private func nativeDisplayReport() -> [String: Any] {
+        var info = tl_display_stats(), copied: UInt32 = 0
+        var records = Array(repeating: tl_display_record(), count: Int(TL_DISPLAY_CAPACITY))
+        let available = records.withUnsafeMutableBufferPointer { tl_vk_display_snapshot(&info, $0.baseAddress, UInt32($0.count), &copied) }
+        let histogram: [UInt64] = withUnsafePointer(to: &info.histogram) { pointer in
+            pointer.withMemoryRebound(to: UInt64.self, capacity: Int(TL_DISPLAY_BINS)) { Array(UnsafeBufferPointer(start: $0, count: Int(TL_DISPLAY_BINS))) }
+        }
+        func percentile(_ fraction: Double) -> Any {
+            guard info.intervals > 0 else { return NSNull() }
+            let wanted = UInt64(ceil(Double(info.intervals) * fraction))
+            var count: UInt64 = 0
+            for (index, value) in histogram.enumerated() {
+                count += value
+                if count >= wanted { return index == histogram.count - 1 ? NSNull() : Double(index) / 10 as Any }
+            }
+            return NSNull()
+        }
+        let rows: [[String: Any]] = records.prefix(Int(copied)).map { r in
+            ["sequence": r.sequence, "swapchain_generation": r.swapchain_generation,
+             "raw_drawable_presented_media_ns": r.raw_drawable_ns, "effective_driver_timestamp_ns": r.effective_driver_ns,
+             "driver_begin_timestamp_ns": r.begin_driver_ns, "observed_media_ns": r.observed_media_ns,
+             "google_present_id": r.google_id, "source": r.source == 1 ? "drawable_presented_time" : "driver_estimate"]
+        }
+        return ["plan_ids": ["M4", "M6", "M3"], "requested": displaySampling, "available": available,
+                "capture_enabled": info.enabled != 0, "excluded": info.excluded != 0, "epoch": info.epoch,
+                "attempts": info.attempts, "direct_drawable_events": info.direct_events, "estimated_events": info.estimated_events,
+                "invalid_events": info.invalid_events, "boundary_events": info.boundary_events, "contention_drops": info.contention_drops,
+                "record_overwrites": info.overwrites, "valid_intervals": info.intervals, "interval_seconds": Double(info.interval_ns) / 1e9,
+                "worst_interval_ms": Double(info.worst_interval_ns) / 1e6,
+                "above_20_ms": info.above20, "above_33_333333_ms": info.above33, "above_50_ms": info.above50,
+                "p50_ms_estimated": percentile(0.5), "p95_ms_estimated": percentile(0.95), "p99_ms_estimated": percentile(0.99),
+                "histogram_0_1ms": histogram, "records": rows,
+                "scope": "Opt-in callback provenance. Only positive raw CAMetalDrawable.presentedTime enters the interval histogram; driver fallback estimates remain separate. Same swapchain generation, consecutive collected callback attempts and increasing times only. Exclusions/reset/drop/invalid/fallback interrupt continuity; late pre-inclusion callbacks rejected. Full included aggregate survives256-record tail overwrite. Callback delivery/order/completeness and physical visibility are not independently verified; not complete displayed FPS, GPU execution, watts or an energy/frame denominator. Histogram final bucket>=51.1ms; percentile in that bucket unavailable. Instrumentation overhead remains unmeasured."]
+    }
     private func swapchainBudgetReport() -> [String: Any] {
         var s = tl_sb_stats(); tl_sb_snapshot(&s)
         return ["plan_ids": ["M6", "M8"], "requested_images": s.requested, "original_min_images": s.original_min,
@@ -446,6 +484,12 @@ final class EfficiencyDiagnostics: ObservableObject {
     }
     private func nativeArchiveReport() -> [String: Any] {
         var a = tl_na_stats(); tl_vk_archive_snapshot(&a)
+        var priority = tl_na_priority(); let priorityAvailable = tl_vk_archive_priority(&priority)
+        let selection: [String: Any] = ["available": priorityAvailable, "eligible_slow_calls": priority.eligible,
+            "higher_cost_replacements": priority.replaced, "lower_cost_or_preparing_rejections": priority.rejected,
+            "known_requirement_satisfied_skips": priority.requirement_satisfied_skips,
+            "highest_pending_host_ns": priority.highest_pending_ns, "lowest_pending_host_ns": priority.lowest_pending_ns,
+            "scope": "Keep up to8 highest observed native-call durations, slowest first. Complete requests only; timing is not a semantic variant key. Skip extra preparation when opt-in verification already satisfied the archive requirement. No first-ever-hitch or net-energy guarantee."]
         let errorDomain = withUnsafePointer(to: &a.last_verification_error_domain) { p in
             p.withMemoryRebound(to: CChar.self, capacity: 64) { String(cString: $0) }
         }
@@ -455,7 +499,7 @@ final class EfficiencyDiagnostics: ObservableObject {
             "metal_archive_requirement_satisfied_calls": a.archive_requirement_satisfied, "verification_failed_calls": a.verification_failures,
             "last_verification_error_domain": errorDomain, "last_verification_error_code": a.last_verification_error_code,
             "verification_scope": "Opt-in extra FailOnBinaryArchiveMiss API attempt. Success is native Metal archive-requirement evidence, not a Vulkan cache hit or zero-cost compilation. Failure is not a proven miss; ordinary native fallback preserved. Verification adds overhead and stays OFF for energy comparisons.",
-            "captured": a.descriptors_captured, "dropped": a.descriptors_dropped,
+            "selection_policy": selection, "captured": a.descriptors_captured, "dropped": a.descriptors_dropped,
             "archive_attachments": a.archive_attachments, "archive_fallbacks": a.archive_fallbacks,
             "prepare_calls": a.prepare_calls, "prepared": a.prepared, "prepare_failures": a.prepare_failures,
             "restored_bytes": a.restored_bytes, "saved_bytes": a.saved_bytes,
@@ -583,8 +627,8 @@ final class EfficiencyDiagnostics: ObservableObject {
         observers.forEach { NotificationCenter.default.removeObserver($0) }; observers = []
         UIDevice.current.isBatteryMonitoringEnabled = previousBatteryMonitoring
         var total = tl_em_stats(); tl_em_snapshot(true, &total)
-        stoppedReport = ["schema_version": 12, "metadata": metadata, "duration_seconds": now - origin,
-                         "summary": stats(total), "delayed_os_reports": EfficiencyMetricKit.shared.summary, "component_sampling": componentReport(), "driver_phases": driverPhaseReport(), "native_pipeline_archive": nativeArchiveReport(), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "swapchain_budget": swapchainBudgetReport(), "queue_execution_options": queueExecutionReport(), "initialization_waits": initializationWaitReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
+        stoppedReport = ["schema_version": 13, "metadata": metadata, "duration_seconds": now - origin,
+                         "summary": stats(total), "native_display_sampling": nativeDisplayReport(), "delayed_os_reports": EfficiencyMetricKit.shared.summary, "component_sampling": componentReport(), "driver_phases": driverPhaseReport(), "native_pipeline_archive": nativeArchiveReport(), "spatial_upscaling": spatialReport(), "pipeline_feedback_request": pipelineFeedbackReport(), "render_inventory": renderInventory(), "worker_policy": workerReport(), "pipeline_groups_since_launch": pipelineGroups(), "gpu_sampling": gpuReport(), "gpu_records": gpuRows, "gpu_windows": gpuWindowReport(), "submit_cpu_work": submitCPUReport(), "swapchain_budget": swapchainBudgetReport(), "queue_execution_options": queueExecutionReport(), "initialization_waits": initializationWaitReport(), "compatibility_sync": syncReport(), "presentation_clock": presentationClockReport(), "samples": samples, "windows": windows, "events": events, "exclusions": exclusions,
                          "battery_drain_pp_per_hour_estimated": battery.rate.map { $0 as Any } ?? NSNull(),
                          "battery_estimate_status": battery.status,
                          "battery_arithmetic_rate_pp_per_hour": battery.arithmeticRate.map { $0 as Any } ?? NSNull(),
@@ -614,6 +658,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                                           "Cache feedback may be unavailable; partial pipeline signatures are not cache keys",
                                           "Frame ring is separate from host/event recording; lost intervals and record categories are disclosed",
                                           "Monitoring overhead and physical-device correctness remain unverified"]]
+        tl_vk_display_monitor(false)
         running = false; canExport = true; excludedAt = nil; message = "Stopped; ready to export"
     }
     func export() {
@@ -641,6 +686,7 @@ final class EfficiencyDiagnostics: ObservableObject {
                 let textures = spatial["texture_observations"] as? [String: Any] ?? [:]
                 let worker = report["worker_policy"] as? [String: Any] ?? [:]
                 let presentation = report["presentation_clock"] as? [String: Any] ?? [:]
+                let display = report["native_display_sampling"] as? [String: Any] ?? [:]
                 let sync = report["compatibility_sync"] as? [String: Any] ?? [:]
                 let submitWork = report["submit_cpu_work"] as? [String: Any] ?? [:]
                 let gpu = report["gpu_sampling"] as? [String: Any] ?? [:]
@@ -656,6 +702,9 @@ final class EfficiencyDiagnostics: ObservableObject {
                 MEASURED worst interval: \(summary["worst_ms"] ?? "UNAVAILABLE") ms
                 Intervals >20/33.33/50 ms: \(summary["above_20_ms"] ?? 0) / \(summary["above_33_333333_ms"] ?? 0) / \(summary["above_50_ms"] ?? 0)
                 Slow pipeline calls: \(summary["slow_pipeline_calls"] ?? 0); worst host call: \(summary["worst_pipeline_ns"] ?? 0) ns
+                M4/M6 native display observer requested/available: \(display["requested"] ?? false) / \(display["available"] ?? false)
+                Drawable-reported/driver-estimated events: \(display["direct_drawable_events"] ?? 0) / \(display["estimated_events"] ?? 0)
+                Direct callback interval p95/p99: \(display["p95_ms_estimated"] ?? "UNAVAILABLE") / \(display["p99_ms_estimated"] ?? "UNAVAILABLE") ms (partial coverage; not full displayed FPS)
                 Process CPU maximum sampled activity: \(cpu.max().map { String(format: "%.2f%%", $0) } ?? "UNAVAILABLE") (100% = one logical CPU, not whole-device usage)
                 Maximum observed footprint: \(footprints.max().map { String(format: "%.3f GiB", Double($0) / 1073741824) } ?? "UNAVAILABLE") (not actual peak)
                 Largest reported process lifetime footprint peak: \(lifetimePeaks.max().map { String(format: "%.3f GiB", Double($0) / 1073741824) } ?? "UNAVAILABLE") (host scope, including pre-session/excluded work)
@@ -721,6 +770,8 @@ struct EfficiencyDiagnosticsView: View {
                     Text("Optional thread CPU counters about every 10 seconds and caller CPU/wall time around submissions. Identifies CPU work, not core placement or watts. Adds overhead; OFF for clean energy comparisons.")
                     Toggle("Sample component CPU and waits (Diagnostic)", isOn: $monitor.componentSampling).disabled(monitor.running || monitor.exporting || monitor.nativePreparing)
                     Text("Samples Vulkan, JNI and synchronisation scopes. Adds diagnostic work; OFF for normal energy comparisons. Wall time includes waiting and nested scopes overlap.")
+                    Toggle("Sample native display presentation (Diagnostic)", isOn: $monitor.displaySampling).disabled(monitor.running || monitor.exporting)
+                    Text("Separates drawable-reported times from driver estimates. Requires the experimental driver (MetalFX or Native Cache Driver Only). Adds callback work; OFF for clean energy comparisons.")
                     Button("Start lightweight test") { monitor.start() }.disabled(monitor.running || monitor.exporting || monitor.nativePreparing)
                     Picker("Phase marker", selection: Binding(get: { monitor.phase }, set: { monitor.markPhase($0) })) {
                         ForEach(["Unmarked", "Loading", "Menu", "Gameplay", "First-use effect", "Repeated effect"], id: \.self) { Text($0).tag($0) }

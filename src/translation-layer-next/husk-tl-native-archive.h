@@ -21,6 +21,11 @@ typedef struct {
  char last_verification_error_domain[64];
 } tl_na_stats;
 typedef struct {
+ uint32_t version,size,pending,capacity;
+ uint64_t eligible,replaced,rejected,requirement_satisfied_skips,highest_pending_ns,lowest_pending_ns;
+} tl_na_priority;
+bool tl_vk_archive_priority(tl_na_priority*);
+typedef struct {
  int (*configure)(const tl_na_config*);int (*snapshot)(tl_na_stats*);
  int (*prepare)(void);void (*forget)(void);
 } tl_npa_api;

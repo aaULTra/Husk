@@ -12,7 +12,7 @@ REPLACEMENTS={
     ],
     [
       "\tVkExtent2D _imageExtent = {0, 0};",
-      "\tVkExtent2D _imageExtent = {0, 0};\n\ttl_spatial_config _huskSpatial = {};"
+      "\tVkExtent2D _imageExtent = {0, 0};\n\ttl_spatial_config _huskSpatial = {};\n\tuint64_t _huskDisplayGeneration = huskDisplayNewGeneration();"
     ]
   ],
   "MVKImage.h": [
@@ -81,6 +81,17 @@ def prepare(src):
             if content.count(before)!=1:raise SystemExit("Pinned source/patch drift: "+name)
             content=content.replace(before,after)
         changed[gpu/name]=content
+    image=changed[gpu/"MVKImage.mm"]
+    anchor='\tif (actualPresentTime == 0) { actualPresentTime = mvkGetRuntimeNanoseconds(); }'
+    if image.count(anchor)!=1:raise SystemExit("Pinned source/patch drift: presentation provenance")
+    image=image.replace(anchor,'\tconst uint64_t huskRawDrawableTime = actualPresentTime;\n'+anchor)
+    anchor='\t\tif (_swapchain) { _swapchain->endPresentation(presentInfo, _beginPresentTime, actualPresentTime); }'
+    if image.count(anchor)!=1:raise SystemExit("Pinned source/patch drift: presentation callback")
+    image=image.replace(anchor,'\t\tif (_swapchain) {\n'
+       '\t\t\tif (huskDisplayMonitoring()) huskDisplayObserve(_swapchain->_huskDisplayGeneration, presentInfo.presentIDGoogle, presentInfo.desiredPresentTime, huskRawDrawableTime, actualPresentTime, _beginPresentTime, (uint64_t)(CACurrentMediaTime() * 1.0e9));\n'
+       '\t\t\t_swapchain->endPresentation(presentInfo, _beginPresentTime, actualPresentTime);\n\t\t}')
+    changed[gpu/"MVKImage.mm"]=image
+    changed[gpu/"MVKSwapchain.mm"]+='\n#include "HuskDisplay.inc"\n'
     pipeline=gpu/"MVKPipeline.mm"
     content=pipeline.read_text()
     if content.count("using namespace std;")!=1:raise SystemExit("Pinned source/patch drift: pipeline include")
@@ -100,13 +111,15 @@ def prepare(src):
     for path,content in changed.items():path.write_text(content)
     for name in ["HuskSpatial.inc","HuskSpatialDriver.h"]:shutil.copy2(ROOT/"patches/metalfx"/name,gpu/name)
     shutil.copy2(ROOT/"src/translation-layer-next/husk-tl-spatial.h",gpu/"HuskSpatialABI.h")
-    inputs=[Path(__file__),ROOT/"patches/metalfx/HuskSpatial.inc",ROOT/"patches/metalfx/HuskSpatialDriver.h",ROOT/"src/translation-layer-next/husk-tl-spatial.h",ROOT/"patches/metalfx/HuskArchive.inc",ROOT/"src/translation-layer-next/husk-tl-native-archive.h"]
+    shutil.copy2(ROOT/"patches/metalfx/HuskDisplay.inc",gpu/"HuskDisplay.inc")
+    shutil.copy2(ROOT/"src/translation-layer-next/husk-tl-display.h",gpu/"HuskDisplayABI.h")
+    inputs=[ROOT/"patches/metalfx/HuskDisplay.inc",ROOT/"src/translation-layer-next/husk-tl-display.h",Path(__file__),ROOT/"patches/metalfx/HuskSpatial.inc",ROOT/"patches/metalfx/HuskSpatialDriver.h",ROOT/"src/translation-layer-next/husk-tl-spatial.h",ROOT/"patches/metalfx/HuskArchive.inc",ROOT/"src/translation-layer-next/husk-tl-native-archive.h"]
     digest=hashlib.sha256()
     for path in inputs:digest.update(path.read_bytes())
     archive=(ROOT/"patches/metalfx/HuskArchive.inc").read_text()
     (gpu/"HuskArchive.inc").write_text('#define HUSK_ARCHIVE_PATCH_ID "'+digest.hexdigest()+'"\n'+archive)
     shutil.copy2(ROOT/"src/translation-layer-next/husk-tl-native-archive.h",gpu/"HuskArchiveABI.h")
-    manifest={"schema":1,"upstream_commit":PIN,"upstream_version":"1.4.2","husk_spatial_patch_sha256":digest.hexdigest(),"husk_native_pipeline_patch_sha256":digest.hexdigest(),"native_archive_abi":2,"feature":"M9-SPATIAL-v3+M5-NATIVE-ARCHIVE-v1","default_enabled":False}
+    manifest={"schema":1,"upstream_commit":PIN,"upstream_version":"1.4.2","husk_spatial_patch_sha256":digest.hexdigest(),"husk_native_pipeline_patch_sha256":digest.hexdigest(),"native_archive_abi":2,"feature":"M9-SPATIAL-v3+M5-NATIVE-ARCHIVE-v1+M4-DISPLAY-v1","default_enabled":False}
     (src/"HuskSpatialBuild.json").write_text(json.dumps(manifest,indent=2)+"\n")
     print(json.dumps(manifest))
 if __name__=="__main__":prepare(Path(sys.argv[1]).resolve())

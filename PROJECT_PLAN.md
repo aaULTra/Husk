@@ -1,6 +1,6 @@
 # Husk master development plan
 
-Updated:2026-10-27. Status:IMPLEMENTATION-CLOSURE-7 source`d8fa46e82106a5c9940f70918e5ce82a934280ee`; final local331checks across36suites (322passed,9Apple-onlydeferred,zero failures),SDK31structures/96offsets pass. Apple CI dispatch rejected:Actions disabled for repository; no new IPA exists. Full inventory/handover:docs/performance/28-whole-plan-implementation-inventory.md and30-implementation-closure-handover.md. Active0ff0758/MetalFXON user test retained; subjective comfortable10–20minute observation E-M4-008. Overall28.67%(+0),M4-only31.86%,Duo0; no measured energy/cooling claim. All unfinished engineering and experiments retained.
+Updated:2026-10-27. Status:Actions re-enabled; d8fa46e Apple run40436887473 passes331/331checks,36suites,zero skips,driver/SDK31-96/app/IPA. Intermediate artifact parked; active0ff0758MetalFX test retained. CONTINUATION-8 adds selective official JNI/APK fixes,typed libUE4 isnan binding,M5 bounded highest-cost preparation/known-satisfied skip and M4/M6 opt-in direct-versus-estimated drawable timing with full aggregate. New source local342pass/17Apple-onlypending,39suites; exact-source Apple validation required. No measured energy/cooling claim; unfinished inputs/experiments retained.
 Repository: [aaULTra/Husk](https://github.com/aaULTra/Husk). Development: `codex/dungeons-efficient-native`. [PR #4](https://github.com/aaULTra/Husk/pull/4) remains draft; no merge is authorised by this handover.
 
 ## 1. Objective, baseline and source of truth
@@ -543,3 +543,12 @@ Overall28.67%(+0),M4-only31.86%,Duo0;fixed I/D/E criteria unchanged. Temporal/li
 
 
 Final source [`d8fa46e82106a5c9940f70918e5ce82a934280ee`](https://github.com/aaULTra/Husk/commit/d8fa46e82106a5c9940f70918e5ce82a934280ee),[exact source handover](docs/performance/builds/d8fa46e82106a5c9940f70918e5ce82a934280ee.md),[dispatch blocker receipt](docs/performance/builds/d8fa46e82106a5c9940f70918e5ce82a934280ee.ci.json),[fixed accepted score](docs/performance/progress/d8fa46e82106a5c9940f70918e5ce82a934280ee.score.json). Final explicit dispatch also rejected at01:55:59Z;no new IPA/run. Both source publications read back exactly.
+
+
+### CONTINUATION-8 — existing logs, official-source review and resumed Apple integration
+
+User authorises nonstop feasible implementation from existing logs and safe official adaptations. [Full mechanisms/audit/dependencies](docs/performance/31-log-led-upstream-continuation.md),[30 official commit decisions](docs/performance/runs/UPSTREAM-2026-10-27.audit.json). Officialhead db6965a/commonbase2df074b;selective JNI cache-generation and manifest APK ordering adapted,not a wholesale3.1merge. Local typed isnan binding fixes the unresolved log import without claiming a measured heat cause. Broad UI/JIT/entitlement/software geometry/battery metadata/ZIP changes remain reviewed separately for stated reasons.
+
+E-M4-007 mixed drawable/fallback timing motivates optional native provenance and full included histogram beyond256raw records. No scheduling/readback/GPU waits;strict epoch/clock/generation/loss continuity and defaultOFF. M5 keeps the highest-cost8complete native requests,slowest first,and skips extra capture when opt-in archive requirement already succeeded;bounds/defaults/fallback/receipts retained. These are implemented mechanisms,not verified energy savings. Schema13 labels partial display coverage;never use it as a complete energy/frame denominator.
+
+Actions now dispatches after user-reported re-enablement. Prior d8fa46e exact source passes331Applechecks/36suites/zero skips,SDK31/96,driver8exports,app/IPA/upload;[additive success receipt](docs/performance/builds/d8fa46e82106a5c9940f70918e5ce82a934280ee.apple-ci.json) preserves earlier rejection history. Intermediate artifact12704853711parked;no replacement install/test requested. New changed source must pass its own Apple/native/driver/app/IPA checks. All unresolved first/repeat/restart/cache/pacing/worker/monitoring/spatial net-energy and true engine-input/Duo dependencies remain tracked.

@@ -99,7 +99,7 @@ def identity(data):
 
 
 def prepare(data, manifest):
-    if type(data.get('schema_version')) is not int or data['schema_version'] not in range(1, 13):
+    if type(data.get('schema_version')) is not int or data['schema_version'] not in range(1, 14):
         raise ValueError('Unsupported Husk schema')
     if manifest.get('schema') != SCHEMA:
         raise ValueError('Unsupported external manifest schema')

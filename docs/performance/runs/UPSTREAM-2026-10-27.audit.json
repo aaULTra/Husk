@@ -1,0 +1,189 @@
+{
+  "official_repository": "Leviidev/Husk",
+  "official_head": "db6965a505488c4980dc19a891f2448b0dd409b5",
+  "common_base": "2df074b3083ce2913922995f2f99249f1498b554",
+  "commit_count": 30,
+  "changes": [
+    {
+      "sha": "db6965a505488c4980dc19a891f2448b0dd409b5",
+      "subject": "Original Husk mark, no splash or side menu; sign in from the top of Settings and Home's avatar menu",
+      "status": "deferred",
+      "reason": "Broad launcher/account/localization redesign is independent of current performance fixes and can conflict with protected game chrome."
+    },
+    {
+      "sha": "9519faf819abed9807cd11eff088f314c993f35f",
+      "subject": "W^X: demote the executable view to r-x, keep dynamic-codesigning out of the TrollStore build (#74)",
+      "status": "deferred",
+      "reason": "Touches executable-memory/JIT/entitlement paths. Preserve working iPadOS27 LiveContainer path; requires its own installer/device matrix and tests."
+    },
+    {
+      "sha": "9eb75870c95db165a8613fb40625c4fe38948812",
+      "subject": "Simplified Chinese for Husk's screens; the setup's language applies to Husk and its apps (#143, #150, #156)",
+      "status": "deferred",
+      "reason": "Broad launcher/account/localization redesign is independent of current performance fixes and can conflict with protected game chrome."
+    },
+    {
+      "sha": "c847ca04a21522004cdf5f6a7a93fa5a41a572a5",
+      "subject": "Crash reports: say when iOS closed Husk for memory (#175)",
+      "status": "deferred",
+      "reason": "Low recorded jetsam headroom alone does not prove iOS terminated the process. Do not import an unsupported causal diagnosis."
+    },
+    {
+      "sha": "f32163fa7c412c64ea5757c1613ca9a982ff4a4d",
+      "subject": "Java runtime: natives registered after a first lookup are found (Dex2C apps, #152, #174)",
+      "status": "adapted",
+      "reason": "Positive JNI lookup invalidated by RegisterNatives generation; prior misses retried. Three upstream source changes retained with executable regression fixtures."
+    },
+    {
+      "sha": "07a2f06462eaafdf6b7c155c0f9919a8cdf7b34e",
+      "subject": "Husk 3.1.0, build 130",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "c2579fe94e06e8c4fed31c846de03947b94eb80b",
+      "subject": "New look from the 3.1 concept: Home, Library, Store, item pages, side menu, Husk accounts and profile, Import APK, splash and H logo; iOS 15 pushed screens (#159, #181)",
+      "status": "deferred",
+      "reason": "Broad launcher/account/localization redesign is independent of current performance fixes and can conflict with protected game chrome."
+    },
+    {
+      "sha": "1f300c7916710f8ea47e7dacbd6801ce3c4db6db",
+      "subject": "Java apps: system dialogs (Bluetooth, NFC...) answer cancelled, installLocation from the manifest (#170, #167)",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "e628b6fd473915277cdc84863a6a99dda922c681",
+      "subject": "JIT: TrollStore and Dopamine on iOS 15-16 get the region from plain memory when MAP_JIT is refused (#148)",
+      "status": "deferred",
+      "reason": "Touches executable-memory/JIT/entitlement paths. Preserve working iPadOS27 LiveContainer path; requires its own installer/device matrix and tests."
+    },
+    {
+      "sha": "b390dfa0869d743995f6288f553939700913ceef",
+      "subject": "Project: add the Godot Kotlin handlers file",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "385bd7f92418790218bb99d66dd65889a7048558",
+      "subject": "Pick the base APK from the split manifests (#106)",
+      "status": "partially-adapted",
+      "reason": "Manifest-based base/split selector and launch/import/description wiring only. Broader ZIP/OBB parser is not copied."
+    },
+    {
+      "sha": "10bf1060a5f44bb475637e3231063641f4f9e404",
+      "subject": "Cocos Creator: V8 runs without its JIT (#113)",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "bab91edd3471f66a3ab9ce7bced577ff525d2730",
+      "subject": "Built-in StikJIT: find the RemotePairing port with Bonjour (#153)",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "33f40b55a2d659a5d0b1e50a99ecb6e8f885983d",
+      "subject": "Godot 4.7: Kotlin directory/file handlers, so saves work (#151)",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "1d9089c6184e4fc0f31ab700dd5eb6b4ffdce595",
+      "subject": "javaapp-test: scratch under TL_TMP, off the GTAV drive",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "f8a16749e5311b286ddd24da482bb328a69d0317",
+      "subject": "Java apps: the notch is a cutout, fullscreen games get the whole screen, GL views hear resizes (PvZ centered)",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "e49ddfde36c4b7611d92fb0f975f85e7a0a6c774",
+      "subject": "Reserve the aligned compressed heap before JIT prewarming (#180)",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "595daa1b094a35b7daf5c924067312d279cd50cd",
+      "subject": "Flutter: fonts under the Java root resolve like /system/fonts (#179)",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "8de235e265fde1943b0fb43a2e635ddd25fb6a32",
+      "subject": "Keyboard button for apps: typing arrives as key presses where no text field takes it",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "b9ff80e2eed76f5adbd063a7d2fe81ed5873fa32",
+      "subject": "Library: small icon size",
+      "status": "deferred",
+      "reason": "Broad launcher/account/localization redesign is independent of current performance fixes and can conflict with protected game chrome."
+    },
+    {
+      "sha": "3b87cbc79079aadf7feb31d99988b8cdb2910750",
+      "subject": "Battery, 24-hour clock, time zone and locale follow the phone; one device identity",
+      "status": "deferred",
+      "reason": "Android guest metadata updates do not calibrate Husk\u2019s direct UIKit battery collector or prove electrical energy."
+    },
+    {
+      "sha": "5158e09c4cc4655c60476f458548ce90ded68cb9",
+      "subject": "Bundles: OBBs inside XAPKs, deflated entries and Zip64",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "a0aa73c24448863a156782e66ece226ed08a887b",
+      "subject": "fix: discover the RemotePairing port instead of assuming 49152",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "c810d6ae0e6ceb6cfdd17a177c2fdac31dc83bdf",
+      "subject": "the four getters Godot 4.7 asks the AssetManager for; the render view's pointer capture",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "dac33bda15dc8d0b7d1491d524f8241ad11be000",
+      "subject": "Godot 4.7: answer the directory and file handlers for the objects the engine holds (#140)",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "8f2096c779d4a933e2b8673f847bce3f424cec9d",
+      "subject": "Cocos Creator games start: V8 runs without its JIT (--jitless)",
+      "status": "deferred",
+      "reason": "Separate compatibility/UI/install/JIT work; no demonstrated current Dungeons issue and no automatic energy credit."
+    },
+    {
+      "sha": "df76b76c65419625b3fcef55b0a8eb9c15f26b7b",
+      "subject": "Fix base APK selection using split manifests",
+      "status": "partially-adapted",
+      "reason": "Manifest-based base/split selector and launch/import/description wiring only. Broader ZIP/OBB parser is not copied."
+    },
+    {
+      "sha": "323ca166cdab64a0a30be2ae39dfe3adcaf69478",
+      "subject": "fix: update comments regarding TrollStore and jailbreak behavior",
+      "status": "deferred",
+      "reason": "Touches executable-memory/JIT/entitlement paths. Preserve working iPadOS27 LiveContainer path; requires its own installer/device matrix and tests."
+    },
+    {
+      "sha": "b0429f09bf98903c9058397854b338c75f2f16e2",
+      "subject": "fix: work around W^X and set RX protection in tl-xmem dual mapping",
+      "status": "deferred",
+      "reason": "Touches executable-memory/JIT/entitlement paths. Preserve working iPadOS27 LiveContainer path; requires its own installer/device matrix and tests."
+    },
+    {
+      "sha": "28bc54846dbbf27e719413c4cd2ef2436cd96ea5",
+      "subject": "fix: explicitly set RX protection on MAP_JIT dual mapping",
+      "status": "deferred",
+      "reason": "Touches executable-memory/JIT/entitlement paths. Preserve working iPadOS27 LiveContainer path; requires its own installer/device matrix and tests."
+    }
+  ],
+  "local_confirmed_log_fix": "Legacy libUE4 isnan import gets a typed double/float math binding; not an upstream change or energy claim."
+}

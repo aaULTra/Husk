@@ -81,6 +81,9 @@ jobs:
           python3 tests/translation-layer/test_spatial_lifetime.py -v
           python3 tests/translation-layer/test_native_archive.py -v
           python3 tests/translation-layer/test_native_preparation_audit.py -v
+          python3 tests/translation-layer/test_native_display.py -v
+          python3 tests/translation-layer/test_upstream_native.py -v
+          python3 tests/translation-layer/test_apk_order.py -v
           {
             echo "## Husk IPA source"
             echo "Commit: $(git rev-parse HEAD)"

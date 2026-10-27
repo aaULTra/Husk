@@ -187,7 +187,7 @@ def compare_pair(left, right, recipe, context=None):
             blockers.append(side + ': Low Power Mode observed')
         if included_seconds(data) is None or included_seconds(data) < 120:
             blockers.append(side + ': invalid exclusions/duration or less than120 included seconds')
-    for key in ('cpu_thread_sampling_requested', 'component_sampling_requested'):
+    for key in ('cpu_thread_sampling_requested', 'component_sampling_requested', 'display_sampling_requested'):
         if metas[0].get(key) != metas[1].get(key):
             blockers.append('Changed diagnostic: ' + key)
     if left.get('gpu_sampling', {}).get('requested') != right.get('gpu_sampling', {}).get('requested'):
@@ -247,6 +247,7 @@ def compare_pair(left, right, recipe, context=None):
             warnings.append('User-supplied condition differs: ' + key)
     clean = all(d.get('gpu_sampling', {}).get('requested') is False and m.get('cpu_thread_sampling_requested') is False
                 and m.get('component_sampling_requested', False if d.get('schema_version', 0) < 11 else None) is False
+                and m.get('display_sampling_requested', False if d.get('schema_version', 0) < 13 else None) is False
                 and all(c.get(k) is False for k in ('detailed_driver_profiling', 'pipeline_identification', 'pipeline_creation_feedback', 'render_target_inventory'))
                 for d, m, c in zip((left, right), metas, configs))
     if all(d.get('schema_version', 0) >= 12 for d in (left, right)):

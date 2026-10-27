@@ -274,5 +274,10 @@ class CampaignTests(unittest.TestCase):
         self.b['metadata']['component_sampling_requested'] = True
         self.assertIn('Changed diagnostic: component_sampling_requested',self.compare()['blockers'])
 
+    def test_display_observer_change_is_a_diagnostic_confound(self):
+        self.a['metadata']['display_sampling_requested']=False
+        self.b['metadata']['display_sampling_requested']=True
+        self.assertIn('Changed diagnostic: display_sampling_requested',self.compare()['blockers'])
+
 if __name__ == '__main__':
     unittest.main()

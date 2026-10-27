@@ -44,6 +44,27 @@ enum BundleUnpacker {
         return 3
     }
 
+    /// Read each manifest once, before sorting. A manifest-confirmed base takes precedence over every filename guess;
+    /// a manifest-confirmed split can never be promoted to base just because it is named models.apk or textures.apk.
+    static func orderedAPKs(_ paths: [String], manifest: (String) -> Data?) -> [String] {
+        let names = paths.map { ($0 as NSString).lastPathComponent }
+        let ranked = paths.map { path -> (path: String, priority: Int) in
+            let name = (path as NSString).lastPathComponent
+            let fallback = rank(name, siblings: names)
+            let split = manifest(path).flatMap { ApkMetadata.isSplit($0) }
+            let priority: Int
+            switch split {
+            case false?: priority = -1
+            case true?: priority = fallback == 0 ? 2 : fallback
+            case nil: priority = fallback
+            }
+            return (path, priority)
+        }
+        return ranked.sorted {
+            $0.priority != $1.priority ? $0.priority < $1.priority : $0.path < $1.path
+        }.map { $0.path }
+    }
+
     /// Copies every APK in `bundle` into `dir`. Returns their names.
     @discardableResult
     static func unpack(_ bundle: URL, into dir: URL) throws -> [String] {

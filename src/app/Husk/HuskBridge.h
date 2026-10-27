@@ -150,3 +150,5 @@ static inline NSString * _Nullable husk_livecontainer_host_scheme(void) {
 #include "../../translation-layer-next/husk-tl-native-archive.h"
 
 #include "../../translation-layer-next/husk-tl-present-clock.h"
+
+#include "husk-tl-display.h"

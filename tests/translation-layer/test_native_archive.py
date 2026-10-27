@@ -118,6 +118,12 @@ int main(int argc,char**argv){assert(argc==2);@autoreleasepool{
  assert(vkHuskArchiveSnapshot(&stats)&&stats.verification_attempts==2&&stats.archive_requirement_satisfied==1);
  for(unsigned i=0;i<12;i++)huskArchiveCapture((id<MTLDevice>)device,d,false,20000000,true,huskArchiveGeneration);
  assert(vkHuskArchiveSnapshot(&stats)&&stats.pending==8&&stats.descriptors_dropped>0);
+ tl_na_priority priority={1,sizeof(priority)};assert(vkHuskArchivePriority(&priority)&&priority.requirement_satisfied_skips==1);
+ huskArchiveCapture((id<MTLDevice>)device,d,false,500000000,true,huskArchiveGeneration);
+ assert(vkHuskArchivePriority(&priority)&&priority.replaced==1&&priority.highest_pending_ns==500000000&&priority.pending==8);
+ assert(huskArchivePending.front()->elapsed_ns==500000000);
+ for(size_t i=1;i<huskArchivePending.size();i++)assert(huskArchivePending[i-1]->elapsed_ns>=huskArchivePending[i]->elapsed_ns);
+ priority.version=2;assert(!vkHuskArchivePriority(&priority));
  NSString *path=[huskArchivePath copy];NSString *directory=[path stringByDeletingLastPathComponent];
  for(unsigned i=0;i<6;i++){NSString *old=[directory stringByAppendingPathComponent:[NSString stringWithFormat:@"native-%016llx.metalarc",(unsigned long long)i]];assert([@"old" writeToFile:old atomically:YES encoding:NSUTF8StringEncoding error:NULL]);}
  NSString *unrelated=[directory stringByAppendingPathComponent:@"notes.keep"];assert([@"keep" writeToFile:unrelated atomically:YES encoding:NSUTF8StringEncoding error:NULL]);

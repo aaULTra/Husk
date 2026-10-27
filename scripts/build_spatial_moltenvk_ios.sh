@@ -44,8 +44,10 @@ cp "$SRC/HuskSpatialBuild.json" "$OUT/"
 nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialConfigure$'
 nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialSnapshot$'
 nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialObservations$'
-nm -gU "$OUT/HuskMoltenVK" | grep -E '_vkHuskSpatialBindings$'
-for symbol in Configure Snapshot Prepare Forget; do
+for symbol in SpatialBindings DisplayConfigure DisplaySnapshot; do
+    nm -gU "$OUT/HuskMoltenVK" | grep -E "_vkHusk${symbol}$"
+done
+for symbol in Configure Snapshot Prepare Forget Priority; do
     nm -gU "$OUT/HuskMoltenVK" | grep -E "_vkHuskArchive${symbol}$"
 done
 test -s "$HUSK_ROOT/build/ios-arm64/lib/MoltenVK.framework/MoltenVK"

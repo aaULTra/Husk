@@ -1,0 +1,18 @@
+{
+  "source_sha": "d8fa46e82106a5c9940f70918e5ce82a934280ee",
+  "packaged_identity": "d8fa46e82106a5c9940f70918e5ce82a934280ee-dirty",
+  "run_id": 40436887473,
+  "job_id": 121967599966,
+  "status": "success",
+  "tests": 331,
+  "suites": 36,
+  "skips": 0,
+  "sdk_structures": 31,
+  "sdk_offsets": 96,
+  "driver_exports": 8,
+  "artifact_id": 12704853711,
+  "artifact_zip_sha256": "e3b5b63ef51e006c272894e49f0a0d42054e648e935f31dca2245dcd38ca69b4",
+  "artifact_zip_size": 142010111,
+  "expires_at": "2026-11-03T02:26:38Z",
+  "delivery": "Parked intermediate; user active0ff0758MetalFX test retained. No install requested."
+}

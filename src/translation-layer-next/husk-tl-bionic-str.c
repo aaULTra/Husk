@@ -551,6 +551,9 @@ static char *b_basename(const char *path)
 
 static void b_sincos(double x, double *s, double *c) { *s = sin(x); *c = cos(x); }
 static int b___isnanf(float x) { return isnan(x); }
+/* Legacy bionic exports a double-argument isnan symbol; a logging stub can
+ * return the wrong classification for actual NaNs in libUE4. */
+static int b_isnan(double x) { return isnan(x) ? 1 : 0; }
 /* bionic's FP_* are 0 nan, 1 infinite, 2 zero, 3 subnormal, 4 normal */
 static int b___fpclassifyd(double x) { switch (fpclassify(x)) { case FP_NAN: return 0; case FP_INFINITE: return 1; case FP_ZERO: return 2; case FP_SUBNORMAL: return 3; default: return 4; } }
 static void b_sincosf(float x, float *s, float *c) { *s = sinf(x); *c = cosf(x); }
@@ -741,7 +744,7 @@ const tl_bionic_entry tl_tab_str[] = {
     TL_DIRECT(sqrt), TL_DIRECT(fmin), TL_DIRECT(fmax), TL_DIRECT(frexp), TL_DIRECT(asinh), TL_DIRECT(tanh),
     TL_DIRECT(tanhf), TL_DIRECT(coshf), TL_DIRECT(asinhf),
     TL_DIRECT(acoshf), TL_DIRECT(atanhf), TL_DIRECT(expm1f), TL_DIRECT(log1pf),
-    TL_WRAP("__isnanf", b___isnanf), TL_WRAP("__fpclassifyd", b___fpclassifyd),
+    TL_WRAP("isnan", b_isnan), TL_WRAP("__isnan", b_isnan), TL_WRAP("isnanf", b___isnanf), TL_WRAP("__isnanf", b___isnanf), TL_WRAP("__fpclassifyd", b___fpclassifyd),
     /* locale.h */
     TL_WRAP("setlocale", b_setlocale), TL_WRAP("nl_langinfo", b_nl_langinfo), TL_WRAP("nl_langinfo_l", b_nl_langinfo_l), TL_WRAP("newlocale", b_newlocale), TL_DIRECT(freelocale), TL_DIRECT(uselocale),
     TL_DIRECT(localeconv),

@@ -90,5 +90,12 @@ class AnalysisTests(unittest.TestCase):
  def test_new_component_and_driver_fields_keep_scope_without_auto_root_cause(self):
   data={'schema_version':11,'component_sampling':{'requested':True,'components':[]},'driver_phases':{'available':False},'component_triage':{'root_cause_confirmed':False},'delayed_os_reports':{'retained_reports':0}}
   result=m.audit(data);self.assertFalse(result['errors']);self.assertTrue(result['component_sampling']['requested']);self.assertFalse(result['component_triage']['root_cause_confirmed'])
+ def test_direct_display_histogram_tail_and_estimates_keep_separate_scope(self):
+  d={'schema_version':13,'native_display_sampling':{'available':True,'histogram_0_1ms':[0]*512,'valid_intervals':0,'direct_drawable_events':1,'estimated_events':1,'records':[{},{}],'record_overwrites':0}}
+  r=m.audit(d);self.assertFalse(r['errors']);self.assertIn('UNVERIFIED',r['energy_benefit'])
+  d['native_display_sampling']['histogram_0_1ms'][167]=1
+  self.assertIn('Native display histogram/interval count does not reconcile',m.audit(d)['errors'])
+  d['native_display_sampling']['valid_intervals']=1;d['native_display_sampling']['record_overwrites']=1
+  self.assertIn('Native display raw-tail accounting does not reconcile',m.audit(d)['errors'])
 if __name__=='__main__':unittest.main()
 
