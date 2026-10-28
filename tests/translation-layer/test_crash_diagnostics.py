@@ -21,6 +21,7 @@ int main(int argc, char **argv) {
     int fd = open(argv[1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
     if (fd < 0) return 3;
     husk_crash_report_sink(fd);
+    husk_crash_stage("ue4_fork_launch_options_applied");
     if (husk_crash_install(-1, -1) != 5) return 4;
     /* A JIT-owned signal must not be intercepted by the generic handler. */
     struct sigaction action = {0};
@@ -46,6 +47,7 @@ class CrashDiagnosticsTest(unittest.TestCase):
             self.assertEqual(result.returncode, -signal.SIGABRT,
                              f"signal handler must re-raise SIGABRT, got {result.returncode}: {result.stderr}")
             record = evidence.read_text(encoding="utf-8")
+            self.assertIn("[fork-stage] ue4_fork_launch_options_applied", record)
             self.assertIn("*** FATAL SIGNAL 6", record)
             self.assertIn("process terminating", record)
 
