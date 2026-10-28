@@ -44,6 +44,9 @@ const char *tl_ld_main_apk(void);
 #include <sys/time.h>
 #include <sys/uio.h>
 #include <mach/mach.h>
+#if defined(__arm64__)
+#include <mach/arm/thread_status.h>
+#endif
 #include <time.h>
 #include <search.h>
 #include <dlfcn.h>
@@ -1478,6 +1481,7 @@ static void host_signal_entry(int dsig, siginfo_t *info, void *uctx)
     sig_trace("delivered", gsig);
     void *h = g_guest_sig[gsig < 32 ? gsig : 0].handler;
     if (!h || h == (void *)1) return;
+#if defined(__arm64__)
     ucontext_t *uc = uctx;
     if (!uc || !uc->uc_mcontext) { ((guest_handler)h)(gsig, info, uctx); return; }
     static __thread guest_ucontext *g;     /* 4.5 KiB: too much for a small signal stack */
@@ -1503,6 +1507,11 @@ static void host_signal_entry(int dsig, siginfo_t *info, void *uctx)
     arm_thread_state64_set_pc_fptr(*ss, (void *)(uintptr_t)mine->uc_mcontext.pc);
     if (g) free(g);
     g = mine;
+#else
+    /* An Intel macOS host test also links this file. Its x86_64 ucontext has
+     * no ARM64 register state to translate; keep the iOS path ARM64-only. */
+    ((guest_handler)h)(gsig, info, uctx);
+#endif
 }
 
 static int is_fault_signal(int g) { return g == 4 || g == 5 || g == 6 || g == 7 || g == 8 || g == 11; }
