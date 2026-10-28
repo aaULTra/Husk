@@ -38,6 +38,11 @@ struct SettingsTab: View {
                     row(AboutSettings(), "info.circle.fill", .gray, "About Husk", "Version \(Bundle.main.version) · \(Bundle.main.commit)")
                 }
 
+                Section("Diagnostics") {
+                    row(HuskDiagnosticsSettings(), "waveform.path.ecg", .teal,
+                        "Diagnostics & Logs", "Crash reports, console, device and OS checks")
+                }
+
                 Section {
                     Toggle(isOn: $multitask) {
                         Label {
@@ -938,10 +943,64 @@ struct AppearanceSettings: View {
 
 // MARK: - About
 
+/// General diagnostic tools live together instead of being scattered
+/// between About and the per-game graphics controls.
+struct HuskDiagnosticsSettings: View {
+    @AppStorage(TranslationLayer.devInfoKey) private var devInfo = false
+    @State private var showLogs = false
+    @State private var showOSReports = false
+
+    var body: some View {
+        HuskPageList {
+            Section {
+                Button { showLogs = true } label: {
+                    Label("Open Console", systemImage: "terminal")
+                }
+                Text("Files > Husk > Crash Reports contains fork-specific launch and crash evidence. In LiveContainer, open the guest's Documents folder.")
+                    .font(.caption).foregroundStyle(.secondary)
+            } header: {
+                Text("Logs & Crash Reports")
+            } footer: {
+                Text("A crash may terminate Husk before it can finish a report. Live logs remain in Files; reports can be recovered on the next launch. Nothing is uploaded automatically.")
+            }
+
+            Section {
+                Toggle("Developer Info", isOn: $devInfo)
+                if devInfo {
+                    NavigationLink { TLChecksView() } label: {
+                        Label("Device Checks", systemImage: "stethoscope")
+                    }
+                    NavigationLink { MassTestView() } label: {
+                        Label("Mass Test", systemImage: "square.stack.3d.down.forward")
+                    }
+                }
+            } header: {
+                Text("Device & Compatibility")
+            } footer: {
+                Text("Enable Developer Info for technical checks. For graphics, worker and Vulkan experiments, open that game's Settings > Advanced Graphics & Diagnostics.")
+            }
+
+            Section {
+                Button { showOSReports = true } label: {
+                    Label("Delayed OS Reports (MetricKit)", systemImage: "waveform.path")
+                }
+            } header: {
+                Text("System Reports")
+            } footer: {
+                Text("iOS may deliver host-process diagnostics after a crash. They can help identify memory or watchdog terminations, but may not name the game.")
+            }
+        }
+        .navigationTitle("Diagnostics & Logs")
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showLogs) { LogView() }
+        .sheet(isPresented: $showOSReports) { EfficiencyMetricKitView() }
+    }
+}
+
+// MARK: - About
+
 struct AboutSettings: View {
     @ObservedObject private var runner = QemuRunner.shared
-    @State private var showLogs = false
-    @AppStorage(TranslationLayer.devInfoKey) private var devInfo = false
 
     var body: some View {
         HuskPageList {
@@ -965,36 +1024,13 @@ struct AboutSettings: View {
                                     : runner.displayKind == .software ? "CPU"
                                     : "Not started")
             }
-
             Section {
-                Toggle(isOn: $devInfo) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Developer Info")
-                        Text("Technical detail in the Android Translation Layer screens: "
-                           + "library reports, device checks and run logs.")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-                if devInfo {
-                    NavigationLink { TLChecksView() } label: {
-                        Label("Device Checks", systemImage: "stethoscope")
-                    }
-                    NavigationLink { MassTestView() } label: {
-                        Label("Mass Test", systemImage: "square.stack.3d.down.forward")
-                    }
-                }
-                Button { showLogs = true } label: {
-                    Label("Open Console", systemImage: "terminal")
-                }
-            } footer: {
-                Text("Husk runs unmodified Android APKs in a real Android system on your iPhone. "
-                   + "The console shows Husk's live log, the guest's serial output and QEMU's own "
-                   + "output — the three files any problem here is diagnosed from.")
+                Text("For crash reports, console output, device checks and system reports, open Settings > Diagnostics & Logs.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
         }
         .navigationTitle("About")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showLogs) { LogView() }
     }
 }
 
