@@ -22,6 +22,26 @@ static atomic_uint image_count;
 static pthread_mutex_t image_lock=PTHREAD_MUTEX_INITIALIZER;
 void husk_crash_native_sink(int fd){atomic_store(&guest_fd,fd);}
 void husk_crash_report_sink(int fd){atomic_store(&report_fd,fd);}
+/* Sparse launch checkpoints of our fork's experimental subsystems. Unlike the
+ * signal handler this runs in ordinary code, but stays allocation-free. The
+ * bounded one-write record and fsync mean a hard crash still leaves the last
+ * completed checkpoint in Files; not proof of which subsystem caused it. */
+void husk_crash_stage(const char *stage){
+ int fd=atomic_load_explicit(&report_fd,memory_order_acquire);
+ if(fd<0||!stage)return;
+ char rec[192];size_t at=0;
+ const char *prefix="[fork-stage] ";
+ while(*prefix&&at<sizeof(rec)-2)rec[at++]=*prefix++;
+ while(*stage&&at<sizeof(rec)-2) {
+  const unsigned char c=(unsigned char)*stage++;
+  if(c<32||c>126)break;
+  rec[at++]=(char)c;
+ }
+ rec[at++]='\n';
+ (void)!write(fd,rec,at);
+ (void)fsync(fd);
+}
+
 void husk_crash_note_image(const char *name,uintptr_t bias,uintptr_t begin,uintptr_t end){
  if(!name||begin>=end)return;
  pthread_mutex_lock(&image_lock);unsigned i=atomic_load_explicit(&image_count,memory_order_relaxed);
