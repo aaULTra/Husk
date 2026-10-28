@@ -60,6 +60,24 @@ final class CrashReport: ObservableObject {
     private static var marker: URL { docs.appendingPathComponent("running-game.json") }
     /// Survives a hard process death and can be opened before Husk is restarted.
     private static var activeRecord: URL { HuskLog.reportsDirectory.appendingPathComponent("ACTIVE-GAME.txt") }
+    private static var activeForkProfile: URL { HuskLog.reportsDirectory.appendingPathComponent("ACTIVE-FORK-CONFIG.json") }
+
+    /// The exact effective launch decisions from our fork, recorded *before*
+    /// experimental graphics/JIT/native setup may abort the entire host.
+    static func noteForkConfiguration(_ config: [String: Any]) {
+        var record = config
+        record["schema"] = 1
+        record["source"] = "Husk custom Dungeons/UE4 launch options; requested != activated"
+        record["build"] = Bundle.main.object(forInfoDictionaryKey: "HuskBuildCommit") as? String ?? "UNAVAILABLE"
+        record["device_model"] = HuskLog.deviceModel
+        record["system_version"] = UIDevice.current.systemVersion
+        record["recorded_unix_time"] = Date().timeIntervalSince1970
+        if let data = try? JSONSerialization.data(withJSONObject: record, options: [.prettyPrinted, .sortedKeys]) {
+            try? FileManager.default.createDirectory(at: HuskLog.reportsDirectory, withIntermediateDirectories: true)
+            try? data.write(to: activeForkProfile, options: .atomic)
+            husk_crash_stage("fork_launch_configuration_saved")
+        }
+    }
     static var previousLogURL: URL { docs.appendingPathComponent("husk-prev.log") }
 
     // MARK: the note
@@ -131,6 +149,8 @@ final class CrashReport: ObservableObject {
         session = nil
         try? FileManager.default.removeItem(at: marker)
         try? FileManager.default.removeItem(at: activeRecord)
+        try? FileManager.default.removeItem(at: activeForkProfile)
+        husk_crash_stage("game_closed_normally")
     }
 
     /// At launch: was a game running when Husk last ended?
@@ -160,6 +180,7 @@ final class CrashReport: ObservableObject {
             HuskLog.log("crash", "recovered Files report: \(saved.path)")
             try? FileManager.default.removeItem(at: Self.marker)
             try? FileManager.default.removeItem(at: Self.activeRecord)
+            try? FileManager.default.removeItem(at: Self.activeForkProfile)
         } else {
             HuskLog.log("crash", "WARNING: could not archive previous game logs; original marker retained")
         }
@@ -227,6 +248,36 @@ final class CrashReport: ObservableObject {
         for url in old.dropFirst(7) { try? fm.removeItem(at: url) }
     }
 
+    /// Concrete error categories first; an unfinished checkpoint is only a
+    /// localization hint, never evidence that the last subsystem caused a crash.
+    private static func forkGuidance(mainLog: String, nativeLog: String, stages: String) -> String {
+        let log = (mainLog + "\n" + nativeLog).lowercased()
+        let checkpoints = stages.split(separator: "\n").map(String.init).filter { $0.contains("[fork-stage]") }
+        let last = checkpoints.last ?? "No fork checkpoint recorded"
+        var hints = ["Last completed checkpoint: " + last,
+                     "This proves progress only, NOT root cause. Compare against Game Default / original driver with the same APK and JIT route."]
+        if log.contains("expansion file (obb) is missing") || log.contains("missing game data") {
+            hints.append("Explicit missing game data/OBB: validate the exact game files and configured storage before changing Vulkan/JIT.")
+        }
+        if log.contains("vk_error_device_lost") || log.contains("device lost") {
+            hints.append("Vulkan device lost: compare original bundled MoltenVK against experimental spatial/archive driver; disable MetalFX/archive one at a time.")
+        }
+        if log.contains("vkcreateinstance") && (log.contains(" -> -") || log.contains("failed to create instance")) {
+            hints.append("Vulkan instance setup may have failed. Inspect the vkCreateInstance result and extension messages in husk-native.log.")
+        }
+        if log.contains("jit prewarm failed") || log.contains("stikdebug is not servicing traps") {
+            hints.append("Explicit JIT setup failure: check StikDebug attachment, debugged flag and supported native JIT mapping before changing game graphics.")
+        }
+        if log.contains("pipeline") && (log.contains("failed") || log.contains("error")) {
+            hints.append("Pipeline errors are present. Compare with native pipeline archive and pipeline feedback disabled, keeping graphics/resolution constant.")
+        }
+        if log.contains("thread-policy") && (log.contains("rollback") || log.contains("frame spike")) {
+            hints.append("Worker-policy rollback/pressure logged. Re-test with Balanced / no adaptive trial and compare frame pacing.")
+        }
+        hints.append("For an OS kill, watchdog, jetsam, SIGBUS/SIGTRAP or LiveContainer host crash, attach the iOS Analytics incident report as well. No app-private log guarantees the exact cause.")
+        return hints.joined(separator: "\n")
+    }
+
     /// In Files > On My iPhone/iPad > Husk > Crash Reports > crash-... .
     /// A report is saved automatically on the next launch, even without the UI.
     static func writeReport(_ r: Report) -> URL? {
@@ -242,6 +293,7 @@ final class CrashReport: ObservableObject {
         preserve(previousLogURL, as: folder.appendingPathComponent("husk.log"))
         preserve(HuskLog.previousNativeLogURL, as: folder.appendingPathComponent("husk-native.log"))
         preserve(HuskLog.previousSignalLogURL, as: folder.appendingPathComponent("fatal-signal.txt"))
+        preserve(activeForkProfile, as: folder.appendingPathComponent("fork-launch-settings.json"))
         let url = folder.appendingPathComponent("ChatGPT Crash Report.txt")
         let text = """
         Husk crash diagnostics (automatic; share with ChatGPT)
@@ -255,6 +307,8 @@ final class CrashReport: ObservableObject {
         Device   : \(HuskLog.deviceModel), \(UIDevice.current.systemName) \(UIDevice.current.systemVersion)
         Bundle   : \(Bundle.main.bundleIdentifier ?? "?")
         Session  : \(r.context["session"] as? String ?? "?")
+        Fork settings: see fork-launch-settings.json (requested options, not proof of activation)
+        Last recorded fork stages: see fatal-signal.txt
         Evidence : A missing fatal signal does NOT prove the game itself crashed.
                    Jetsam, watchdog, process kill, and LiveContainer host termination
                    may require an iOS Analytics incident report to identify.
@@ -263,6 +317,17 @@ final class CrashReport: ObservableObject {
 
         ---- game lifecycle and environment ----
         \(contextText)
+
+        ---- fork-specific active launch configuration ----
+        \(readTail(activeForkProfile, bytes: 32768))
+
+        ---- last completed launch checkpoints (fatal-signal file) ----
+        \(readTail(HuskLog.previousSignalLogURL, bytes: 8192))
+
+        ---- evidence-based troubleshooting (not a diagnosis) ----
+        \(Self.forkGuidance(mainLog: readTail(previousLogURL, bytes: 1048576),
+                            nativeLog: readTail(HuskLog.previousNativeLogURL, bytes: 1048576),
+                            stages: readTail(HuskLog.previousSignalLogURL, bytes: 8192)))
 
         ---- dedicated fatal signal (if captured) ----
         \(readTail(HuskLog.previousSignalLogURL, bytes: 8192))
@@ -274,7 +339,7 @@ final class CrashReport: ObservableObject {
         \(readTail(HuskLog.previousNativeLogURL, bytes: 1024 * 1024))
 
         Additional files next to this report: running-game.json, husk.log,
-        husk-native.log, fatal-signal.txt (when available).
+        husk-native.log, fatal-signal.txt and fork-launch-settings.json (when available).
         Nothing was uploaded automatically.
         """
         do {
