@@ -71,7 +71,7 @@ enum JITBootstrap {
     private static func prewarmSelfIfSupported(_ bytes: Int) -> Bool {
         typealias SelfPrewarm = @convention(c) (Int) -> Bool
         guard let process = dlopen(nil, RTLD_NOW) else {
-            HuskLog.log("jit", "cannot inspect loaded JIT symbols: " + String(cString: dlerror()))
+            HuskLog.log("jit", "cannot inspect loaded JIT symbols: process handle unavailable")
             return false
         }
         defer { dlclose(process) }
