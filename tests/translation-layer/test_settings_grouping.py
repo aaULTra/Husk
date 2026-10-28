@@ -12,7 +12,7 @@ class SettingsGroupingTests(unittest.TestCase):
         # Prefer identity of the setting binding over UI label text, so renaming
         # labels won't silently delete an experimental control.
         names = [
-            "unrealGraphics", "efficientResolution", "customResolutionPercent",
+            "unrealGraphics", "efficientResolution",
             "efficientFrameRate", "workerScheduling", "vulkanSubmission",
             "execution.prefill", "execution.commandBufferLimit",
             "execution.swapchainImages", "execution.initializationParking",
@@ -25,6 +25,10 @@ class SettingsGroupingTests(unittest.TestCase):
         for name in names:
             with self.subTest(setting=name):
                 self.assertIn(f"$settings.{name}", GAME)
+        # The 1%-step slider deliberately uses a clamped custom Binding rather
+        # than a direct $settings binding. Assert both read and write paths.
+        self.assertIn("Double(settings.customResolutionPercent)", GAME)
+        self.assertIn("settings.customResolutionPercent = Int($0.rounded())", GAME)
 
     def test_simple_page_and_advanced_page_are_separate(self):
         self.assertIn("TLGameAdvancedSettingsView(settings: $settings, appID: app.id)", GAME)
