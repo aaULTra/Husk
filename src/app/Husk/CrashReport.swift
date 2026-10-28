@@ -110,8 +110,9 @@ final class CrashReport: ObservableObject {
         Device: \(HuskLog.deviceModel), iOS \(UIDevice.current.systemVersion)
         Last recorded state: \(last)
         Started (Unix time): \(session.time)
-        Relevant live files: Husk/husk.log, Husk/husk-native.log
-        Fatal-signal record: Husk/Crash Reports/fatal-signal-current.txt
+        Relevant live files: Documents/husk.log, Documents/husk-native.log
+        Fatal-signal record: Documents/Crash Reports/fatal-signal-current.txt
+        For LiveContainer guests, use the guest's Documents folder in the host.
         If Husk disappears, these files can be copied in Files without reopening it.
         No native crash signature means the OS may have killed the process.
         """
@@ -341,7 +342,7 @@ struct CrashReportSheet: View {
                         }
                         .buttonStyle(.bordered)
                     }
-                    Text("The report is automatically saved in Files > On My iPhone/iPad > Husk > Crash Reports. It includes the last lines and keeps additional log files in the same folder. Nothing is uploaded unless you share it.")
+                    Text("Automatically saved in Files > Husk > Crash Reports (or the LiveContainer guest Documents folder). Additional native and Husk logs are kept beside this report. Nothing is uploaded unless you share it.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 .padding(20)
