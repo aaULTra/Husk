@@ -7,6 +7,7 @@
 #include "husk-tl-crash-signal.h"
 #include <signal.h>
 #include <stdatomic.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <pthread.h>
 #include <unistd.h>
