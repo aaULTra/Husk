@@ -22,6 +22,7 @@ import os
 enum HuskLog {
     private static let osLog = Logger(subsystem: "com.husk.app", category: "husk")
 
+    private static var crashSignalFD: Int32 = -1
     private static var logFD: Int32 = -1
     private static var pipeReadFD: Int32 = -1
     private static var pipeWriteFD: Int32 = -1
@@ -34,6 +35,18 @@ enum HuskLog {
     private static let ringLimit = 4000
     private static var ring: [String] = []
     private static let ringLock = NSLock()
+
+    /// Visible in Files > On My iPhone/iPad > Husk > Crash Reports.
+    static var reportsDirectory: URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Crash Reports", isDirectory: true)
+    }
+    static var signalLogURL: URL {
+        reportsDirectory.appendingPathComponent("fatal-signal-current.txt")
+    }
+    static var previousSignalLogURL: URL {
+        reportsDirectory.appendingPathComponent("fatal-signal-previous.txt")
+    }
 
     static var logFileURL: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -69,6 +82,21 @@ enum HuskLog {
         logFD = open(url.path, O_CREAT | O_WRONLY | O_TRUNC, 0o644)
 
         redirectStdio()
+        // Rotate independently from husk.log so a crash survives even when
+        // native stderr is lost or the log mirror thread is interrupted.
+        let fm = FileManager.default
+        do {
+            try fm.createDirectory(at: reportsDirectory, withIntermediateDirectories: true)
+            try? fm.removeItem(at: previousSignalLogURL)
+            if fm.fileExists(atPath: signalLogURL.path) {
+                try fm.moveItem(at: signalLogURL, to: previousSignalLogURL)
+            }
+            crashSignalFD = open(signalLogURL.path, O_CREAT | O_WRONLY | O_TRUNC, 0o644)
+            if crashSignalFD < 0 { log("boot", "WARNING: cannot open durable fatal signal log (errno \(errno))") }
+        } catch {
+            log("boot", "WARNING: cannot prepare Crash Reports folder: \(error)")
+        }
+        husk_crash_report_sink(crashSignalFD)
         installCrashHandlers()
         logBanner()
         replayPreviousNativeLog()
