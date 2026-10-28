@@ -5,6 +5,8 @@ name: Build Husk IPA
 on:
   push:
     branches: [codex/dungeons-efficient-native, codex/husk31-compatible]
+  pull_request:
+    branches: [codex/husk31-compatible]
   workflow_dispatch:
     inputs:
       source_ref:
