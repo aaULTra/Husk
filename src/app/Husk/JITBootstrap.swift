@@ -65,6 +65,23 @@ enum JITBootstrap {
     /// again charges for it twice and cost the guest 256 MiB.
     nonisolated(unsafe) static var prewarmed = false
 
+    /// Optional on the pinned QEMU baseline: newer Husk JIT sources define this
+    /// entry point, but older staged release dylibs do not export it. Resolving
+    /// at runtime keeps the app linkable without silently changing the donor.
+    private static func prewarmSelfIfSupported(_ bytes: Int) -> Bool {
+        typealias SelfPrewarm = @convention(c) (Int) -> Bool
+        guard let process = dlopen(nil, RTLD_NOW) else {
+            HuskLog.log("jit", "cannot inspect loaded JIT symbols: " + String(cString: dlerror()))
+            return false
+        }
+        defer { dlclose(process) }
+        guard let symbol = dlsym(process, "husk_ios_jit_prewarm_self") else {
+            HuskLog.log("jit", "self-prewarm unavailable in the pinned JIT library; retaining existing MAP_JIT fallback")
+            return false
+        }
+        return unsafeBitCast(symbol, to: SelfPrewarm.self)(bytes)
+    }
+
     /// Take the JIT region now, while StikDebug is definitely still attached.
     ///
     /// StikDebug lets go after a while, and a first run spends a minute
@@ -100,7 +117,7 @@ enum JITBootstrap {
             // process or a jailbreak allows -- made here, with no brk for an attach that answers none (#148)
             HuskLog.log("jit", "not trapping for a JIT region (no StikDebug); MAP_JIT does not execute here, trying plain memory")
             if #unavailable(iOS 26.0) { prepareCompressedHeap() }
-            if husk_ios_jit_prewarm_self(jitBytes) {
+            if prewarmSelfIfSupported(jitBytes) {
                 prewarmed = true
                 lastFailure = nil
                 HuskLog.log("jit", "JIT region made by Husk itself (\(husk_ios_jit_self_route().map { String(cString: $0) } ?? "self"))")
