@@ -250,7 +250,7 @@ final class CrashReport: ObservableObject {
 
     /// Concrete error categories first; an unfinished checkpoint is only a
     /// localization hint, never evidence that the last subsystem caused a crash.
-    private static func forkGuidance(mainLog: String, nativeLog: String, stages: String) -> String {
+    private static func forkGuidance(mainLog: String, nativeLog: String, stages: String, config: [String: Any]) -> String {
         let log = (mainLog + "\n" + nativeLog).lowercased()
         let checkpoints = stages.split(separator: "\n").map(String.init).filter { $0.contains("[fork-stage]") }
         let last = checkpoints.last ?? "No fork checkpoint recorded"
@@ -274,6 +274,24 @@ final class CrashReport: ObservableObject {
         if log.contains("thread-policy") && (log.contains("rollback") || log.contains("frame spike")) {
             hints.append("Worker-policy rollback/pressure logged. Re-test with Balanced / no adaptive trial and compare frame pacing.")
         }
+        // The following compare-one-option-at-a-time steps come from this
+        // run's actual saved launch request, not a guessed default preset.
+        if config["metalfx_spatial_requested"] as? Bool == true {
+            hints.append("This run requested MetalFX spatial: repeat with spatial off, same output resolution/game files; compare whether the crash recurs.")
+        }
+        if (config["native_pipeline_archive_mode"] as? Int ?? 0) != 0 {
+            hints.append("This run requested the experimental native pipeline archive/driver: repeat with archive Off and inspect first pipeline creation.")
+        }
+        if (config["submission_mode"] as? Int ?? 0) != 0 {
+            hints.append("This run requested asynchronous Vulkan submission: repeat with Driver Default before changing other settings.")
+        }
+        if (config["worker_policy"] as? Int ?? 0) != 0 {
+            hints.append("This run requested a non-default worker policy: compare the Balanced/default worker policy at the same graphics preset.")
+        }
+        if config["pipeline_identification"] as? Bool == true || config["detailed_driver_profiling"] as? Bool == true {
+            hints.append("Diagnostic profiling was active: compare with optional GPU/pipeline diagnostics Off, as profiling itself adds overhead.")
+        }
+        hints.append("Change one switch per test, use the same APK/OBB and StikDebug attachment, and preserve both the failing and passing reports.")
         hints.append("For an OS kill, watchdog, jetsam, SIGBUS/SIGTRAP or LiveContainer host crash, attach the iOS Analytics incident report as well. No app-private log guarantees the exact cause.")
         return hints.joined(separator: "\n")
     }
@@ -287,6 +305,8 @@ final class CrashReport: ObservableObject {
         catch { return nil }
         let contextData = try? JSONSerialization.data(withJSONObject: r.context, options: [.prettyPrinted, .sortedKeys])
         let contextText = contextData.flatMap { String(data: $0, encoding: .utf8) } ?? "(no recorded context)"
+        let forkConfig = (try? Data(contentsOf: activeForkProfile))
+            .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? [:]
         if let contextData {
             try? contextData.write(to: folder.appendingPathComponent("running-game.json"), options: .atomic)
         }
@@ -327,7 +347,8 @@ final class CrashReport: ObservableObject {
         ---- evidence-based troubleshooting (not a diagnosis) ----
         \(Self.forkGuidance(mainLog: readTail(previousLogURL, bytes: 1048576),
                             nativeLog: readTail(HuskLog.previousNativeLogURL, bytes: 1048576),
-                            stages: readTail(HuskLog.previousSignalLogURL, bytes: 8192)))
+                            stages: readTail(HuskLog.previousSignalLogURL, bytes: 8192),
+                            config: forkConfig))
 
         ---- dedicated fatal signal (if captured) ----
         \(readTail(HuskLog.previousSignalLogURL, bytes: 8192))
