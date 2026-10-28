@@ -7,6 +7,7 @@
 #include "husk-tl-crash-signal.h"
 #include <signal.h>
 #include <stdatomic.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -14,12 +15,33 @@
 #include <sys/ucontext.h>
 #endif
 _Static_assert(ATOMIC_INT_LOCK_FREE==2,"Signal metadata requires lock-free int atomics");
-static atomic_int main_fd=-1,stream_fd=-1,guest_fd=-1;
+static atomic_int main_fd=-1,stream_fd=-1,guest_fd=-1,report_fd=-1;
 typedef struct {uintptr_t bias,begin,end;char name[96];} image;
 static image images[64];
 static atomic_uint image_count;
 static pthread_mutex_t image_lock=PTHREAD_MUTEX_INITIALIZER;
 void husk_crash_native_sink(int fd){atomic_store(&guest_fd,fd);}
+void husk_crash_report_sink(int fd){atomic_store(&report_fd,fd);}
+/* Sparse launch checkpoints of our fork's experimental subsystems. Unlike the
+ * signal handler this runs in ordinary code, but stays allocation-free. The
+ * bounded one-write record and fsync mean a hard crash still leaves the last
+ * completed checkpoint in Files; not proof of which subsystem caused it. */
+void husk_crash_stage(const char *stage){
+ int fd=atomic_load_explicit(&report_fd,memory_order_acquire);
+ if(fd<0||!stage)return;
+ char rec[192];size_t at=0;
+ const char *prefix="[fork-stage] ";
+ while(*prefix&&at<sizeof(rec)-2)rec[at++]=*prefix++;
+ while(*stage&&at<sizeof(rec)-2) {
+  const unsigned char c=(unsigned char)*stage++;
+  if(c<32||c>126)break;
+  rec[at++]=(char)c;
+ }
+ rec[at++]='\n';
+ (void)!write(fd,rec,at);
+ (void)fsync(fd);
+}
+
 void husk_crash_note_image(const char *name,uintptr_t bias,uintptr_t begin,uintptr_t end){
  if(!name||begin>=end)return;
  pthread_mutex_lock(&image_lock);unsigned i=atomic_load_explicit(&image_count,memory_order_relaxed);
@@ -60,12 +82,18 @@ static void fatal(int signal_number,siginfo_t *info,void *context){
   at=literal(record,at,"guest image ");at=literal(record,at,images[i].name);
   at=address(record,at," offset ",pc-images[i].bias);at=literal(record,at,"\n");break;
  }
- int fds[3]={atomic_load(&main_fd),atomic_load(&stream_fd),atomic_load(&guest_fd)};
- for(unsigned i=0;i<3;i++){
-  if(fds[i]<0||(i>0&&fds[i]==fds[0])||(i>1&&fds[i]==fds[1]))continue;
-  /* One bounded record. A partial/failed write is not retried indefinitely. */
+ int fds[4]={atomic_load(&main_fd),atomic_load(&stream_fd),atomic_load(&guest_fd),atomic_load(&report_fd)};
+ for(unsigned i=0;i<4;i++){
+  if(fds[i]<0)continue;
+  bool duplicate=false;
+  for(unsigned j=0;j<i;j++)if(fds[i]==fds[j])duplicate=true;
+  if(duplicate)continue;
+  /* No locks, allocation, Swift or Foundation from the signal handler. */
   (void)!write(fds[i],record,at);
  }
+ /* The dedicated small crash marker is independent of the normal log reader.
+  * Preserve this final record before re-raising the signal. */
+ if(fds[3]>=0)(void)fsync(fds[3]);
  struct sigaction action={0};action.sa_handler=SIG_DFL;sigemptyset(&action.sa_mask);
  sigaction(signal_number,&action,NULL);
  if(kill(getpid(),signal_number)!=0)_exit(128+signal_number);

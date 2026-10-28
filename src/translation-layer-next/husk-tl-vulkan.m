@@ -4,6 +4,7 @@
 #include "husk-tl-queue-options.h"
 #include "husk-tl-swapchain-budget.h"
 #include "husk-tl-vulkan.h"
+#include "husk-tl-crash-signal.h"
 
 #import <QuartzCore/QuartzCore.h>
 #import <QuartzCore/CAMetalLayer.h>
@@ -244,6 +245,7 @@ static int w_vkCreateInstance(const vk_instance_ci *ci, const void *alloc, void 
     pfn_create_instance create = (pfn_create_instance)V.gipa(NULL, "vkCreateInstance");
     int r = create ? create(&copy, alloc, out) : -3;
     tl_log_line("vulkan: vkCreateInstance(%u extensions) -> %d", n, r);
+    husk_crash_stage(r == VK_SUCCESS ? "vulkan_instance_created" : "vulkan_instance_creation_failed");
     if (r == VK_SUCCESS && out && *out) resolve_feature_hooks(*out);
     free(ext); free(have);
     return r;
@@ -582,6 +584,11 @@ static int w_vkCreateSwapchainKHR(void *device, const void *ci, const void *allo
     int r = real ? real(device, effective, alloc, out) : -3;
     tl_sb_created(device,r==VK_SUCCESS&&out?*out:0,r,budget_ticket);
     tl_log_line("vulkan: vkCreateSwapchainKHR %ux%u images %u format %u colorspace %u usage %#x compositeAlpha %u presentMode %u -> %d", w, h, minimg, fmt, cs, usage, alpha, mode, r);
+    /* The first actual guest swapchain is the launch milestone; avoid syncing a
+     * crash log on later per-session surface recreation. */
+    static atomic_bool first_swapchain_recorded = false;
+    if (!atomic_exchange(&first_swapchain_recorded, true))
+        husk_crash_stage(r == VK_SUCCESS ? "vulkan_first_swapchain_created" : "vulkan_first_swapchain_creation_failed");
     if (r == VK_SUCCESS) tl_em_size(w, h);
     if (r == VK_SUCCESS && tl_ue4_sharp_graphics_enabled())
         tl_log_line("ue4 graphics: actual guest swapchain buffer %ux%u (M9 experiment may upscale to a separate drawable; not a measurement of internal 3D resolution)", w, h);
@@ -1304,6 +1311,7 @@ static int w_vkCreateDevice(void *pd, const vk_device_ci *ci, const void *alloc,
     free(ext);
     if (f2) reclaim(f2->f, saved2);
     tl_log_line("vulkan: vkCreateDevice(%u extensions) -> %d", ci->extCount, r);
+    husk_crash_stage(r == VK_SUCCESS ? "vulkan_device_created" : "vulkan_device_creation_failed");
     if (r == VK_SUCCESS && out && *out) {
         tl_dp_device(*out);
         tl_npa_device(*out);

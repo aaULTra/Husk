@@ -267,9 +267,7 @@ struct TLAppSettings: Codable, Equatable {
 struct TLAppSettingsView: View {
     let app: TLApp
 
-    @State private var efficiencySheet = false
     @State private var profilesSheet = false
-    @State private var metricKitSheet = false
     @ObservedObject private var store = TranslationLayerStore.shared
     @ObservedObject private var geode = GeodeSupport.shared
     @State private var settings: TLAppSettings
@@ -335,99 +333,45 @@ struct TLAppSettingsView: View {
 
             if app.report?.nativeEngine == .ue4 {
                 Section {
-                    Picker("Graphics", selection: $settings.unrealGraphics) {
+                    Picker("Graphics Preset", selection: $settings.unrealGraphics) {
                         ForEach(TLAppSettings.UnrealGraphics.allCases) { Text($0.title).tag($0) }
-                    }
-                    Picker("Vulkan Submission", selection: $settings.vulkanSubmission) {
-                        ForEach(TLAppSettings.VulkanSubmission.allCases) { Text($0.title).tag($0) }
-                    }
-                    Picker("Metal Command Preparation (Experimental)", selection: $settings.execution.prefill) {
-                        Text("Driver Default").tag(-1)
-                        Text("At Queue Submission").tag(0)
-                        Text("At End of Recording").tag(1)
-                        Text("During Recording").tag(2)
-                    }
-                    Picker("Active Metal Buffer Limit (Experimental)", selection: $settings.execution.commandBufferLimit) {
-                        Text("Driver Default").tag(0)
-                        ForEach([8,16,32,64], id: \.self) { Text("\($0) per queue").tag($0) }
-                    }
-                    Picker("Swapchain Images (Experimental)", selection: $settings.execution.swapchainImages) {
-                        Text("Game Default").tag(0)
-                        Text("Two Images").tag(2)
-                        Text("Three Images").tag(3)
-                    }
-                    Text("Preserves output size and presentation mode. An override is used only within reported surface limits; extended swapchains are left unchanged. This is not a frame-in-flight guarantee. Restart to restore Game Default.").font(.caption)
-                    Toggle("Block During Initialization Waits (Experimental)", isOn: $settings.execution.initializationParking)
-                    Text("Independent experiments; fully restart and change one option per comparison. Defaults preserve the working mode. Blocking waits can avoid active polling during initialization. Buffer limits and preparation timing can change CPU work, memory and waiting; benefit is unverified.").font(.caption)
-                    Toggle("MetalFX Spatial (Experimental)", isOn: $settings.spatialUpscaling)
-                    if settings.spatialUpscaling {
-                        Picker("MetalFX Input Budget", selection: $settings.spatialInputPercent) {
-                            ForEach([80, 85, 90, 95], id: \.self) { percent in
-                                Text("\(percent)% of output dimensions").tag(percent)
-                            }
-                        }
-                        Text("80% keeps the tested prototype. Larger inputs retain more original detail but may cost more GPU work. Your selected output stays unchanged; restart after changing.").font(.caption)
-                    }
-                    Text("Renders fewer pixels and upscales to your selected output. Includes HUD/text. Requires supported hardware and the experimental driver; fully restart. Visual quality, stability and energy benefit need testing. Off restores original rendering. The original driver is selected when MetalFX and Native Pipeline Cache are both off.").font(.caption)
-                    Toggle("Engine-only 60 FPS Limiter (Diagnostic)", isOn: $settings.engineOnlyLimiter)
-                    Text("Off keeps the existing engine + host limiter. On requests engine-only pacing at 60 FPS; verify actual cadence in a short test. Thermal fallback caps remain active. Fully restart after changes.").font(.caption)
-                    Picker("Native Pipeline Cache (Experimental)", selection: $settings.nativePipelineArchiveMode) {
-                        Text("Off").tag(0)
-                        Text("Driver Only · Comparison").tag(1)
-                        Text("Archive Enabled").tag(2)
-                    }
-                    Text("Archive mode captures up to eight slow native pipeline requests. Prepare them explicitly in Efficiency Test while the game pauses; later launches can reuse the saved archive. Preparation costs CPU/time. Driver Only uses the same experimental driver without the archive for comparison. Restart after changing.").font(.caption)
-                    Toggle("Verify Native Archive Reuse (Diagnostic)", isOn: $settings.nativeArchiveVerification).disabled(settings.nativePipelineArchiveMode != 2)
-                    Text("Short diagnostic only: requires Archive Enabled and restart. Metal is asked to fail on an archive miss, with ordinary compilation fallback. Success tests the native archive requirement; failures may have other causes. Adds API work, so leave OFF for energy comparisons.").font(.caption)
-                    Toggle("Guest-Clock Feedback Only (Experimental)", isOn: $settings.feedbackClockCorrection)
-                    Text("Corrects the clock domain of presentation feedback consumed by the game. Keeps immediate presentation; does not enable future scheduling. Benefit needs testing. Restart after changing.").font(.caption)
-                    Toggle("Clock-Correct Presentation (Experimental)", isOn: $settings.clockPresentation)
-                    Text("Translates requested presentation times and feedback between game and Metal clocks. Off keeps immediate presentation. Bounds future requests; no frame-rate or energy benefit proven. Test separately from engine-only, submission and worker settings; restart after changing.").font(.caption)
-                    Toggle("Pipeline Identification (Diagnostic)", isOn: $settings.pipelineIdentification)
-                    Toggle("Pipeline Creation Feedback (Diagnostic)", isOn: $settings.pipelineFeedback).disabled(!settings.pipelineIdentification)
-                    Text("Optional driver feedback request, only where advertised; requires identification and full restart. Adds diagnostic overhead, with no guaranteed cache hits or savings.").font(.caption)
-                    Toggle("Render Target Inventory (Diagnostic)", isOn: $settings.renderTargetInventory)
-                    Text("Records requested image and render-area sizes for MetalFX investigation; adds CPU observation overhead. No upscaling or resolution change. Restart after changing.").font(.caption)
-                    Toggle("Driver Phase Profiling", isOn: $settings.driverPhaseProfiling)
-                    Button("Performance & Efficiency Diagnostics") { efficiencySheet = true }
-                        .sheet(isPresented: $efficiencySheet) { EfficiencyDiagnosticsView() }
-                    Button("Device Graphics Profiles") { profilesSheet = true }
-                        .sheet(isPresented: $profilesSheet) { EfficiencyProfilesView(settings: $settings, game: app.packageName ?? app.label) }
-                    Button("Delayed OS Reports (MetricKit)") { metricKitSheet = true }
-                        .sheet(isPresented: $metricKitSheet) { EfficiencyMetricKitView() }
-                    Picker("Worker Scheduling", selection: $settings.workerScheduling) {
-                        ForEach(TLAppSettings.WorkerScheduling.allCases) { Text($0.title).tag($0) }
-                    }
-                    if settings.workerScheduling == .relativeTrial {
-                        Text("Measures starting cadence before trying extra Utility caps on selected normal workers. Preserves critical roles and a fast-worker budget; rolls back on pacing, pipeline or thermal pressure. No guaranteed efficiency-core placement or energy saving. Restart after changing.").font(.caption)
                     }
                     LabeledContent("Active Preset", value: settings.usesEfficientGraphics(for: app) ? "Sharp / Efficient" : (settings.usesSharpGraphics(for: app) ? "Sharp / High Quality" : "Game Default"))
                     if settings.usesEfficientGraphics(for: app) {
                         Picker("Rendering Resolution", selection: $settings.efficientResolution) {
                             ForEach(TLAppSettings.EfficientResolution.allCases) { Text($0.title).tag($0) }
                         }
-                        LabeledContent("Fullscreen Target", value: settings.fullscreenResolutionEstimate(for: app))
                         if settings.efficientResolution == .custom {
                             LabeledContent("Render Scale", value: "\(settings.customResolutionPercent)%")
-                            Slider(value: Binding(get: { Double(settings.customResolutionPercent) }, set: { settings.customResolutionPercent = Int($0.rounded()) }), in: 65...100, step: 1)
+                            Slider(value: Binding(get: { Double(settings.customResolutionPercent) },
+                                                  set: { settings.customResolutionPercent = Int($0.rounded()) }),
+                                   in: 65...100, step: 1)
                         }
+                        LabeledContent("Fullscreen Target", value: settings.fullscreenResolutionEstimate(for: app))
                         Picker("Frame Limit", selection: $settings.efficientFrameRate) {
                             ForEach(TLAppSettings.EfficientFrameRate.allCases) { Text($0.title).tag($0) }
                         }
                     }
+                    Button("Device Graphics Profiles") { profilesSheet = true }
+                        .sheet(isPresented: $profilesSheet) {
+                            EfficiencyProfilesView(settings: $settings, game: app.packageName ?? app.label)
+                        }
                 } header: {
                     Text("Game Graphics")
                 } footer: {
-                    Text("Automatic uses Sharp / Efficient for Minecraft Dungeons: a display-based resolution budget, high texture detail, 8× filtering and lighter shadows/effects. "
-                       + "Pipeline Identification is diagnostic and adds overhead; restart before testing and keep it off for ordinary energy comparisons. Async submission is experimental; keep Driver Default if it causes instability. Driver Phase Profiling is off by default and adds MoltenVK activity counters to the log for short diagnostic sessions; it adds overhead and does not measure pure GPU execution or power. Fully restart after enabling or disabling it. Compare resolution steps from Native downward at your usual viewing distance and keep the lowest that still looks equally sharp to you. "
-                       + "The default target is 60 FPS; 30 FPS is an optional lower-power mode. "
-                       + "Automatic deliberately uses reduced resolution, with a larger pixel budget on iPad than iPhone. Native · 100% requests the full display resolution. Fullscreen Target estimates the next landscape launch on this display; windowed sizes can differ, and changes require Husk to be fully restarted. This is a starting point, not a measured optimum or an FPS guarantee. Percentages scale both dimensions. Open a folding device to the desired display before restarting Husk; live folding is not supported. "
-                       + "When iOS reports serious heat, the cap drops to 30 FPS, or 20 at critical heat, and recovers after cooling. "
-                       + "Sharp / High Quality keeps the previous maximum-quality preset. Game Default removes the overrides. "
-                       + "For Dungeons only, Balanced caps named normal workers at Default QoS and background workers at Utility. "
-                       + "Other thread roles are preserved. Observe Only logs requested QoS without changing it. "
-                       + "Adaptive Trial uses a CPU-capacity hint, preserves critical roles, and waits for healthy 60 FPS cadence with only inexpensive pipeline creation before requesting extra worker caps. Frame spikes or expensive pipeline calls request rollback. Changes apply on worker self checkpoints, not immediately to busy threads. It does not know individual job deadlines or measure energy savings. "
-                       + "This does not pin CPU cores and may affect frame times. Close Husk completely and reopen after changes.")
+                    Text("Sharp / Efficient is automatic for Minecraft Dungeons. Resolution and FPS choices apply on the next launch. Fullscreen Target is an estimate, not a guarantee.")
+                }
+
+                Section {
+                    NavigationLink {
+                        TLGameAdvancedSettingsView(settings: $settings, appID: app.id)
+                    } label: {
+                        Label("Advanced Graphics & Diagnostics", systemImage: "slider.horizontal.3")
+                    }
+                } header: {
+                    Text("Advanced")
+                } footer: {
+                    Text("Optional performance experiments, their matching diagnostic controls and general game reports. Leave experimental options at their defaults unless testing one change at a time.")
                 }
             }
 
@@ -565,5 +509,108 @@ struct TLAppSettingsView: View {
             }
             return bytes == 0 ? "nothing" : ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
         }.value
+    }
+}
+
+
+/// Optional Unreal controls grouped by the feature they affect. Keeping them
+/// off the main game page makes routine graphics settings easier to find.
+/// These bindings use the existing TLAppSettings storage, not new preferences.
+private struct TLGameAdvancedSettingsView: View {
+    @Binding var settings: TLAppSettings
+    let appID: String
+
+    @State private var efficiencySheet = false
+    @State private var metricKitSheet = false
+
+    var body: some View {
+        HuskForm {
+            Section {
+                Toggle("MetalFX Spatial (Experimental)", isOn: $settings.spatialUpscaling)
+                if settings.spatialUpscaling {
+                    Picker("MetalFX Input Budget", selection: $settings.spatialInputPercent) {
+                        ForEach([80, 85, 90, 95], id: \.self) { percent in
+                            Text("\(percent)% of output dimensions").tag(percent)
+                        }
+                    }
+                }
+                Toggle("Render Target Inventory (Diagnostic)", isOn: $settings.renderTargetInventory)
+            } header: {
+                Text("Upscaling & Rendering")
+            } footer: {
+                Text("MetalFX renders at a smaller input size and upscales the image, including HUD text. Render Target Inventory logs image sizes to help diagnose it. Both require a restart; results and energy savings are unverified.")
+            }
+
+            Section {
+                Picker("Worker Scheduling", selection: $settings.workerScheduling) {
+                    ForEach(TLAppSettings.WorkerScheduling.allCases) { Text($0.title).tag($0) }
+                }
+                Toggle("Engine-only 60 FPS Limiter (Diagnostic)", isOn: $settings.engineOnlyLimiter)
+                Toggle("Guest-Clock Feedback Only (Experimental)", isOn: $settings.feedbackClockCorrection)
+                Toggle("Clock-Correct Presentation (Experimental)", isOn: $settings.clockPresentation)
+            } header: {
+                Text("Frame Pacing & CPU")
+            } footer: {
+                Text("Worker policies change scheduling, not fixed CPU-core affinity. The limiter compares engine-only pacing with the normal host limit; thermal safeguards stay active. Clock modes are experimental. Test each separately and restart.")
+            }
+
+            Section {
+                Picker("Vulkan Submission", selection: $settings.vulkanSubmission) {
+                    ForEach(TLAppSettings.VulkanSubmission.allCases) { Text($0.title).tag($0) }
+                }
+                Picker("Metal Command Preparation (Experimental)", selection: $settings.execution.prefill) {
+                    Text("Driver Default").tag(-1)
+                    Text("At Queue Submission").tag(0)
+                    Text("At End of Recording").tag(1)
+                    Text("During Recording").tag(2)
+                }
+                Picker("Active Metal Buffer Limit (Experimental)", selection: $settings.execution.commandBufferLimit) {
+                    Text("Driver Default").tag(0)
+                    ForEach([8, 16, 32, 64], id: \.self) { Text("\($0) per queue").tag($0) }
+                }
+                Picker("Swapchain Images (Experimental)", selection: $settings.execution.swapchainImages) {
+                    Text("Game Default").tag(0)
+                    Text("Two Images").tag(2)
+                    Text("Three Images").tag(3)
+                }
+                Toggle("Block During Initialization Waits (Experimental)", isOn: $settings.execution.initializationParking)
+            } header: {
+                Text("Vulkan & GPU Queues")
+            } footer: {
+                Text("Defaults preserve the normal driver. Swapchain overrides apply only inside the surface's reported limits. Queue and wait settings can affect stability or memory, so compare one at a time after a full restart.")
+            }
+
+            Section {
+                Picker("Native Pipeline Cache (Experimental)", selection: $settings.nativePipelineArchiveMode) {
+                    Text("Off").tag(0)
+                    Text("Driver Only · Comparison").tag(1)
+                    Text("Archive Enabled").tag(2)
+                }
+                Toggle("Verify Native Archive Reuse (Diagnostic)", isOn: $settings.nativeArchiveVerification)
+                    .disabled(settings.nativePipelineArchiveMode != 2)
+                Toggle("Pipeline Identification (Diagnostic)", isOn: $settings.pipelineIdentification)
+                Toggle("Pipeline Creation Feedback (Diagnostic)", isOn: $settings.pipelineFeedback)
+                    .disabled(!settings.pipelineIdentification)
+            } header: {
+                Text("Pipeline Cache & Diagnostics")
+            } footer: {
+                Text("Archive Enabled stores native pipeline work for later preparation in Efficiency Test. Verify Reuse checks archive misses, while Identification and Feedback log pipeline activity. Diagnostics add overhead; leave off outside a short test.")
+            }
+
+            Section {
+                Toggle("Driver Phase Profiling (Diagnostic)", isOn: $settings.driverPhaseProfiling)
+                Button("Performance & Efficiency Diagnostics") { efficiencySheet = true }
+                    .sheet(isPresented: $efficiencySheet) { EfficiencyDiagnosticsView() }
+                Button("Delayed OS Reports (MetricKit)") { metricKitSheet = true }
+                    .sheet(isPresented: $metricKitSheet) { EfficiencyMetricKitView() }
+            } header: {
+                Text("General Game Diagnostics")
+            } footer: {
+                Text("Collect general performance evidence here. Driver profiling adds overhead; MetricKit reports can arrive later. Full crash reports and device checks are in Husk Settings > Diagnostics & Logs.")
+            }
+        }
+        .huskForm()
+        .navigationTitle("Advanced & Diagnostics")
+        .onChange(of: settings) { $0.save(appID) }
     }
 }

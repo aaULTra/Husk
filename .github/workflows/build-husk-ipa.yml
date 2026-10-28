@@ -92,6 +92,8 @@ jobs:
           python3 tests/translation-layer/test_upstream_native.py -v
           python3 tests/translation-layer/test_apk_order.py -v
           python3 tests/translation-layer/test_husk31_integration.py -v
+          python3 tests/translation-layer/test_crash_diagnostics.py -v
+          python3 tests/translation-layer/test_settings_grouping.py -v
           sh tests/translation-layer/run_font_paths.sh
           {
             echo "## Husk IPA source"
