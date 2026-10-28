@@ -366,11 +366,12 @@ final class TLUnityUIView: UIView, UIKeyInput {
     }
 
     private func launch(width: Int, height: Int) {
+        husk_crash_stage("native_view_launch_enter")
         launched = true
         launchedSize = bounds.size
         touchSurfaceSize = CGSize(width: width, height: height)
         if engine == .ue4 {
-            EfficiencyDiagnostics.shared.attach([
+            let forkConfiguration: [String: Any] = [
                 "engine": "ue4", "game": (apk as NSString).lastPathComponent,
                 "launch_width": width, "launch_height": height,
                 "sharp_graphics": sharpGraphics, "efficient_graphics": efficientGraphics,
@@ -378,7 +379,9 @@ final class TLUnityUIView: UIView, UIKeyInput {
                 "submission_mode": submissionMode, "detailed_driver_profiling": driverProfiling, "pipeline_identification": pipelineIdentification, "pipeline_creation_feedback": pipelineFeedback, "metalfx_spatial_requested": spatialUpscaling, "metalfx_input_percent": spatialInputPercent, "clock_correct_presentation": clockPresentation, "feedback_clock_correction": feedbackClockCorrection, "native_pipeline_archive_mode": nativePipelineArchiveMode, "native_archive_verification": nativeArchiveVerification, "metal_prefill": execution.prefill, "metal_command_buffer_limit": execution.commandBufferLimit, "initialization_parking": execution.initializationParking, "swapchain_image_budget": execution.swapchainImages, "engine_only_limiter": engineOnlyLimiter, "render_target_inventory": renderTargetInventory,
                 "windowed": windowed, "cache": "existing compatible persistence; see runtime events",
                 "driver": "bundled MoltenVK; verify runtime version in attempt log"
-            ])
+            ]
+            CrashReport.noteForkConfiguration(forkConfiguration)
+            EfficiencyDiagnostics.shared.attach(forkConfiguration)
         }
         let angle = (Bundle.main.privateFrameworksPath ?? "") + "/libANGLE-shared.dylib"
         let ca = Bundle.main.path(forResource: "cacert", ofType: "pem") ?? ""
@@ -444,15 +447,19 @@ final class TLUnityUIView: UIView, UIKeyInput {
             husk_ue4_set_pipeline_feedback(pipelineIdentification && pipelineFeedback)
             husk_ue4_set_engine_only_limiter(engineOnlyLimiter)
             husk_ue4_set_render_inventory(renderTargetInventory)
+            husk_crash_stage("ue4_fork_launch_options_applied")
             HuskLog.log("tl", "ue4: requested graphics preset: \(efficientGraphics ? "Sharp / Efficient" : (sharpGraphics ? "Sharp / High Quality" : "Game Default")), surface \(width)x\(height)")
             HuskLog.log("tl", "ue4 resolution: device \(UIDevice.current.model), display \(Int(UIScreen.main.bounds.width * UIScreen.main.scale))x\(Int(UIScreen.main.bounds.height * UIScreen.main.scale)), render scale \(contentScaleFactor), launch surface \(width)x\(height); launch-time selection, not runtime calibration")
             if let fw = Bundle.main.privateFrameworksPath {
                 let candidate = fw + "/HuskMoltenVK.framework/HuskMoltenVK"
                 let experimental = (spatialUpscaling || nativePipelineArchiveMode != 0) && FileManager.default.fileExists(atPath: candidate)
                 husk_ue4_set_vulkan(experimental ? candidate : fw + "/MoltenVK.framework/MoltenVK")
+                husk_crash_stage(experimental ? "ue4_experimental_moltenvk_selected" : "ue4_original_moltenvk_selected")
                 HuskLog.log("tl", "[M9-SPATIAL] driver \(experimental ? "pinned experimental" : "original"); spatial requested \(spatialUpscaling), archive mode \(nativePipelineArchiveMode); actual native project/preflight decides activation")
             }
+            husk_crash_stage("ue4_native_runtime_launch_enter")
             started = husk_ue4_launch(apk, dataDir, layerPtr, Int32(width), Int32(height), angle, ca)
+            husk_crash_stage(started ? "ue4_native_runtime_launch_returned_success" : "ue4_native_runtime_launch_returned_refused")
         case .cocos:
             // Geode, when it is on for this game and downloaded: loaded into the game after its own libraries.
             let geode = GeodeSupport.files(appDir: (dataDir as NSString).deletingLastPathComponent)
